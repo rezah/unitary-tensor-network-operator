@@ -7,6 +7,8 @@ import pyUni10 as uni10
 import random 
 import copy
 
+
+##################### Spin 1/2 Pauli Operators ###############################################
 def matS0():
   return uni10.Matrix(2, 2, [1.0, 0.0, 0.0, 1.0])
 
@@ -18,7 +20,7 @@ def matSy():
 
 def matSz():
   return uni10.Matrix(2, 2, [0.50, 0.0, 0.0, -0.50])
-
+#############################################################################3
 
 
 def intialize_coupling(L, hz_list, W): 

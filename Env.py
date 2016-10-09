@@ -8,7 +8,6 @@ import random
 import copy
 
 def Iden_uni10(d):
- 
  bdi=uni10.Bond(uni10.BD_IN, d*d)
  bdo=uni10.Bond(uni10.BD_OUT, d*d)
  Iden_Matrix=uni10.Matrix(d*d*d*d,d*d)
@@ -25,7 +24,7 @@ def Iden_uni10(d):
      
 
 
-def Env_left ( mpo_U_list_up, mpo_U_list_down, mpo_list2, mpo_boundy_list, L_position, d   ):
+def Env_left ( mpo_U_list_up, mpo_U_list_down, mpo_list2, mpo_boundy_list, L_position, d, Environment_Left   ):
  
  if L_position is 0:
   U_up_1=copy.copy(mpo_U_list_up[0])
@@ -38,7 +37,6 @@ def Env_left ( mpo_U_list_up, mpo_U_list_down, mpo_list2, mpo_boundy_list, L_pos
   mpo_boundy_down=copy.copy(mpo_boundy_list[0])
   Iden_up=Iden_uni10(d)
   Iden_down=Iden_uni10(d)
-  
   ##### assign label#####
   U_up_1.setLabel([-1,0,-5])
   U_up_2.setLabel([-9,3,-7])
@@ -50,7 +48,7 @@ def Env_left ( mpo_U_list_up, mpo_U_list_down, mpo_list2, mpo_boundy_list, L_pos
   mpo_boundy_down.setLabel([-10])
   Iden_up.setLabel([-6,-4,-5])
   Iden_down.setLabel([-6,-8,-7])
-  ########################
+  ##########  Contraction  ##############
   A_uni10=(((U_up_1*mpo_up)*(mpo_boundy_up))*(U_down_1))*Iden_up
   B_uni10=(((U_up_2*mpo_down)*(mpo_boundy_down))*(U_down_2))*Iden_down
   Environment_Left=A_uni10*B_uni10
@@ -59,10 +57,88 @@ def Env_left ( mpo_U_list_up, mpo_U_list_down, mpo_list2, mpo_boundy_list, L_pos
   #print Environment_Left.printDiagram()
   #print Environment_Left
   return Environment_Left
+ else: 
+  Env_left_copy=copy.copy(Environment_Left[L_position-1]) 
+  U_up_1=copy.copy(mpo_U_list_up[L_position])
+  U_down_1=copy.copy(mpo_U_list_down[L_position])
+  U_up_2=copy.copy(mpo_U_list_up[L_position])
+  U_down_2=copy.copy(mpo_U_list_down[L_position])
+  mpo_up=copy.copy(mpo_list2[L_position])
+  mpo_down=copy.copy(mpo_list2[L_position])
+  Iden_up=Iden_uni10(d)
+  Iden_down=Iden_uni10(d)
+#  ##### assign label#####
+#  U_up_1.setLabel([0,6,-1,8])
+#  U_up_2.setLabel([3,11,-4,14])
+#  U_down_1.setLabel([2,9,-3,7])
+#  U_down_2.setLabel([5,13,-6,12])
+#  mpo_up.setLabel([1,7,-2,6])
+#  mpo_down.setLabel([4,12,-5,11])
+#  Iden_up.setLabel([10,9,8])
+#  Iden_down.setLabel([10,13,14])
+#  ###########   Contraction  ####################
+#  A_uni10=((Environment_Left[L_position-1]*(U_up_1*mpo_up))*U_down_1)*Iden_up
+#  Result_uni10=((A_uni10*(U_up_2*mpo_down))*U_down_2)*Iden_down
+#  print Result_uni10.printDiagram()
+#  Result_uni10.permute([-1,-2,-3,-4,-5,-6],0)
+#  Result_uni10.setLabel([0,1,2,3,4,5])
+#  Result_uni10.setName('Environment_Left')
+#  print Result_uni10.profile()
+#  print Result_uni10[5]
   
+  ############## Contraction using Network ###############
+  EnvLeft_net = uni10.Network("EnvLeft.net")
+  EnvLeft_net.putTensor('Env_left_copy',Env_left_copy)
+  EnvLeft_net.putTensor('U_up_1',U_up_1)
+  EnvLeft_net.putTensor('U_up_2',U_up_2)
+  EnvLeft_net.putTensor('U_down_1',U_down_1)
+  EnvLeft_net.putTensor('U_down_2',U_down_2)
+  EnvLeft_net.putTensor('mpo_up',mpo_up)
+  EnvLeft_net.putTensor('mpo_down',mpo_down)
+  EnvLeft_net.putTensor('Iden_up',Iden_up)
+  EnvLeft_net.putTensor('Iden_down',Iden_down)
+  Result_uni10=EnvLeft_net.launch()
+  Result_uni10.setLabel([0,1,2,3,4,5])
+  #print Result_uni10.printDiagram()
+  #print EnvLeft_net.profile()
+  #print EnvLeft_net
+  #print Result_uni10[5]
+  return Result_uni10
   
-  
-  
-  
+def Env_right ( mpo_U_list_up, mpo_U_list_down, mpo_list2, mpo_boundy_list, L_position, d, Environment_Right   ):
+ 
+ if L_position is (len(mpo_list2)-1):
+  U_up_1=copy.copy(mpo_U_list_up[L_position])
+  U_down_1=copy.copy(mpo_U_list_down[L_position])
+  U_up_2=copy.copy(mpo_U_list_up[L_position])
+  U_down_2=copy.copy(mpo_U_list_down[L_position])
+  mpo_up=copy.copy(mpo_list2[L_position])
+  mpo_down=copy.copy(mpo_list2[L_position])
+  mpo_boundy_up=copy.copy(mpo_boundy_list[1])
+  mpo_boundy_down=copy.copy(mpo_boundy_list[1])
+  Iden_up=Iden_uni10(d)
+  Iden_down=Iden_uni10(d)
+  ##### assign label#####
+  U_up_1.setLabel([-1,0,-5])
+  U_up_2.setLabel([-9,3,-7])
+  U_down_1.setLabel([-4,2,-3])
+  U_down_2.setLabel([-8,5,-11])
+  mpo_up.setLabel([1,-3,-2,-1])
+  mpo_down.setLabel([4,-11,-10,-9])
+  mpo_boundy_up.setLabel([-2])
+  mpo_boundy_down.setLabel([-10])
+  Iden_up.setLabel([-6,-4,-5])
+  Iden_down.setLabel([-6,-8,-7])
+  ##########  Contraction  ##############
+  A_uni10=(((U_up_1*mpo_up)*(mpo_boundy_up))*(U_down_1))*Iden_up
+  B_uni10=(((U_up_2*mpo_down)*(mpo_boundy_down))*(U_down_2))*Iden_down
+  Environment_Right=A_uni10*B_uni10
+  Environment_Right.permute([0,1,2,3,4,5],6)
+  Environment_Right.setName('Environment_Right')
+  #print Environment_Right.printDiagram()
+  #print Environment_Right
+  return Environment_Right
+ else: 
+  print 'wow'
   
   
