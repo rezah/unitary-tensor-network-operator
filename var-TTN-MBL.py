@@ -15,20 +15,21 @@ chi=5
 W=5
 J=3.0
 hz_list=[]
-U_delta=0.400  #if it's zero, U_list is intialize by Identity
+U_delta=0.00  #if it's zero, U_list is intialize by Identity
 #######################################################################################3
 
 
 MPO.intialize_coupling(L, hz_list, W)
 MPO.print_trH2(L, hz_list,J)
 
+MPO.variance_Energy(L, hz_list,J)
 
 
 
-# retrun MPO list, 1: one-site MPO, 2: two-site MPO; mpo_uni10_bl, mpo_uni10_br, mpo_uni10_bl2, mpo_uni10_br2
+######### retrun MPO list, 1: one-site MPO, 2: two-site MPO; mpo_uni10_bl, mpo_uni10_br, mpo_uni10_bl2, mpo_uni10_br2###
 mpo_list1, mpo_list2, mpo_boundy_list=MPO.make_mpo_H( L, J, hz_list )
 
-MPO.contraction_MPO_trH2( mpo_list1, mpo_list2, mpo_boundy_list )
+#MPO.contraction_MPO_trH2( mpo_list1, mpo_list2, mpo_boundy_list )
 
 U_list=MPO.intialize_unitary_list( L, L_lay, d, U_delta)
 #U_list_Trans=MPO.unitary_list_transpose( U_list, L, L_lay)
@@ -43,10 +44,10 @@ U_list=MPO.intialize_unitary_list( L, L_lay, d, U_delta)
 
 
 L_position=4
-# make a mpo representation of unitary U at position L_position
+############ make a mpo representation of unitary U at position L_position  ###############
 example_mpo_U=MPO.make_mpo_U(U_list, L_position, L_lay, L, 'up')
 
-# make a mpo representation of unitary U, up stand for U, down for U^{T} 
+######### make a mpo representation of unitary U, up stand for U, down for U^{T} ######### 
 mpo_U_list_up= MPO.make_mpo_U_list(U_list, L_lay, L, 'up')
 mpo_U_list_down= MPO.make_mpo_U_list(U_list, L_lay, L, 'down')
 
@@ -62,32 +63,39 @@ for i in xrange(3):
  L_lay_h.append([i+1])
  #mpo_U_list_down[4].setLabel([0,4,2,1])
  #print mpo_U_list_down[0].printDiagram()
- mpo_U_list_down[9].setLabel([3,1,0])
- #print mpo_U_list_up[9]*mpo_U_list_down[9]
+ #mpo_U_list_down[8].setLabel([3,1,0])
+ #print mpo_U_list_up[8]*mpo_U_list_down[8]
+
+mpo_U_list_up= MPO.make_mpo_U_list(U_list, L_lay, L, 'up')
+mpo_U_list_down= MPO.make_mpo_U_list(U_list, L_lay, L, 'down')
+
 
 
 Environment_Left=[None]*(L/2)
-#print Environment_Left 
+Environment_Right=[None]*(L/2)
+Environment_Uni=[None]*(L/2)
 
 for i in xrange((L/2)-1):
  L_position=i
  Environment_Left[i]=Env.Env_left (mpo_U_list_up, mpo_U_list_down, mpo_list2, mpo_boundy_list, L_position, d, Environment_Left)
-
  #print Environment_Left[i].printDiagram()
  
  
-Environment_Right=[None]*(L/2)
-#print Environment_Left 
 
-#for i in xrange((L/2)-1):
-L_position=(L/2)-1
-print L_position
-Environment_Right[i]=Env.Env_right (mpo_U_list_up, mpo_U_list_down, mpo_list2, mpo_boundy_list, L_position, d, Environment_Right)
+for i in xrange((L/2)-1):
+ L_position=(L/2)-1-i
+ #print L_position
+ Environment_Right[L_position]=Env.Env_right (mpo_U_list_up, mpo_U_list_down, mpo_list2, mpo_boundy_list, L_position, d, Environment_Right)
+ #print Environment_Right[L_position].printDiagram()
+ #print Environment_Right[0]
+print (Environment_Right[1] * Environment_Left[0])[0] 
+print (Environment_Right[8] * Environment_Left[7])[0]
+print (Environment_Right[3] * Environment_Left[2])[0]
 
-print Environment_Right[i].printDiagram()
-#print Environment_Right[i]
- 
- 
- 
+L_position=0
+Environment_Uni[L_position]=Env.Environment_uni(mpo_U_list_up, mpo_U_list_down, mpo_list2, mpo_boundy_list, L_position, d, Environment_Left, Environment_Right)
 
- 
+
+
+
+

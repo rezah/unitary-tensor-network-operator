@@ -31,7 +31,14 @@ def intialize_coupling(L, hz_list, W):
 def print_trH2(L, hz_list,J): 
  hz_list_2=[x**2 for x in hz_list]
  trH2=(2.00**L)*( J**2 * 3.0/16.00 * (L-1) + 1.0/4.0 * sum(hz_list_2))
+ variance_Energy=(2.00**L)*( J**2 /16.00 * (L-1) + 1.0/4.0 * sum(hz_list_2))
  print trH2
+ 
+def variance_Energy(L, hz_list,J): 
+ hz_list_2=[x**2 for x in hz_list]
+ trH2=(2.00**L)*( J**2 * 3.0/16.00 * (L-1) + 1.0/4.0 * sum(hz_list_2))
+ variance_Energy=(2.00**L)*( J**2 /16.00 * (L-1) + 1.0/4.0 * sum(hz_list_2))
+ print variance_Energy
 
 
 
