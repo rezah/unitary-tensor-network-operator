@@ -7,6 +7,8 @@ import pyUni10 as uni10
 import random 
 import copy
 
+
+##################### Spin 1/2 Pauli Operators ###############################################
 def matS0():
   return uni10.Matrix(2, 2, [1.0, 0.0, 0.0, 1.0])
 
@@ -18,7 +20,7 @@ def matSy():
 
 def matSz():
   return uni10.Matrix(2, 2, [0.50, 0.0, 0.0, -0.50])
-
+#############################################################################3
 
 
 def intialize_coupling(L, hz_list, W): 
@@ -29,7 +31,14 @@ def intialize_coupling(L, hz_list, W):
 def print_trH2(L, hz_list,J): 
  hz_list_2=[x**2 for x in hz_list]
  trH2=(2.00**L)*( J**2 * 3.0/16.00 * (L-1) + 1.0/4.0 * sum(hz_list_2))
- #print trH2
+ variance_Energy=(2.00**L)*( J**2 /16.00 * (L-1) + 1.0/4.0 * sum(hz_list_2))
+ print trH2
+ 
+def variance_Energy(L, hz_list,J): 
+ hz_list_2=[x**2 for x in hz_list]
+ trH2=(2.00**L)*( J**2 * 3.0/16.00 * (L-1) + 1.0/4.0 * sum(hz_list_2))
+ variance_Energy=(2.00**L)*( J**2 /16.00 * (L-1) + 1.0/4.0 * sum(hz_list_2))
+ print variance_Energy
 
 
 
@@ -144,6 +153,7 @@ def make_mpo_H(L, J, hz_list ):
    mpo_uni10_cotraction.setLabel([0,1,2,3])
    mpo_uni10_cotraction.setName('mpo_uni10_4')
    mpo_uni10_4_list.append(mpo_uni10_cotraction)
+   
    
  ##printmpo_uni10_1_list[1].printDiagram()
  
@@ -266,14 +276,14 @@ def contraction_MPO_trH2(mpo_uni10_1_list, mpo_uni10_4_list,  mpo_boundy_list):
  mpo_uni10_br_2=copy.copy(mpo_boundy_list[3])
  mpo_uni10_br_2.setLabel([1])
  trH2=mpo_boundy_list[2]*mpo_uni10_6_list_prime[0]*mpo_uni10_br_2
- #printtrH2[0]
+ print trH2[0]
  ###############################################################################
 
 
  ##printmpo_uni10_6_list_prime[0].profile()
  ##printmpo_uni10_6_list_prime[0].printDiagram()
 ###################  intialize_unitary_list #################################### 
-def  intialize_unitary_list( L, L_lay,d, delta): 
+def intialize_unitary_list( L, L_lay,d, delta): 
  U_list=[]
  bdi_spin = uni10.Bond(uni10.BD_IN, d);
  bdo_spin = uni10.Bond(uni10.BD_OUT, d);
@@ -325,56 +335,54 @@ def  make_mpo_U(U_list, L_position, L_lay, L, Letter):
     U0=copy.copy(U[0])
     U0.combineBond([0,1])
     U0.combineBond([2,3])
-    Uni_out_1.setLabel([1])
+    Uni_out_1.setLabel([4])
     U_result=U0*Uni_out_1
-    U_result.permute([0,1,2],1)
-    ##printU_result.printDiagram()
-    if (Letter is 'up'):
-     return U_result
-    elif(Letter is 'down'):
-     U_result.permute([2,1,0],1)
+    U_result.permute([0,4,2],1)
+    if Letter is 'up':
      U_result.setLabel([0,1,2])
      return U_result
-  if (len(L_lay) == 2  ):
+    elif Letter is 'down':
+     U_result.permute([2,4,0],1)
+     U_result.setLabel([0,1,2])
+     return U_result
+  if len(L_lay) == 2 :
     U0=copy.copy(U[0])
     U1=copy.copy(U[1]) 
     U0.setLabel([0,1,2,3])
     U1.setLabel([3,4,5,6])
-    U_result=uni10.contract(U0,U1)
+    U_result=U0*U1
     U_result.combineBond([0,1])
     U_result.combineBond([2,5,6])
     U_result.permute([0,4,2],1)
     U_result.setLabel([0,1,2])
-    ##printU_result.printDiagram()
-    if (Letter is 'up'):
+    if Letter is 'up':
      return U_result
-    elif(Letter is 'down'):
+    elif Letter is 'down':
      U_result.permute([2,1,0],1)
      U_result.setLabel([0,1,2])
      return U_result
     
-  if (len(L_lay) == 3  ):
+  if len(L_lay) == 3  :
     U0=copy.copy(U[0])
     U1=copy.copy(U[1])
     U2=copy.copy(U[2]) 
     U0.setLabel([0,1,2,3])
     U1.setLabel([3,4,5,6])
     U2.setLabel([2,5,7,8])
-    U_result=((U0*U1)*U2)
+    U_result=((U0*U1)*(U2))
     U_result.combineBond([0,1])
     U_result.combineBond([7,8])
     U_result.combineBond([4,6])
     U_result.permute([0,4,7],1)
     U_result.setLabel([0,1,2])
-    #printU_result.#printDiagram()
-    if (Letter is 'up'):
+    if Letter is 'up':
      return U_result
-    elif(Letter is 'down'):
+    elif Letter is 'down':
      U_result.permute([2,1,0],1)
      U_result.setLabel([0,1,2])
      return U_result
     
-  if (len(L_lay) == 4  ):
+  if len(L_lay) == 4  :
     U0=copy.copy(U[0])
     U1=copy.copy(U[1])
     U2=copy.copy(U[2])
@@ -389,15 +397,14 @@ def  make_mpo_U(U_list, L_position, L_lay, L, Letter):
     U_result.combineBond([4,6,9])
     U_result.permute([0,4,7],1)
     U_result.setLabel([0,1,2])
-    #printU_result.printDiagram()
-    if (Letter is 'up'):
+    if Letter is 'up':
      return U_result
-    elif(Letter is 'down'):
+    elif Letter is 'down':
      U_result.permute([2,1,0],1)
      U_result.setLabel([0,1,2])
      return U_result
     
-  if (len(L_lay) == 5  ):
+  if len(L_lay) == 5  :
     U0=copy.copy(U[0])
     U1=copy.copy(U[1])
     U2=copy.copy(U[2])
@@ -414,45 +421,43 @@ def  make_mpo_U(U_list, L_position, L_lay, L, Letter):
     U_result.combineBond([4,6,9,11])
     U_result.permute([0,4,12],1)
     U_result.setLabel([0,1,2])
-    ##printU_result.printDiagram()
-    if (Letter is 'up'):
+    if Letter is 'up':
      return U_result
-    elif(Letter is 'down'):
+    elif Letter is 'down':
      U_result.permute([2,1,0],1)
      U_result.setLabel([0,1,2])
      return U_result
     
- if (L_position==((L/2) - 1)):
-  if (len(L_lay) == 1  ):
+ if L_position==((L/2) - 1):
+  if len(L_lay) == 1:
     U0=copy.copy(U[0])
     U0.combineBond([0,1])
     U0.combineBond([2,3])
-    Uni_out_1.setLabel([1])
+    Uni_out_1.setLabel([4])
     U_result=U0*Uni_out_1
-    U_result.permute([0,1,2],2)
-    #printU_result.#printDiagram()
+    U_result.permute([0,4,2],2)
     if (Letter is 'up'):
+     U_result.setLabel([0,1,2])
      return U_result
     elif(Letter is 'down'):
-     U_result.permute([2,1,0],2)
+     U_result.permute([2,4,0],2)
      U_result.setLabel([0,1,2])
      return U_result
      
-  if (len(L_lay) == 2  ):
+  if len(L_lay) == 2  :
       U0=copy.copy(U[0])
       U0.combineBond([0,1])
       U0.permute([0,2,3],2)
       U0.setLabel([0,1,2])
       U_result=copy.copy(U0)
-      ##printU0.printDiagram()
       if (Letter is 'up'):
        return U_result
-      elif(Letter is 'down'):
+      elif Letter is 'down':
        U_result.permute([2,1,0],2)
        U_result.setLabel([0,1,2])
        return U_result
      
-  if (len(L_lay) == 3  ):
+  if len(L_lay) == 3  :
       U0=copy.copy(U[0])
       U0.combineBond([0,1])
       U2=copy.copy(U[2])
@@ -463,9 +468,9 @@ def  make_mpo_U(U_list, L_position, L_lay, L, Letter):
       U_result.permute([0,2,5],2)
       U_result.setLabel([0,1,2])
       ##printU_result.printDiagram()
-      if (Letter is 'up'):
+      if Letter is 'up':
        return U_result
-      elif(Letter is 'down'):
+      elif Letter is 'down':
        U_result.permute([2,1,0],2)
        U_result.setLabel([0,1,2])
        return U_result
@@ -479,10 +484,9 @@ def  make_mpo_U(U_list, L_position, L_lay, L, Letter):
       U_result.combineBond([2,4,5])
       U_result.permute([0,2,6],2)
       U_result.setLabel([0,1,2])
-      #printU_result.printDiagram()
-      if (Letter is 'up'):
+      if Letter is 'up':
        return U_result
-      elif(Letter is 'down'):
+      elif Letter is 'down':
        U_result.permute([2,1,0],2)
        U_result.setLabel([0,1,2])
        return U_result
@@ -500,10 +504,9 @@ def  make_mpo_U(U_list, L_position, L_lay, L, Letter):
       U_result.combineBond([2,4,5,7])
       U_result.permute([0,2,8],2)
       U_result.setLabel([0,1,2])
-      #printU_result.printDiagram()
-      if (Letter is 'up'):
-       return U_result
-      elif(Letter is 'down'):
+      if Letter is 'up':
+       return U_result       
+      elif Letter is 'down':
        U_result.permute([2,1,0],2)
        U_result.setLabel([0,1,2])
        return U_result
@@ -516,12 +519,11 @@ def  make_mpo_U(U_list, L_position, L_lay, L, Letter):
     Uni_in_1.setLabel([5])
     Uni_out_1.setLabel([4])
     U_result=U0*Uni_in_1*Uni_out_1
-    U_result.permute([5,0,4, 2],2)
-    U_result.setLabel([0,1,2, 3])
-    #printU_result.printDiagram()
-    if (Letter is 'up'):
+    U_result.permute([5,0,4,2],2)
+    U_result.setLabel([0,1,2,3])
+    if Letter is 'up':
      return U_result
-    elif(Letter is 'down'):
+    elif Letter is 'down':
      U_result.permute([0,3,2,1],2)
      U_result.setLabel([0,1,2,3])
      return U_result
@@ -545,14 +547,14 @@ def  make_mpo_U(U_list, L_position, L_lay, L, Letter):
      U_result.setLabel([0,1,2,3])
      return U_result
     
-  if (len(L_lay) == 3 ):
+  if len(L_lay) == 3 :
     U0=copy.copy(U[0])
     U1=copy.copy(U[1])
     U2=copy.copy(U[2]) 
     U0.setLabel([0,1,2,3])
     U1.setLabel([3,4,5,6])
     U2.setLabel([7,5,8,9])
-    U_result=((U0*U1)*U2)
+    U_result=((U0*U1)*(U2))
     U_result.combineBond([0,1])
     U_result.combineBond([8,9])
     U_result.combineBond([4,6])
@@ -560,18 +562,18 @@ def  make_mpo_U(U_list, L_position, L_lay, L, Letter):
     U_result.permute([2,0,4,8],2)
     U_result.setLabel([0,1,2,3])
     #printU_result.printDiagram()
-    if (Letter is 'up'):
+    if Letter is 'up':
      return U_result
-    elif(Letter is 'down'):
+    elif Letter is 'down':
      U_result.permute([0,3,2,1],2)
      U_result.setLabel([0,1,2,3])
      return U_result
  
-  if (len(L_lay) == 4 ):
+  if len(L_lay) == 4 :
     U0=copy.copy(U[0])
     U1=copy.copy(U[1])
     U2=copy.copy(U[2])
-    U3=copy.copy(U[3]) 
+    U3=copy.copy(U[3])
     U0.setLabel([0,1,2,3])
     U1.setLabel([3,4,5,6])
     U2.setLabel([7,5,8,9])
@@ -583,10 +585,9 @@ def  make_mpo_U(U_list, L_position, L_lay, L, Letter):
     U_result.combineBond([4,6,10])
     U_result.permute([2,0,4,11],2)
     U_result.setLabel([0,1,2,3])
-    #printU_result.printDiagram()
-    if (Letter is 'up'):
+    if Letter is 'up':
      return U_result
-    elif(Letter is 'down'):
+    elif Letter is 'down':
      U_result.permute([0,3,2,1],2)
      U_result.setLabel([0,1,2,3])
      return U_result
@@ -602,7 +603,7 @@ def  make_mpo_U(U_list, L_position, L_lay, L, Letter):
     U2.setLabel([7,5,8,9])
     U3.setLabel([9,10,11,12])
     U4.setLabel([13,11,14,15])
-    U_result=(((U0*U1)*(U2*U3))*U4)
+    U_result=(((U0*U1)*(U2*U3))*(U4))
     U_result.combineBond([0,1])
     U_result.combineBond([14,15])
     U_result.combineBond([2,7,8,13])
@@ -610,20 +611,157 @@ def  make_mpo_U(U_list, L_position, L_lay, L, Letter):
     U_result.permute([2,0,4,14],2)
     U_result.setLabel([0,1,2,3])
     #printU_result.printDiagram()
-    if (Letter is 'up'):
+    if Letter is 'up':
      return U_result
-    elif(Letter is 'down'):
+    elif Letter is 'down':
      U_result.permute([0,3,2,1],2)
      U_result.setLabel([0,1,2,3])
      return U_result
 
 
 
+def make_mpo_U_Label( L_position,L_lay, L, Letter):
+ if (L_position==0):
+  Bond_IN=2
+  if (len(L_lay) == 1 ):
+    if Letter=='up':
+     per_labels=[0,1,4,2,3]
+     return per_labels, Bond_IN
+    elif Letter=='down':
+     per_labels=[2,3,4,0,1]
+     return per_labels, Bond_IN
+     
+  if (len(L_lay) == 2 ):     
+    if Letter=='up':
+     per_labels=[0,1,4,2,5,6]
+     return per_labels, Bond_IN
+    elif Letter=='down':
+     per_labels=[2,5,6,4, 0,1]
+     return per_labels, Bond_IN
+
+  if (len(L_lay) == 3 ):
+    if Letter=='up':
+     per_labels=[0,1,4,6,7,8 ]
+     return per_labels, Bond_IN
+    elif Letter=='down':
+     per_labels=[4,6,7,8,0,1 ]
+     return per_labels, Bond_IN
+
+  if (len(L_lay) == 4 ):     
+    if Letter=='up':
+     per_labels=[0,1,4,6,9,7,10,11]
+     return per_labels, Bond_IN
+    elif Letter=='down':
+     per_labels=[7,10,11,4,6,9,0,1]
+     return per_labels, Bond_IN
+
+  if (len(L_lay) == 5 ):
+    if Letter=='up':
+     per_labels=[0,1,4,6,9,11,12,13]
+     return per_labels, Bond_IN
+    elif Letter=='down':
+     per_labels=[12,13,4,6,9,11,0,1]
+     return per_labels, Bond_IN
+
+ if L_position==((L/2)-1):
+ 
+  if (len(L_lay) == 1 ):    
+    Bond_IN=3
+    if Letter=='up':
+     per_labels=[0,1,4,2,3]
+     return per_labels, Bond_IN
+    elif Letter=='down':
+     per_labels=[2,3,4, 0,1]
+     return per_labels, Bond_IN
+
+  if (len(L_lay) == 2 ):
+    Bond_IN=3  
+    if Letter=='up':
+     per_labels=[0,1,2,3]
+     return per_labels, Bond_IN
+    elif Letter=='down':
+     per_labels=[3,2,0,1]
+     return per_labels, Bond_IN
+
+  if (len(L_lay) == 3 ):
+    Bond_IN=4    
+    if Letter=='up':
+     per_labels=[0,1,2,4,5,6]
+     return per_labels, Bond_IN
+    elif Letter=='down':
+     per_labels=[5,6,2,4,0,1]
+     return per_labels, Bond_IN
+
+  if (len(L_lay) == 4 ):
+    Bond_IN=5    
+    if Letter=='up':
+     per_labels=[0,1,2,4,5,6]
+     return per_labels, Bond_IN
+    elif Letter=='down':
+     per_labels=[6,2,4,5,0,1]
+     return per_labels, Bond_IN
+
+  if (len(L_lay) == 5 ):
+    Bond_IN=6    
+    if Letter=='up':
+     per_labels=[0,1,2,4,5,7,8,9]
+     return per_labels, Bond_IN
+    elif Letter=='down':
+     per_labels=[8,9,2,4,5,7,0,1]
+     return per_labels, Bond_IN
+ if  (L_position is not ((L/2) - 1)) and (L_position is not 0)  : 
+  if (len(L_lay) == 1 ):
+    Bond_IN=3    
+    if Letter=='up':
+     per_labels=[5,0,1,4,2,3]
+     return per_labels, Bond_IN
+    elif Letter=='down':
+     per_labels=[5,2,3,4,0,1]
+     return per_labels, Bond_IN
+
+  if (len(L_lay) == 2 ):
+    Bond_IN=3    
+    if Letter=='up':
+     per_labels=[2,0,1,4,5,6]
+     return per_labels, Bond_IN
+    elif Letter=='down':
+     per_labels=[2,5,6,4,0,1]
+     return per_labels, Bond_IN
+
+
+  if (len(L_lay) == 3 ):
+    Bond_IN=4    
+    if Letter=='up':
+     per_labels=[2,7,0,1,4,6,8,9]
+     return per_labels, Bond_IN
+    elif Letter=='down':
+     per_labels=[2,7,8,9,4,6,0,1]
+     return per_labels, Bond_IN
+
+  if (len(L_lay) == 4 ):
+    Bond_IN=5    
+    if Letter=='up':
+     per_labels=[2,7,8,0,1,4,6,10,11,12]
+     return per_labels, Bond_IN
+    elif Letter=='down':
+     per_labels=[2,7,8,11,12,4,6,10,0,1]
+     return per_labels, Bond_IN
+
+  if (len(L_lay) == 5 ):
+    Bond_IN=6    
+    if Letter=='up':
+     per_labels=[2,7,8,13,0,1,4,6,10,12,14,15]
+     return per_labels, Bond_IN
+    elif Letter=='down':
+     per_labels=[2,7,8,13,14,15,4,6,10,12,0,1]
+     return per_labels, Bond_IN
+
 
 def make_mpo_U_list(U_list, L_lay, L, Letter):
  mpo_U_list=[]
  for i in xrange(L/2):
   mpo_U_list.append(make_mpo_U(U_list,i, L_lay, L, Letter))
+ 
  return mpo_U_list
 
 
