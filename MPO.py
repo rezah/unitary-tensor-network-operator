@@ -283,7 +283,7 @@ def contraction_MPO_trH2(mpo_uni10_1_list, mpo_uni10_4_list,  mpo_boundy_list):
  ##printmpo_uni10_6_list_prime[0].profile()
  ##printmpo_uni10_6_list_prime[0].printDiagram()
 ###################  intialize_unitary_list #################################### 
-def  intialize_unitary_list( L, L_lay,d, delta): 
+def intialize_unitary_list( L, L_lay,d, delta): 
  U_list=[]
  bdi_spin = uni10.Bond(uni10.BD_IN, d);
  bdo_spin = uni10.Bond(uni10.BD_OUT, d);
@@ -761,6 +761,7 @@ def make_mpo_U_list(U_list, L_lay, L, Letter):
  mpo_U_list=[]
  for i in xrange(L/2):
   mpo_U_list.append(make_mpo_U(U_list,i, L_lay, L, Letter))
+ 
  return mpo_U_list
 
 
