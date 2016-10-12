@@ -8,4 +8,4 @@ mpo_down: 4, 12 ;-5, 11
 Iden_up: 10, 9 ; 8
 Iden_down: 10, 13 ; 14
 TOUT: ; -1 , -2, -3, -4, -5, -6
-ORDER: ((((((Env_left_copy (U_up_1 mpo_up)) U_down_1) Iden_up) (U_up_2 mpo_down)) U_down_2) Iden_down)
+ORDER: (((((((Env_left_copy (U_up_1 mpo_up)) U_down_1) Iden_up) )  ) U_down_2) Iden_down) (U_up_2 mpo_down) 
