@@ -23,7 +23,9 @@ def matSz():
 #############################################################################3
 
 
-def intialize_coupling(L, hz_list, W): 
+def intialize_coupling(L, hz_list, W,Randomness): 
+ if Randomness is 'Fixed':
+  random.seed(3)
  for i in xrange(L):
   hz_list.append(random.uniform(-W,W))
 

@@ -9,23 +9,24 @@ import copy
 import time
 import mpo
 import env
-import optimize
+import optimize 
 
 
 L=10             # Numbers of particles
-L_lay=[0,1,2]   #Numbers of layers <= 4
+L_lay=[0,1]   #Numbers of layers <= 4
 d=2             #pysical bond-dimension  
 chi=5           #bond-dimension of MPO
 W=5             #random interval, [-W,W]
 J=3.0           #coupling
 hz_list=[]
-U_delta=0.00  #if it's zero, U_list is intialize by Identity
-Method='Steepest-Descent'    #There are three methods: Conjugate, SVD, Steepest-Descent
+U_delta=08.00  #if it's zero, U_list is intialize by Identity
+Method='SVD'    #There are three methods: Conjugate, SVD, SteepestDescent
+Randomness='Fixed'
 #######################################################################################3
 
 
-mpo.intialize_coupling(L, hz_list, W)
-#mpo.print_trH2(L, hz_list,J)
+mpo.intialize_coupling(L, hz_list, W,Randomness)
+mpo.print_trH2(L, hz_list,J)
 
 mpo.variance_Energy(L, hz_list,J)
 
@@ -110,7 +111,6 @@ for i in xrange( (L/2) ):
 
 
 
-
 Env_Uni_inner=[]
 for i in xrange(L/2):
  Env_Uni_inner.append([])
@@ -147,26 +147,19 @@ for i in xrange(len(L_lay)):
 
 
 
-
 for i in xrange((L/2)-1):
  L_position=(L/2)-1-i
  #print L_position
  Environment_Right[L_position]=env.Env_right (mpo_U_list_up, mpo_U_list_down, mpo_list2, mpo_boundy_list, L_position, d, Environment_Right)
 
 L_position=0
-Optimize(mpo_U_list_up, mpo_U_list_down, mpo_list2, mpo_boundy_list,d,L,L_position,Environment_Left,Environment_Right)
+optimize.optimize_function(U_list,mpo_U_list_up, mpo_U_list_down, mpo_list2, mpo_boundy_list,Environment_Left,Environment_Right,perl_label_up, Environment_Uni,Env_Uni_inner, Bond_IN,d,L,L_lay,L_position,Method)
 
 
 
-Environment_Uni[L_position]=env.Environment_uni_function(mpo_U_list_up, mpo_U_list_down, mpo_list2, mpo_boundy_list, L_position, d, Environment_Left, Environment_Right)
-
-for i in xrange(len(L_lay)):
- L_position=0
- L_lay_selected=i
- env.Env_Uni_inner_function(U_list, Environment_Uni, perl_label_up, Bond_IN, L_lay,L_lay_selected, L_position, Env_Uni_inner )
 
  
-Optimize()
+
 
  
 
