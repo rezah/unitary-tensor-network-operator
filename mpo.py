@@ -35,13 +35,20 @@ def print_trH2(L, hz_list,J):
  trH2=(2.00**L)*( J**2 * 3.0/16.00 * (L-1) + 1.0/4.0 * sum(hz_list_2))
  variance_Energy=(2.00**L)*( J**2 /16.00 * (L-1) + 1.0/4.0 * sum(hz_list_2))
  print trH2
- 
-def variance_Energy(L, hz_list,J): 
+
+
+def avarage_Energy_power_2(L, hz_list,J): 
  hz_list_2=[x**2 for x in hz_list]
  trH2=(2.00**L)*( J**2 * 3.0/16.00 * (L-1) + 1.0/4.0 * sum(hz_list_2))
  variance_Energy=(2.00**L)*( J**2 /16.00 * (L-1) + 1.0/4.0 * sum(hz_list_2))
- print variance_Energy
+ return variance_Energy
+ 
 
+def variance_Energy_function(L, hz_list,J,Avarage_E_power2): 
+ hz_list_2=[x**2 for x in hz_list]
+ trH2=(2.00**L)*( J**2 * 3.0/16.00 * (L-1) + 1.0/4.0 * sum(hz_list_2))
+ print 'variance_Energy=%d - %d' %(trH2, Avarage_E_power2)  
+ return (trH2 - Avarage_E_power2)/(2.00**L)
 
 
 
