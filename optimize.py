@@ -41,7 +41,7 @@ def copy_U_list_function(U_list,L,L_lay):
 #############################################################################################
 
 ###################################Optimze  ###########################################################
-def optimize_function(U_list,mpo_U_list_up, mpo_U_list_down, mpo_list2, mpo_boundy_list,Environment_Left,Environment_Right,perl_label_up, Environment_Uni,Env_Uni_inner, Bond_IN,d,L,L_lay,L_position,Method ,Max_SVD_iteratoin, Max_Steepest_iteratoin):
+def optimize_function(U_list,mpo_U_list_up, mpo_U_list_down, mpo_list2, mpo_boundy_list,Environment_Left,Environment_Right,perl_label_up, Environment_Uni,Env_Uni_inner, Bond_IN,d,L,L_lay,L_position,Method ,Max_SVD_iteratoin, Max_Steepest_iteratoin, E_list, Count_list):
  
  #U_list_copy=copy_U_list_function(U_list,L,L_lay)
  
@@ -52,11 +52,11 @@ def optimize_function(U_list,mpo_U_list_up, mpo_U_list_down, mpo_list2, mpo_boun
  if L_position is not L/2-1:
   for i in xrange(len(L_lay)):
    L_lay_selected=i
-   optimize_inner_function(U_list,mpo_U_list_up, mpo_U_list_down, mpo_list2, mpo_boundy_list,Environment_Left,Environment_Right,perl_label_up, Environment_Uni,Env_Uni_inner, Bond_IN,d,L,L_lay,L_position, L_lay_selected,Method,Max_SVD_iteratoin, Max_Steepest_iteratoin)
+   optimize_inner_function(U_list,mpo_U_list_up, mpo_U_list_down, mpo_list2, mpo_boundy_list,Environment_Left,Environment_Right,perl_label_up, Environment_Uni,Env_Uni_inner, Bond_IN,d,L,L_lay,L_position, L_lay_selected,Method,Max_SVD_iteratoin, Max_Steepest_iteratoin,E_list, Count_list)
  elif L_position is L/2 -1:
   for i in xrange(0,len(L_lay),2):
    L_lay_selected=i
-   optimize_inner_function(U_list,mpo_U_list_up, mpo_U_list_down, mpo_list2, mpo_boundy_list,Environment_Left,Environment_Right,perl_label_up, Environment_Uni,Env_Uni_inner, Bond_IN,d,L,L_lay,L_position, L_lay_selected,Method ,Max_SVD_iteratoin, Max_Steepest_iteratoin)
+   optimize_inner_function(U_list,mpo_U_list_up, mpo_U_list_down, mpo_list2, mpo_boundy_list,Environment_Left,Environment_Right,perl_label_up, Environment_Uni,Env_Uni_inner, Bond_IN,d,L,L_lay,L_position, L_lay_selected,Method ,Max_SVD_iteratoin, Max_Steepest_iteratoin,E_list, Count_list)
 
 
  Energy_f=Energy_newunitary(U_list, mpo_U_list_up, mpo_U_list_down, mpo_list2, mpo_boundy_list, L_position, d, Environment_Left, L_lay,L, Environment_Right,L_lay_selected,Env_Uni_inner,Environment_Uni, perl_label_up, Bond_IN)
@@ -65,7 +65,7 @@ def optimize_function(U_list,mpo_U_list_up, mpo_U_list_down, mpo_list2, mpo_boun
  
 
 ################################ Optimize inner function #########################################
-def optimize_inner_function(U_list, mpo_U_list_up, mpo_U_list_down, mpo_list2, mpo_boundy_list,Environment_Left,Environment_Right,perl_label_up, Environment_Uni,Env_Uni_inner, Bond_IN,d,L,L_lay,L_position, L_lay_selected,Method,Max_SVD_iteratoin, Max_Steepest_iteratoin):
+def optimize_inner_function(U_list, mpo_U_list_up, mpo_U_list_down, mpo_list2, mpo_boundy_list,Environment_Left,Environment_Right,perl_label_up, Environment_Uni,Env_Uni_inner, Bond_IN,d,L,L_lay,L_position, L_lay_selected,Method,Max_SVD_iteratoin, Max_Steepest_iteratoin,E_list, Count_list):
  
  Energy_s=Energy_newunitary(U_list, mpo_U_list_up, mpo_U_list_down, mpo_list2, mpo_boundy_list, L_position, d, Environment_Left, L_lay,L, Environment_Right,L_lay_selected,Env_Uni_inner,Environment_Uni, perl_label_up, Bond_IN)
  #print 'E_s=', Energy_s
@@ -75,11 +75,21 @@ def optimize_inner_function(U_list, mpo_U_list_up, mpo_U_list_down, mpo_list2, m
   U_update_copy=copy.copy(U_update)
   U_first=U_update
   E2=0
+  
+  if len(Count_list) is 0: count=0 
+  else: count = Count_list[len(Count_list)-1]
+  
   for i in xrange(Max_SVD_iteratoin):
+   count+=1
    E1=Energy_newunitary(U_list, mpo_U_list_up, mpo_U_list_down, mpo_list2, mpo_boundy_list, L_position, d, Environment_Left, L_lay,L, Environment_Right,L_lay_selected,Env_Uni_inner,Environment_Uni, perl_label_up, Bond_IN)
+   E_list.append(E1)
+   Count_list.append(count)
    #print E1, i, '\n'
    if E1>E2 or i is 0:
     U_update_copy=copy.copy(U_update)
+    if abs((E2-E1)/E1) < 1.0e-8:
+     print E2, E1, abs((E2-E1)/E1), i
+     break
     E2=E1
    else:
     U_update=U_update_copy
@@ -104,12 +114,15 @@ def optimize_inner_function(U_list, mpo_U_list_up, mpo_U_list_down, mpo_list2, m
   U_update=copy.copy(U_list[L_position][L_lay_selected].getBlock())
   U_first=copy.copy(U_update)
   Gamma= 1.00
-  count=0
+  if len(Count_list) is 0: count=0 
+  else: count = Count_list[len(Count_list)-1]
+  E_previous=0
   for i in xrange(Max_Steepest_iteratoin):
    U_list[L_position][L_lay_selected].putBlock(U_update)
    E1=Energy_newunitary(U_list, mpo_U_list_up, mpo_U_list_down, mpo_list2, mpo_boundy_list, L_position, d, Environment_Left, L_lay,L, Environment_Right,L_lay_selected,Env_Uni_inner,Environment_Uni, perl_label_up, Bond_IN)
    #print 'E=', E1, count
-   count=0
+   E_list.append(E1)
+   Count_list.append(count)
    #print 'test', (Env_Uni_inner[L_position][L_lay_selected].transpose().getBlock()*U_update).trace()
    D_u=-4.00*Env_Uni_inner[L_position][L_lay_selected].getBlock()
    D_u_trans=copy.copy(D_u)
@@ -119,6 +132,14 @@ def optimize_inner_function(U_list, mpo_U_list_up, mpo_U_list_down, mpo_list2, m
    Z_decent_trans=copy.copy(Z_decent)
    Z_decent_trans.transpose()
    Norm_Z=(Z_decent_trans*Z_decent).trace() / 2.00
+    
+    
+   if E1>E_previous or i is 0:
+    if abs((E_previous-E1)/E1) < 1.0e-8:
+     print E_previous, E1, abs((E_previous-E1)/E1), i
+     break
+   E_previous=E1
+   
    if Norm_Z < 1.0e-7:
     print 'Break Norm=', Norm_Z
     break
@@ -167,7 +188,7 @@ def optimize_inner_function(U_list, mpo_U_list_up, mpo_U_list_down, mpo_list2, m
   U_list[L_position][L_lay_selected].putBlock(U_update)
   E_f=Energy_newunitary(U_list, mpo_U_list_up, mpo_U_list_down, mpo_list2, mpo_boundy_list, L_position, d, Environment_Left, L_lay,L, Environment_Right,L_lay_selected,Env_Uni_inner,Environment_Uni, perl_label_up, Bond_IN)
   
-  #print 'E_s=', Energy_s, '\n', 'E_f=', E_f 
+  print 'E_s=', Energy_s, '\n', 'E_f=', E_f 
   if Energy_s > E_f:
    print 'Notoptimized= E > E1', E_f,  Energy_s
    U_list[L_position][L_lay_selected].putBlock(U_first)

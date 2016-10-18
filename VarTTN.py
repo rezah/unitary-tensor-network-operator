@@ -12,29 +12,47 @@ import env
 import optimize 
 
 
-L=10             # Numbers of particles
-L_lay=[0,1]   #Numbers of layers <= 4
+L=20             # Numbers of particles
+L_lay=[0,1,2]   #Numbers of layers <= 4
 d=2             #pysical bond-dimension  
 chi=5           #bond-dimension of MPO
 W=8             #random interval, [-W,W]
 J=1.0           #coupling
 hz_list=[]
-U_delta=0.00  #if it's zero, U_list is intialize by Identity
-Method='SVD'    #There are three methods: Conjugate, SVD, SteepestDescent
+U_delta=0.400  #if it's zero, U_list is intialize by Identity
+Method='SteepestDescent'    #There are three methods: Conjugate, SVD, SteepestDescent
 Randomness='Fixed'
-Max_number_iteratoin=20   # maximum number of sweeps 
+Max_number_iteratoin_SVD=10   # maximum number of sweeps 
+Max_number_iteratoin_Steepest=3   # maximum number of sweeps 
 Max_SVD_iteratoin=20     #maximum number of SVD iteration
 Max_Steepest_iteratoin=20  # maximum number of SteepestDescent iteration
 #######################################################################################3
+def Optimi_full_process(U_list,mpo_U_list_up, mpo_U_list_down, mpo_list2, mpo_boundy_list,Environment_Left,Environment_Right,perl_label_up, Environment_Uni,Env_Uni_inner, Bond_IN,d,L,L_lay,L_position,Method ,Max_SVD_iteratoin, Max_Steepest_iteratoin, E_list, Count_list):
+ if Method is 'SVD':
+  Length=Max_number_iteratoin_SVD
+ elif Method is 'SteepestDescent':
+  Length=Max_number_iteratoin_Steepest
+ for j in xrange(Length):
+  for i in xrange( L/2 ):
+   #making Env right
+   if i is 0:
+    for m in xrange((L/2)-1):
+     L_position1=(L/2)-1-m
+     #print L_position
+     Environment_Right[L_position1]=env.Env_right (mpo_U_list_up, mpo_U_list_down, mpo_list2, mpo_boundy_list, L_position1, d, Environment_Right)
+
+   print i
+   L_position=i
+   optimize.optimize_function(U_list,mpo_U_list_up, mpo_U_list_down, mpo_list2, mpo_boundy_list,Environment_Left,Environment_Right,perl_label_up, Environment_Uni,Env_Uni_inner, Bond_IN,d,L,L_lay,L_position,Method ,Max_SVD_iteratoin, Max_Steepest_iteratoin, E_list, Count_list)
+   if i is not L/2 -1:
+    Environment_Left[i]=env.Env_left (mpo_U_list_up, mpo_U_list_down, mpo_list2, mpo_boundy_list, L_position, d, Environment_Left)
+########################################################################################
 
 mpo.intialize_coupling(L, hz_list, W,Randomness)
 
 print hz_list
-mpo.print_trH2(L, hz_list,J)
-
+trH2=mpo.print_trH2(L, hz_list,J)
 mpo.avarage_Energy_power_2(L, hz_list,J)
-
-
 
 ######### retrun MPO list, 1: one-site MPO, 2: two-site MPO; mpo_uni10_bl, mpo_uni10_br, mpo_uni10_bl2, mpo_uni10_br2###
 mpo_list1, mpo_list2, mpo_boundy_list=mpo.make_mpo_H( L, J, hz_list )
@@ -45,7 +63,7 @@ U_list=mpo.intialize_unitary_list( L/2, L_lay, d, U_delta)
 #U_list_Trans=mpo.unitary_list_transpose( U_list, L, L_lay)
 #print len(U_list)
 
-
+copy_U_list=optimize.copy_U_list_function(U_list,L,L_lay)
 
 #U1=copy.copy(U_list[4][2])
 #U1.setLabel([4,5,2,3])
@@ -149,44 +167,47 @@ for i in xrange(len(L_lay)):
 
 
 
+E_list=[]
+Count_list=[]
+Optimi_full_process(U_list,mpo_U_list_up, mpo_U_list_down, mpo_list2, mpo_boundy_list,Environment_Left,Environment_Right,perl_label_up, Environment_Uni,Env_Uni_inner, Bond_IN,d,L,L_lay,L_position,Method ,Max_SVD_iteratoin, Max_Steepest_iteratoin, E_list, Count_list )
 
 
-
-for j in xrange(Max_number_iteratoin):
- for i in xrange( L/2 ):
-  #making Env right
-  if i is 0:
-   for m in xrange((L/2)-1):
-    L_position1=(L/2)-1-m
-    #print L_position
-    Environment_Right[L_position1]=env.Env_right (mpo_U_list_up, mpo_U_list_down, mpo_list2, mpo_boundy_list, L_position1, d, Environment_Right)
-
-  print i
-  L_position=i
-  optimize.optimize_function(U_list,mpo_U_list_up, mpo_U_list_down, mpo_list2, mpo_boundy_list,Environment_Left,Environment_Right,perl_label_up, Environment_Uni,Env_Uni_inner, Bond_IN,d,L,L_lay,L_position,Method ,Max_SVD_iteratoin, Max_Steepest_iteratoin)
-  if i is not L/2 -1:
-   Environment_Left[i]=env.Env_left (mpo_U_list_up, mpo_U_list_down, mpo_list2, mpo_boundy_list, L_position, d, Environment_Left)
+E_f=mpo.Energy_through_env(U_list, L_lay, L, mpo_U_list_up, mpo_U_list_down, mpo_list2, mpo_boundy_list, L_position, d, Environment_Left)
+print  E_f
 
 
+U_list=copy_U_list
 mpo_U_list_up= mpo.make_mpo_U_list(U_list, L_lay, L, 'up')
 mpo_U_list_up= mpo.make_mpo_U_list(U_list, L_lay, L, 'up')
 mpo_U_list_down= mpo.make_mpo_U_list(U_list, L_lay, L, 'down')
 
-for i in xrange((L/2)-1):
- L_position=i
- Environment_Left[i]=env.Env_left (mpo_U_list_up, mpo_U_list_down, mpo_list2, mpo_boundy_list, L_position, d, Environment_Left)
- #print Environment_Left[i].printDiagram()
-#print time.time() - t0, "seconds wall time"
- 
-for i in xrange((L/2)-1):
- L_position=(L/2)-1-i
- #print L_position
- Environment_Right[L_position]=env.Env_right (mpo_U_list_up, mpo_U_list_down, mpo_list2, mpo_boundy_list, L_position, d, Environment_Right)
+E_f=mpo.Energy_through_env(U_list, L_lay, L, mpo_U_list_up, mpo_U_list_down, mpo_list2, mpo_boundy_list, L_position, d, Environment_Left)
+print  E_f
+print  E_list[0], 'must be equall'
 
-print (Environment_Right[1] * Environment_Left[0])[0] 
-print (Environment_Right[2] * Environment_Left[1])[0] 
+Method='SVD'
+E_list1=[]
+Count_list1=[]
+Optimi_full_process(U_list,mpo_U_list_up, mpo_U_list_down, mpo_list2, mpo_boundy_list,Environment_Left,Environment_Right,perl_label_up, Environment_Uni,Env_Uni_inner, Bond_IN,d,L,L_lay,L_position,Method ,Max_SVD_iteratoin, Max_Steepest_iteratoin, E_list1, Count_list1 )
 
-Avarage_E_power2=(Environment_Right[1] * Environment_Left[0])[0]
-variance_Energy=mpo.variance_Energy_function(L, hz_list,J,Avarage_E_power2)
+E_f=mpo.Energy_through_env(U_list, L_lay, L, mpo_U_list_up, mpo_U_list_down, mpo_list2, mpo_boundy_list, L_position, d, Environment_Left)
+print  E_f
+print  E_list[0], 'must be equall'
+
+variance_Energy=mpo.variance_Energy_function(L, hz_list,J,E_f)
 print variance_Energy
+
+variance_list=[]
+variance_list=[ (trH2-E_list[i])*(1.0/(2**L)) for i in xrange(len(E_list)) ]
+variance_list1=[]
+variance_list1=[ (trH2-E_list1[i])*(1.0/(2**L)) for i in xrange(len(E_list1)) ]
+
+plt.plot(Count_list,variance_list, 'ro',label='Steepest Descent')
+plt.plot( Count_list1,variance_list1,'bs',label='SVD' )
+plt.xlabel('Iterations', fontsize=20)
+plt.ylabel('$\sigma$', fontsize=20)
+plt.legend(loc='upper right')
+plt.savefig('Figs/Convergance.pdf')
+
+
 

@@ -6,6 +6,7 @@ import pyUni10 as uni10
 #import pylab
 import random 
 import copy
+import env
 
 
 ##################### Spin 1/2 Pauli Operators ###############################################
@@ -23,6 +24,7 @@ def matSz():
 #############################################################################3
 
 
+
 def intialize_coupling(L, hz_list, W,Randomness): 
  if Randomness is 'Fixed':
   random.seed(3)
@@ -34,6 +36,7 @@ def print_trH2(L, hz_list,J):
  hz_list_2=[x**2 for x in hz_list]
  trH2=(2.00**L)*( J**2 * 3.0/16.00 * (L-1) + 1.0/4.0 * sum(hz_list_2))
  variance_Energy=(2.00**L)*( J**2 /16.00 * (L-1) + 1.0/4.0 * sum(hz_list_2))
+ return trH2
  print trH2
 
 
@@ -49,6 +52,28 @@ def variance_Energy_function(L, hz_list,J,Avarage_E_power2):
  trH2=(2.00**L)*( J**2 * 3.0/16.00 * (L-1) + 1.0/4.0 * sum(hz_list_2))
  print 'variance_Energy=%d - %d' %(trH2, Avarage_E_power2)  
  return (trH2 - Avarage_E_power2)/(2.00**L)
+
+
+def Energy_through_env(U_list, L_lay, L, mpo_U_list_up, mpo_U_list_down, mpo_list2, mpo_boundy_list, L_position, d, Environment_Left):
+ mpo_U_list_up= make_mpo_U_list(U_list, L_lay, L, 'up')
+ mpo_U_list_up= make_mpo_U_list(U_list, L_lay, L, 'up')
+ mpo_U_list_down= make_mpo_U_list(U_list, L_lay, L, 'down')
+ Environment_Left=[None]*(L/2)
+ Environment_Right=[None]*(L/2)
+
+ for i in xrange((L/2)-1):
+  L_position=i
+  Environment_Left[i]=env.Env_left (mpo_U_list_up, mpo_U_list_down, mpo_list2, mpo_boundy_list, L_position, d, Environment_Left)
+
+ for i in xrange((L/2)-1):
+  L_position=(L/2)-1-i
+  #print L_position
+  Environment_Right[L_position]=env.Env_right (mpo_U_list_up, mpo_U_list_down, mpo_list2, mpo_boundy_list, L_position, d, Environment_Right)
+
+ return (Environment_Right[1] * Environment_Left[0])[0] 
+
+
+
 
 
 
