@@ -10,22 +10,24 @@ import time
 import mpo
 import env
 import optimize 
-
-
-L=20             # Numbers of particles
-L_lay=[0,1,2]   #Numbers of layers <= 4
-d=2             #pysical bond-dimension  
-chi=5           #bond-dimension of MPO
-W=8             #random interval, [-W,W]
-J=1.0           #coupling
-hz_list=[]
-U_delta=0.400  #if it's zero, U_list is intialize by Identity
-Method='SteepestDescent'    #There are three methods: Conjugate, SVD, SteepestDescent
+################################## Set parameter #######################################
+Model='Ising'               #could be: Ising and or Heisenberg
+L=4                             #Numbers of particles should be even
+L_lay=[0,1,2,3]                  #Numbers of layers <= 5
+d=2                              #pysical bond-dimension  
+chi=5                            #bond-dimension of MPO
+W=8                              #random interval, [-W,W]
+J=1.0                            #coupling
+J2=0.30                           #coupling
+Fieldz=0.60                            #Field in z direction
+hz_list=[]                        # list of randomness 
+U_delta=0.020                     #if it's zero, U_list is intialize by Identity
+Method='SteepestDescent'          #There are three methods: Conjugate, SVD, SteepestDescent
 Randomness='Fixed'
-Max_number_iteratoin_SVD=10   # maximum number of sweeps 
-Max_number_iteratoin_Steepest=3   # maximum number of sweeps 
-Max_SVD_iteratoin=20     #maximum number of SVD iteration
-Max_Steepest_iteratoin=20  # maximum number of SteepestDescent iteration
+Max_number_iteratoin_SVD=1        # maximum number of sweeps for SVD method 
+Max_number_iteratoin_Steepest=1   # maximum number of sweeps for SteepestDescent method
+Max_SVD_iteratoin=20               #maximum number of SVD iteration
+Max_Steepest_iteratoin=20          #maximum number of SteepestDescent iteration
 #######################################################################################3
 def Optimi_full_process(U_list,mpo_U_list_up, mpo_U_list_down, mpo_list2, mpo_boundy_list,Environment_Left,Environment_Right,perl_label_up, Environment_Uni,Env_Uni_inner, Bond_IN,d,L,L_lay,L_position,Method ,Max_SVD_iteratoin, Max_Steepest_iteratoin, E_list, Count_list):
  if Method is 'SVD':
@@ -48,32 +50,24 @@ def Optimi_full_process(U_list,mpo_U_list_up, mpo_U_list_down, mpo_list2, mpo_bo
     Environment_Left[i]=env.Env_left (mpo_U_list_up, mpo_U_list_down, mpo_list2, mpo_boundy_list, L_position, d, Environment_Left)
 ########################################################################################
 
-mpo.intialize_coupling(L, hz_list, W,Randomness)
+mpo.intialize_coupling(L, hz_list, W,Randomness, Model)
 
 print hz_list
 trH2=mpo.print_trH2(L, hz_list,J)
-mpo.avarage_Energy_power_2(L, hz_list,J)
+print trH2 
+#mpo.avarage_Energy_power_2(L, hz_list,J)
 
 ######### retrun MPO list, 1: one-site MPO, 2: two-site MPO; mpo_uni10_bl, mpo_uni10_br, mpo_uni10_bl2, mpo_uni10_br2###
-mpo_list1, mpo_list2, mpo_boundy_list=mpo.make_mpo_H( L, J, hz_list )
-#print len(mpo_list2)
-#mpo.contraction_MPO_trH2( mpo_list1, mpo_list2, mpo_boundy_list )
+mpo_list1, mpo_list2, mpo_boundy_list=mpo.make_mpo_H( L, J, hz_list, Fieldz, J2,Model )
+trH2=mpo.contraction_MPO_trH2( mpo_list2, mpo_boundy_list, L )
+print trH2
 
 U_list=mpo.intialize_unitary_list( L/2, L_lay, d, U_delta)
 #U_list_Trans=mpo.unitary_list_transpose( U_list, L, L_lay)
 #print len(U_list)
-
 copy_U_list=optimize.copy_U_list_function(U_list,L,L_lay)
 
-#U1=copy.copy(U_list[4][2])
-#U1.setLabel([4,5,2,3])
-#print U1.transpose()
-#print U_list[4][2]*U1.transpose()
 
-
-L_position=4
-############ make a mpo representation of unitary U at position L_position  ###############
-example_mpo_U=mpo.make_mpo_U(U_list, L_position, L_lay, L, 'up')
 
 ######### make a mpo representation of unitary U, up stand for U, down for U^{T} ######### 
 mpo_U_list_up= mpo.make_mpo_U_list(U_list, L_lay, L, 'up')
@@ -88,15 +82,7 @@ for i in xrange(3):
  perl_label_up[i], Bond_IN[i]= mpo.make_mpo_U_Label( L_position, L_lay, L, 'up')
 #print perl_label_up[0], perl_label_up[1], perl_label_up[2]
 
-L_lay_h=[0]
-for i in xrange(len(L_lay)):
- mpo_U_list_up= mpo.make_mpo_U_list(U_list, L_lay_h, L, 'up')
- mpo_U_list_down= mpo.make_mpo_U_list(U_list, L_lay_h, L, 'down')
- L_lay_h.append([i+1])
- #mpo_U_list_down[4].setLabel([0,4,2,1])
- #print mpo_U_list_down[0].printDiagram()
- #mpo_U_list_down[8].setLabel([3,1,0])
- #print mpo_U_list_up[8]*mpo_U_list_down[8]
+
 
 mpo_U_list_up= mpo.make_mpo_U_list(U_list, L_lay, L, 'up')
 mpo_U_list_down= mpo.make_mpo_U_list(U_list, L_lay, L, 'down')
@@ -124,6 +110,8 @@ for i in xrange((L/2)-1):
  #print (Environment_Right[1] * Environment_Left[0])[0] 
 #print time.time() - t0, "seconds wall time"
 #t0 = time.time()
+
+
 for i in xrange( (L/2) ):
  L_position=i
  Environment_Uni[L_position]=env.Environment_uni_function(mpo_U_list_up, mpo_U_list_down, mpo_list2, mpo_boundy_list, L_position, d, Environment_Left, Environment_Right)
@@ -145,24 +133,25 @@ for i in xrange(len(L_lay)):
  L_lay_selected=i
  env.Env_Uni_inner_function(U_list, Environment_Uni, perl_label_up, Bond_IN, L_lay,L_lay_selected, L_position, Env_Uni_inner )
 
- print (Env_Uni_inner[0][L_lay_selected]*U_list[0][L_lay_selected])[0]
+ print (Env_Uni_inner[0][L_lay_selected]*U_list[0][L_lay_selected])[0], 'Left'
+
 
 for i in xrange(0,len(L_lay),2):
  L_position=(L/2)-1
  L_lay_selected=i
  env.Env_Uni_inner_function(U_list, Environment_Uni, perl_label_up, Bond_IN, L_lay,L_lay_selected, L_position, Env_Uni_inner )
 
- print (Env_Uni_inner[L_position][L_lay_selected]*U_list[L_position][L_lay_selected])[0]
+ print (Env_Uni_inner[L_position][L_lay_selected]*U_list[L_position][L_lay_selected])[0], 'Right'
 
 
 
+if L > 4: 
+ for i in xrange(len(L_lay)):
+  L_position=1
+  L_lay_selected=i
+  env.Env_Uni_inner_function(U_list, Environment_Uni, perl_label_up, Bond_IN, L_lay,L_lay_selected, L_position, Env_Uni_inner )
 
-for i in xrange(len(L_lay)):
- L_position=3
- L_lay_selected=i
- env.Env_Uni_inner_function(U_list, Environment_Uni, perl_label_up, Bond_IN, L_lay,L_lay_selected, L_position, Env_Uni_inner )
-
- print (Env_Uni_inner[L_position][L_lay_selected]*U_list[L_position][L_lay_selected])[0]
+  print (Env_Uni_inner[L_position][L_lay_selected]*U_list[L_position][L_lay_selected])[0],'middle'
  
 
 
@@ -192,9 +181,8 @@ Optimi_full_process(U_list,mpo_U_list_up, mpo_U_list_down, mpo_list2, mpo_boundy
 
 E_f=mpo.Energy_through_env(U_list, L_lay, L, mpo_U_list_up, mpo_U_list_down, mpo_list2, mpo_boundy_list, L_position, d, Environment_Left)
 print  E_f
-print  E_list[0], 'must be equall'
 
-variance_Energy=mpo.variance_Energy_function(L, hz_list,J,E_f)
+variance_Energy=mpo.variance_Energy_function(trH2, E_f, L)
 print variance_Energy
 
 variance_list=[]

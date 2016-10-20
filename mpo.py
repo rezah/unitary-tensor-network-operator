@@ -25,12 +25,16 @@ def matSz():
 
 
 
-def intialize_coupling(L, hz_list, W,Randomness): 
+def intialize_coupling(L, hz_list, W,Randomness, Model): 
  if Randomness is 'Fixed':
   random.seed(3)
- for i in xrange(L):
-  hz_list.append(random.uniform(-W,W))
-
+ if Model is 'Heisenberg':
+  for i in xrange(L):
+   hz_list.append(random.uniform(-W,W))
+ elif Model is 'Ising':
+  for i in xrange(L):
+   rand_w=random.uniform(-W,W)
+   hz_list.append(1.00+rand_w)
 
 def print_trH2(L, hz_list,J): 
  hz_list_2=[x**2 for x in hz_list]
@@ -47,9 +51,7 @@ def avarage_Energy_power_2(L, hz_list,J):
  return variance_Energy
  
 
-def variance_Energy_function(L, hz_list,J,Avarage_E_power2): 
- hz_list_2=[x**2 for x in hz_list]
- trH2=(2.00**L)*( J**2 * 3.0/16.00 * (L-1) + 1.0/4.0 * sum(hz_list_2))
+def variance_Energy_function(trH2, Avarage_E_power2, L): 
  print 'variance_Energy=%d - %d' %(trH2, Avarage_E_power2)  
  return (trH2 - Avarage_E_power2)/(2.00**L)
 
@@ -77,15 +79,19 @@ def Energy_through_env(U_list, L_lay, L, mpo_U_list_up, mpo_U_list_down, mpo_lis
 
 
 
-def make_mpo_H(L, J, hz_list ):
- d=2
- chi=5
+def make_mpo_H(L, J, hz_list, Fieldz, J2,Model ):
  s0=matS0()
  sx=matSx()
  sy=matSy()
  sz=matSz()
-
-
+ if Model is 'Ising': 
+  chi=3
+  d=4
+  sx=2.00*sx;sz=2.00*sz;
+ elif Model is 'Heisenberg':
+  d=2
+  chi=5  
+ #print d, chi
 ###############  Define Boundry of MPO   ################################3
  mpo_matrix_bl=uni10.Matrix(1,chi)
  mpo_matrix_br=uni10.Matrix(chi,1)
@@ -98,7 +104,7 @@ def make_mpo_H(L, J, hz_list ):
  for i in xrange(1):
    for j in xrange(chi):
     mpo_matrix_bl[i*chi+j]=0
-    if(j==4 and i==0):
+    if(j==(chi-1) and i==0):
      mpo_matrix_bl[i*chi+j]=1
 
 
@@ -135,153 +141,119 @@ def make_mpo_H(L, J, hz_list ):
  mpo_uni10_list_boundry.append(mpo_uni10_bl_2)
  mpo_uni10_list_boundry.append(mpo_uni10_br_2)
 
-#################### Define MPO ########################
- mpo_matrix=uni10.Matrix(chi*d,chi*d)
+#################### Define MPO: Heisenberg ########################
+ if Model is 'Heisenberg':
+  mpo_matrix=uni10.Matrix(chi*d,chi*d)
 
 
- bdi_spin = uni10.Bond(uni10.BD_IN, d);
- bdo_spin = uni10.Bond(uni10.BD_OUT, d);
+  bdi_spin = uni10.Bond(uni10.BD_IN, d);
+  bdo_spin = uni10.Bond(uni10.BD_OUT, d);
 
- mpo_uni10_1_list=[]
- mpo_uni10_4_list=[]
- 
- for num in xrange(L):
-  mpo_matrix.set_zero()
-  for mu in xrange(chi):
-   for mup in xrange(chi):
-    for s in xrange(d):
-     for sp in xrange(d):
-        if(mu==0 and mup==0  ):
-           mpo_matrix[mu*d*d*chi+s*d*chi+mup*d+sp]=s0[s*d+sp]
-        if(mu==1 and mup==0  ):
-           mpo_matrix[mu*d*d*chi+s*d*chi+mup*d+sp]=sx[s*d+sp]
-        if(mu==2 and mup==0  ):
-           mpo_matrix[mu*d*d*chi+s*d*chi+mup*d+sp]=sy[s*d+sp]
-        if(mu==3 and mup==0  ):
-           mpo_matrix[mu*d*d*chi+s*d*chi+mup*d+sp]=sz[s*d+sp]
-        if(mu==4 and mup==0  ):
-           mpo_matrix[mu*d*d*chi+s*d*chi+mup*d+sp]=float(hz_list[num])*sz[s*d+sp]
-        if(mu==4 and mup==1  ):
-           mpo_matrix[mu*d*d*chi+s*d*chi+mup*d+sp]=float(J)*sx[s*d+sp]
-        if(mu==4 and mup==2  ):
-           mpo_matrix[mu*d*d*chi+s*d*chi+mup*d+sp]=-float(J)*sy[s*d+sp]
-        if(mu==4 and mup==3  ):
-           mpo_matrix[mu*d*d*chi+s*d*chi+mup*d+sp]=float(J)*sz[s*d+sp]
-        if(mu==4 and mup==4  ):
-           mpo_matrix[mu*d*d*chi+s*d*chi+mup*d+sp]=s0[s*d+sp]
-
- 
-  mpo_uni10=uni10.UniTensor([bdi_mpo, bdi_spin, bdo_mpo,bdo_spin], "mpo_uni10_1")
+  mpo_uni10_1_list=[]
+  mpo_uni10_4_list=[]
   
-  mpo_uni10.putBlock(mpo_matrix)
-  mpo_uni10_1_list.append(mpo_uni10)
+  for num in xrange(L):
+   mpo_matrix.set_zero()
+   for mu in xrange(chi):
+    for mup in xrange(chi):
+     for s in xrange(d):
+      for sp in xrange(d):
+         if mu==0 and mup==0  :
+            mpo_matrix[mu*d*d*chi+s*d*chi+mup*d+sp]=s0[s*d+sp]
+         if mu==1 and mup==0  :
+            mpo_matrix[mu*d*d*chi+s*d*chi+mup*d+sp]=sx[s*d+sp]
+         if mu==2 and mup==0  :
+            mpo_matrix[mu*d*d*chi+s*d*chi+mup*d+sp]=sy[s*d+sp]
+         if(mu==3 and mup==0  ):
+            mpo_matrix[mu*d*d*chi+s*d*chi+mup*d+sp]=sz[s*d+sp]
+         if(mu==4 and mup==0  ):
+            mpo_matrix[mu*d*d*chi+s*d*chi+mup*d+sp]=float(hz_list[num])*sz[s*d+sp]
+         if(mu==4 and mup==1  ):
+            mpo_matrix[mu*d*d*chi+s*d*chi+mup*d+sp]=float(J)*sx[s*d+sp]
+         if(mu==4 and mup==2  ):
+            mpo_matrix[mu*d*d*chi+s*d*chi+mup*d+sp]=-float(J)*sy[s*d+sp]
+         if(mu==4 and mup==3  ):
+            mpo_matrix[mu*d*d*chi+s*d*chi+mup*d+sp]=float(J)*sz[s*d+sp]
+         if(mu==4 and mup==4  ):
+            mpo_matrix[mu*d*d*chi+s*d*chi+mup*d+sp]=s0[s*d+sp]
+
   
- mpo_uni10_1_list_prime=[copy.copy(mpo_uni10_1_list[i]) for i in xrange(len(mpo_uni10_1_list)) ]
-
- for i in xrange(0,L,2):
-   mpo_uni10_1_list_prime[i+1].setLabel([2,4,5,6])
-   mpo_uni10_cotraction=uni10.contract(mpo_uni10_1_list_prime[i],mpo_uni10_1_list_prime[i+1] )
-   mpo_uni10_cotraction.permute([0,1,4,5,3,6],3)
-   mpo_uni10_cotraction.combineBond([1,4])
-   mpo_uni10_cotraction.combineBond([3,6])
-   mpo_uni10_cotraction.setLabel([0,1,2,3])
-   mpo_uni10_cotraction.setName('mpo_uni10_4')
-   mpo_uni10_4_list.append(mpo_uni10_cotraction)
+   mpo_uni10=uni10.UniTensor([bdi_mpo, bdi_spin, bdo_mpo,bdo_spin], "mpo_uni10_1")
    
+   mpo_uni10.putBlock(mpo_matrix)
+   mpo_uni10_1_list.append(mpo_uni10)
    
- ##printmpo_uni10_1_list[1].printDiagram()
- 
- return mpo_uni10_1_list, mpo_uni10_4_list, mpo_uni10_list_boundry
+  mpo_uni10_1_list_prime=[copy.copy(mpo_uni10_1_list[i]) for i in xrange(len(mpo_uni10_1_list)) ]
+
+  
+  for i in xrange(0,L,2):
+     mpo_uni10_1_list_prime[i+1].setLabel([2,4,5,6])
+     mpo_uni10_cotraction=uni10.contract(mpo_uni10_1_list_prime[i],mpo_uni10_1_list_prime[i+1] )
+     mpo_uni10_cotraction.permute([0,1,4,5,3,6],3)
+     mpo_uni10_cotraction.combineBond([1,4])
+     mpo_uni10_cotraction.combineBond([3,6])
+     mpo_uni10_cotraction.setLabel([0,1,2,3])
+     mpo_uni10_cotraction.setName('mpo_uni10_4')
+     mpo_uni10_4_list.append(mpo_uni10_cotraction)
+  ##printmpo_uni10_1_list[1].printDiagram()
+  return mpo_uni10_1_list, mpo_uni10_4_list, mpo_uni10_list_boundry
+ elif Model is 'Ising':
+  mpo_matrix=uni10.Matrix(chi*d,chi*d)
+  bdi_spin = uni10.Bond(uni10.BD_IN, d);
+  bdo_spin = uni10.Bond(uni10.BD_OUT, d);
+
+  mpo_uni10_1_list=[]
+  mpo_uni10_4_list=[]
+  #print (-float(hz_list[0])*uni10.otimes(sz,sz)+float(Fieldz)*uni10.otimes(sx,s0)+float(Fieldz)*uni10.otimes(s0,sx))
+  #print (float(J2)*uni10.otimes(sz,s0)+float(hz_list[1])*uni10.otimes(s0,sz))
+  for num in xrange(0,L,2):
+   mpo_matrix.set_zero()
+   for mu in xrange(chi):
+    for mup in xrange(chi):
+     for s in xrange(d):
+      for sp in xrange(d):
+       if mu==0 and mup==0:
+          mpo_matrix[mu*d*d*chi+s*d*chi+mup*d+sp]=(uni10.otimes(s0,s0))[s*d+sp]
+       if mu==1 and mup==0:
+          mpo_matrix[mu*d*d*chi+s*d*chi+mup*d+sp]=(uni10.otimes(sz,s0))[s*d+sp]
+       if mu==2 and mup==0:
+          mpo_matrix[mu*d*d*chi+s*d*chi+mup*d+sp]=(-float(hz_list[num])*uni10.otimes(sz,sz)+float(Fieldz)*uni10.otimes(sx,s0)+float(Fieldz)*uni10.otimes(s0,sx))[s*d+sp]
+       if mu==2 and mup==1:
+        mpo_matrix[mu*d*d*chi+s*d*chi+mup*d+sp]=(float(J2)*uni10.otimes(sz,s0)+float(hz_list[num+1])*uni10.otimes(s0,sz))[s*d+sp]
+       if mu==2 and mup==2:
+          mpo_matrix[mu*d*d*chi+s*d*chi+mup*d+sp]=(uni10.otimes(s0,s0))[s*d+sp]
+
+   mpo_uni10=uni10.UniTensor([bdi_mpo, bdi_spin, bdo_mpo,bdo_spin])
+   mpo_uni10.putBlock(mpo_matrix)
+   mpo_uni10_4_list.append(mpo_uni10)
+  #print mpo_uni10_4_list[0]
+  return None, mpo_uni10_4_list, mpo_uni10_list_boundry
+  
 
 
 
-def contraction_MPO_trH2(mpo_uni10_1_list, mpo_uni10_4_list,  mpo_boundy_list):
- mpo_uni10_2_list=[]
- mpo_uni10_3_list=[]
- mpo_uni10_5_list=[]
- mpo_uni10_6_list=[]
- mpo_uni10_1_listN=[copy.copy(mpo_uni10_1_list[i])  for i in xrange(len(mpo_uni10_1_list)) ] 
+def contraction_MPO_trH2( mpo_uni10_4_list,  mpo_boundy_list,L):
+
  mpo_uni10_4_listN=[copy.copy(mpo_uni10_4_list[i]) for i in xrange(len(mpo_uni10_4_list)) ]
- L=len(mpo_uni10_1_listN)
- for num in xrange(L):
-  mpo_uni10_prime=copy.copy(mpo_uni10_1_listN[num])
-  mpo_uni10_prime.setLabel([4,5,6,1])
-  mpo_uni10_2=uni10.contract(mpo_uni10_1_listN[num],mpo_uni10_prime)
-
-  mpo_uni10_2.permute([0,4,5,2,6,3],3)
-  mpo_uni10_2.combineBond([0,4])
-  mpo_uni10_2.combineBond([2,6])
-  mpo_uni10_2.setLabel([0,1,2,3])
-
-  mpo_uni10_2.setName('mpo_uni10_2')
-  mpo_uni10_2_list.append(mpo_uni10_2)
-  
-  mpo_uni10_2_prime=copy.copy(mpo_uni10_2)
-  mpo_uni10_2_prime.partialTrace(1,3)
-  mpo_uni10_2_prime.permute([0,2],1)
-  mpo_uni10_2_prime.setLabel([0,1])
-  mpo_uni10_2_prime.setName("mpo_uni10_3")
-  mpo_uni10_3_list.append(mpo_uni10_2_prime)
-
- ##printmpo_uni10_list[0], mpo_uni10_list[1]
- ##printmpo_uni10_2_list[0], mpo_uni10_2_list[1]
- ##printmpo_uni10_3_list[0], mpo_uni10_3_list[1]
-
- mpo_uni10_3_list_prime=[copy.copy(mpo_uni10_3_list[i])  for i in xrange(len(mpo_uni10_3_list)) ]
-
- for i in xrange(L-1):
-   if(i==0):
-    mpo_uni10_3_list_prime[i].setLabel([0,1])
-    mpo_uni10_3_list_prime[i+1].setLabel([1,2])
-    mpo_uni10_ctraction=uni10.contract(mpo_uni10_3_list_prime[i], mpo_uni10_3_list_prime[i+1])
-    mpo_uni10_ctraction.permute([0,2],1)
-    mpo_uni10_ctraction.setLabel([0,1])
-    mpo_uni10_ctraction.setName('mpo_uni10_ctraction')
-    mpo_uni10_3_list_prime[0]=mpo_uni10_ctraction
-   else:
-    mpo_uni10_3_list_prime[i+1].setLabel([1,2])
-    mpo_uni10_ctraction=uni10.contract(mpo_uni10_3_list_prime[0], mpo_uni10_3_list_prime[i+1])
-    mpo_uni10_ctraction.permute([0,2],1)
-    mpo_uni10_ctraction.setLabel([0,1])
-    mpo_uni10_ctraction.setName('mpo_uni10_ctraction')
-    mpo_uni10_3_list_prime[0]=mpo_uni10_ctraction
-
-    
-
- #############  Testing calcualtion of trace H^{2} ###########################
- mpo_uni10_br_2=copy.copy(mpo_boundy_list[3])
- mpo_uni10_br_2.setLabel([1])
- trH2=mpo_boundy_list[2]*mpo_uni10_3_list_prime[0]*mpo_uni10_br_2
- #printtrH2[0]
- ###########################################################################
-
-
-
- mpo_uni10_1_list_prime=mpo_uni10_1_list[:]
+ mpo_uni10_6_list=[]
 
  for i in xrange(0,L,2):
   
   mpo_uni10_cotraction_prime=copy.copy(mpo_uni10_4_listN[i/2])
   mpo_uni10_cotraction_prime.setLabel([4,5,6,1])
-
   mpo_uni10_contraction2=uni10.contract(mpo_uni10_4_listN[i/2], mpo_uni10_cotraction_prime)
-  
   mpo_uni10_contraction2.permute([0,4,5,2,6,3],3)
   mpo_uni10_contraction2.combineBond([0,4])
   mpo_uni10_contraction2.combineBond([2,6])
   mpo_uni10_contraction2.setLabel([0,1,2,3])
 
-  mpo_uni10_contraction2.setName('mpo_uni10_5')
-  mpo_uni10_5_list.append(mpo_uni10_contraction2)
-    
+  
   mpo_uni10_cotraction3=copy.copy(mpo_uni10_contraction2)
   mpo_uni10_cotraction3.partialTrace(1,3)
   mpo_uni10_cotraction3.permute([0,2],1)
   mpo_uni10_cotraction3.setLabel([0,1])
   mpo_uni10_cotraction3.setName('mpo_uni10_6')
   mpo_uni10_6_list.append(mpo_uni10_cotraction3)
-  ##printmpo_uni10_5_list[0], mpo_uni10_6_list[0] 
-  
 
 
 
@@ -310,6 +282,7 @@ def contraction_MPO_trH2(mpo_uni10_1_list, mpo_uni10_4_list,  mpo_boundy_list):
  mpo_uni10_br_2=copy.copy(mpo_boundy_list[3])
  mpo_uni10_br_2.setLabel([1])
  trH2=mpo_boundy_list[2]*mpo_uni10_6_list_prime[0]*mpo_uni10_br_2
+ return trH2[0]
  print trH2[0]
  ###############################################################################
 
