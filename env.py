@@ -24,6 +24,56 @@ def Iden_uni10(d):
      
 
 
+
+def Reduction_lastbond(U_up_1, n, Letter):
+ Mat=U_up_1.getBlock()
+ dim0=U_up_1.bond(0).dim()
+ dim1=U_up_1.bond(1).dim()
+ dim2=U_up_1.bond(2).dim()
+ dim3=U_up_1.bond(3).dim()
+ if Letter is 'up':
+  Mat1=uni10.Matrix(dim0*dim1, dim2)
+  Mat1.set_zero()
+  for i in xrange(dim0):
+   for j in xrange(dim1):
+    for m in xrange(dim2):
+     Mat1[i*dim1*dim2+j*dim2+m]=U_up_1[i*dim1*dim2*dim3+j*dim2*dim3+m*dim3+n]
+  bond_list=list(U_up_1.bond())
+  #print list(bond_list)
+  bond_list=list(bond_list)
+  bond_list.pop()
+  #print bond_list
+  Uni_tensor=uni10.UniTensor(bond_list,U_up_1.getName())
+  Uni_tensor.putBlock(Mat1)
+  #print Uni_tensor.printDiagram(), n
+  return Uni_tensor
+ elif Letter is 'down':
+  Mat1=uni10.Matrix(dim0, dim2*dim3)
+  Mat1.set_zero()
+  for i in xrange(dim0):
+   for j in xrange(dim3):
+    for m in xrange(dim2):
+     Mat1[i*dim3*dim2+m*dim3+j]=U_up_1[i*dim1*dim2*dim3+n*dim2*dim3+m*dim3+j]
+  bond_list=list(U_up_1.bond())
+  #print list(bond_list)
+  bond_list=list(bond_list)
+  A=bond_list.pop()
+  B=bond_list.pop()
+  C=bond_list.pop()
+  bond_list.append(B)
+  bond_list.append(A)
+  #print bond_list
+  Uni_tensor=uni10.UniTensor(bond_list,U_up_1.getName())
+  Uni_tensor.putBlock(Mat1)
+  #print Uni_tensor.printDiagram(), n
+  return Uni_tensor
+ 
+ 
+ 
+ 
+ 
+  
+  
 def Env_left ( mpo_U_list_up, mpo_U_list_down, mpo_list2, mpo_boundy_list, L_position, d, Environment_Left   ):
  if L_position is 0:
   U_up_1=copy.copy(mpo_U_list_up[L_position])
@@ -88,21 +138,35 @@ def Env_left ( mpo_U_list_up, mpo_U_list_down, mpo_list2, mpo_boundy_list, L_pos
   ############## Contraction using Network ###############
   EnvLeft_net = uni10.Network("EnvLeft.net")
   EnvLeft_net.putTensor('Env_left_copy',Env_left_copy)
-  EnvLeft_net.putTensor('U_up_1',U_up_1)
-  EnvLeft_net.putTensor('U_up_2',U_up_2)
-  EnvLeft_net.putTensor('U_down_1',U_down_1)
-  EnvLeft_net.putTensor('U_down_2',U_down_2)
   EnvLeft_net.putTensor('mpo_up',mpo_up)
   EnvLeft_net.putTensor('mpo_down',mpo_down)
-  EnvLeft_net.putTensor('Iden_up',Iden_up)
-  EnvLeft_net.putTensor('Iden_down',Iden_down)
-  Result_uni10=EnvLeft_net.launch()
-  Result_uni10.setLabel([0,1,2,3,4,5])
-  #print Result_uni10.printDiagram()
+
+  dim0=U_up_1.bond(3).dim()
+  for i in xrange(dim0):
+   U_up_11=Reduction_lastbond(U_up_1, i, 'up')
+   U_down_11=Reduction_lastbond(U_down_1, i, 'down')
+   U_up_22=Reduction_lastbond(U_up_2, i, 'up')
+   U_down_22=Reduction_lastbond(U_down_2, i, 'down')
+   EnvLeft_net.putTensor('U_up_11',U_up_11)
+   EnvLeft_net.putTensor('U_up_22',U_up_22)
+   EnvLeft_net.putTensor('U_down_11',U_down_11)
+   EnvLeft_net.putTensor('U_down_22',U_down_22)
+   if i is 0:
+    Result_uni10=EnvLeft_net.launch()
+    Result_uni10.setLabel([0,1,2,3,4,5])
+    Result_final=copy.copy(Result_uni10)
+    #print EnvLeft_net
+   elif i is not 0:
+    Result_uni10=EnvLeft_net.launch()
+    Result_uni10.setLabel([0,1,2,3,4,5])
+    Result_final=Result_final+Result_uni10
+   
+   
+   #print Result_uni10.printDiagram()
   #print EnvLeft_net.profile()
   #print EnvLeft_net
   #print Result_uni10[5]
-  return Result_uni10
+  return Result_final
   
 def Env_right ( mpo_U_list_up, mpo_U_list_down, mpo_list2, mpo_boundy_list, L_position, d, Environment_Right   ):
  
@@ -148,26 +212,46 @@ def Env_right ( mpo_U_list_up, mpo_U_list_down, mpo_list2, mpo_boundy_list, L_po
   Iden_up=Iden_uni10(U_up_1.bond(3).dim())
   Iden_down=Iden_uni10(U_up_1.bond(3).dim())
   ############## Contraction using Network ###############
+  dim0=U_up_1.bond(3).dim()
   EnvRight_net = uni10.Network("EnvRight.net")
   EnvRight_net.putTensor('Env_right_copy', Env_right_copy)
-  EnvRight_net.putTensor('U_up_1',U_up_1)
-  EnvRight_net.putTensor('U_up_2',U_up_2)
-  EnvRight_net.putTensor('U_down_1',U_down_1)
-  EnvRight_net.putTensor('U_down_2',U_down_2)
   EnvRight_net.putTensor('mpo_up',mpo_up)
   EnvRight_net.putTensor('mpo_down',mpo_down)
-  EnvRight_net.putTensor('Iden_up',Iden_up)
-  EnvRight_net.putTensor('Iden_down',Iden_down)
-  Result_uni10=EnvRight_net.launch()
-  Result_uni10.setLabel([0,1,2,3,4,5])
-  #print Result_uni10.printDiagram()
-  #print EnvRight_net.profile()
-  #print EnvRight_net
-  #print Result_uni10[5]
-  return Result_uni10
+
+  for i in xrange(dim0):
+   U_up_11=Reduction_lastbond(U_up_1, i, 'up')
+   U_down_11=Reduction_lastbond(U_down_1, i, 'down')
+   U_up_22=Reduction_lastbond(U_up_2, i, 'up')
+   U_down_22=Reduction_lastbond(U_down_2, i, 'down')
+   EnvRight_net.putTensor('U_up_11',U_up_11)
+   EnvRight_net.putTensor('U_up_22',U_up_22)
+   EnvRight_net.putTensor('U_down_11',U_down_11)
+   EnvRight_net.putTensor('U_down_22',U_down_22)
+   if i is 0:
+    Result_uni10=EnvRight_net.launch()
+    Result_uni10.setLabel([0,1,2,3,4,5])
+    Result_final=copy.copy(Result_uni10)
+   elif i is not 0:
+    Result_uni10=EnvRight_net.launch()
+    Result_uni10.setLabel([0,1,2,3,4,5])
+    Result_final=Result_final+Result_uni10
+
+  return Result_final
   
   
-  
+def put_uni10(U_up_2,Result_final, Result_uni10, n):
+  dim0=U_up_2.bond(0).dim()
+  dim1=U_up_2.bond(1).dim()
+  dim2=U_up_2.bond(2).dim()
+  dim3=U_up_2.bond(3).dim()
+  matH=Result_uni10.getBlock()
+  for i in xrange(dim0):
+   for j in xrange(dim1):
+    for m in xrange(dim2):
+     Result_final[i*dim1*dim2*dim3+j*dim2*dim3+m*dim3+n]=matH[i*dim1*dim2+j*dim2+m]
+
+
+ 
   
 def Environment_uni_function(mpo_U_list_up, mpo_U_list_down, mpo_list2, mpo_boundy_list, L_position, d, Environment_Left, Environment_Right):
  if L_position is 0:
@@ -239,19 +323,38 @@ def Environment_uni_function(mpo_U_list_up, mpo_U_list_down, mpo_list2, mpo_boun
   Iden_up=Iden_uni10(U_up_2.bond(3).dim())
   Iden_down=Iden_uni10(U_up_2.bond(3).dim())
   ############## Contraction using Network ###############
+  
+  
+  dim0=U_up_2.bond(0).dim()
+  dim1=U_up_2.bond(1).dim()
+  dim2=U_up_2.bond(2).dim()
+  dim3=U_up_2.bond(3).dim()
+  Result_final=uni10.Matrix(dim0*dim1,dim2*dim3)
+  Result_final.set_zero()
   EnvUni_net = uni10.Network("EnvUni.net")
   EnvUni_net.putTensor('Env_Left_copy',Env_Left_copy)
   EnvUni_net.putTensor('Env_Right_copy',Env_Right_copy)
-  EnvUni_net.putTensor('U_up_2',U_up_2)
-  EnvUni_net.putTensor('U_down_1',U_down_1)
-  EnvUni_net.putTensor('U_down_2',U_down_2)
   EnvUni_net.putTensor('mpo_up',mpo_up)
   EnvUni_net.putTensor('mpo_down',mpo_down)
-  EnvUni_net.putTensor('Iden_up',Iden_up)
-  EnvUni_net.putTensor('Iden_down',Iden_down)
-  Result_uni10=EnvUni_net.launch()
-  Result_uni10.setLabel([0,1,2,3])
-  return Result_uni10
+
+  for i in xrange(dim3):
+   U_down_11=Reduction_lastbond(U_down_1, i, 'down')
+   U_up_22=Reduction_lastbond(U_up_2, i, 'up')
+   U_down_22=Reduction_lastbond(U_down_2, i, 'down')
+   EnvUni_net.putTensor('U_up_22',U_up_22)
+   EnvUni_net.putTensor('U_down_11',U_down_11)
+   EnvUni_net.putTensor('U_down_22',U_down_22)
+   Result_uni10=EnvUni_net.launch()
+   put_uni10(U_up_2,Result_final, Result_uni10, i)
+   
+  Result_final_uni=uni10.UniTensor(U_up_2.bond())
+  Result_final_uni.putBlock(Result_final)
+  Result_final_uni.setLabel([0,1,2,3])
+  
+  
+  
+  
+  return Result_final_uni
 
  
  

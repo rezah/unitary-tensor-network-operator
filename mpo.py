@@ -27,7 +27,7 @@ def matSz():
 
 def intialize_coupling(L, hz_list, W,Randomness, Model): 
  if Randomness is 'Fixed':
-  random.seed(3)
+  random.seed(5)
  if Model is 'Heisenberg':
   for i in xrange(L):
    hz_list.append(random.uniform(-W,W))
@@ -303,9 +303,9 @@ def intialize_unitary_list( L, L_lay,d, delta):
    else:
     matrix_random[i*d*d+j]=0.0
  #matrix_random.setIdentity()
- for i in xrange(L):
+ for i in xrange(L/2):
   U_list.append([]) 
- for i in xrange(L):
+ for i in xrange(L/2):
   for j in xrange(len(L_lay)):
     U_uni10=uni10.UniTensor([bdi_spin, bdi_spin, bdo_spin,bdo_spin], "Unitary_uni10")
     matrix_random1=copy.copy(matrix_random)
