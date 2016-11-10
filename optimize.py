@@ -34,7 +34,7 @@ def Mat_uni_to_np(Mat_uni):
  return  Mat_np
 
 ##################  Line-Poly ##############################################
-def Line_search_pol(H_direct, U_update,count,U_list, mpo_U_list_up, mpo_U_list_down, mpo_list2, mpo_boundy_list, L_position, d, Environment_Left, L_lay,L, Environment_Right,L_lay_selected,Env_Uni_inner,Environment_Uni, perl_label_up, Bond_IN):
+def Line_search_pol(H_direct, U_update,count,U_list, mpo_U_list_up, mpo_U_list_down, mpo_list2, mpo_boundy_list, L_position, d, Environment_Left, L_lay,L, Environment_Right,L_lay_selected,Env_Uni_inner,Environment_Uni, perl_label_up, Bond_IN,Tech):
  #print H_direct
  
 
@@ -81,7 +81,7 @@ def Line_search_pol(H_direct, U_update,count,U_list, mpo_U_list_up, mpo_U_list_d
   Mat_np1=np.dot(R_mu_poly,Wk) 
   Temporary=Mat_np_to_Uni(Mat_np1)
   U_list[L_position][L_lay_selected].putBlock(Temporary)
-  E2=Energy_newunitary(U_list, mpo_U_list_up, mpo_U_list_down, mpo_list2, mpo_boundy_list, L_position, d, Environment_Left, L_lay,L, Environment_Right,L_lay_selected,Env_Uni_inner,Environment_Uni, perl_label_up, Bond_IN)
+  E2=Energy_newunitary(U_list, mpo_U_list_up, mpo_U_list_down, mpo_list2, mpo_boundy_list, L_position, d, Environment_Left, L_lay,L, Environment_Right,L_lay_selected,Env_Uni_inner,Environment_Uni, perl_label_up, Bond_IN,Tech)
   Temporary=4.00*Env_Uni_inner[L_position][L_lay_selected].getBlock()
   Dk=Mat_uni_to_np(Temporary)
   d1_poly[n_poly,0]=2.00*np.real(np.trace(np.dot(Dk,np.dot(np.dot(np.transpose(Wk),np.transpose(R_mu_poly)),np.transpose(Hk)))))
@@ -124,7 +124,7 @@ def Line_search_pol(H_direct, U_update,count,U_list, mpo_U_list_up, mpo_U_list_d
  return Real_positive , count
 
 
-#################################Line Search############################################################
+#################################   Line Search    #################################
 def Line_search(Z_decent, Gamma, E1, U_update,count, Norm_Z,U_list, mpo_U_list_up, mpo_U_list_down, mpo_list2, mpo_boundy_list, L_position, d, Environment_Left, L_lay,L, Environment_Right,L_lay_selected,Env_Uni_inner,Environment_Uni, perl_label_up, Bond_IN):
  Break_loop=1
  Temporary=exp_matrix(Z_decent,-Gamma,U_update)
@@ -173,25 +173,25 @@ def exp_matrix(H_direct,Gamma, U_update):
    M_return1[i*dim1+j]=M0[i,j]
  M_return1=M_return1*U_update
  return M_return1 
-####################################      Energy           #####################################################
-def Energy_newunitary(U_list, mpo_U_list_up, mpo_U_list_down, mpo_list2, mpo_boundy_list, L_position, d, Environment_Left, L_lay,L, Environment_Right,L_lay_selected,Env_Uni_inner,Environment_Uni, perl_label_up, Bond_IN):
+####################################      Energy           #####################################
+def Energy_newunitary(U_list, mpo_U_list_up, mpo_U_list_down, mpo_list2, mpo_boundy_list, L_position, d, Environment_Left, L_lay,L, Environment_Right,L_lay_selected,Env_Uni_inner,Environment_Uni, perl_label_up, Bond_IN,Tech):
  
- Update_Unitary_change(U_list, mpo_U_list_up, mpo_U_list_down, mpo_list2, mpo_boundy_list, L_position, d, Environment_Left, L_lay,L)
+ Update_Unitary_change(U_list, mpo_U_list_up, mpo_U_list_down, mpo_list2, mpo_boundy_list, L_position, d, Environment_Left, L_lay,L,Tech)
  
  Environment_Uni[L_position]=env.Environment_uni_function(mpo_U_list_up, mpo_U_list_down, mpo_list2, mpo_boundy_list, L_position, d, Environment_Left, Environment_Right)
  
- env.Env_Uni_inner_function(U_list, Environment_Uni, perl_label_up, Bond_IN, L_lay,L_lay_selected, L_position, Env_Uni_inner )
+ env.Env_Uni_inner_function(U_list, Environment_Uni, perl_label_up, Bond_IN, L_lay,L_lay_selected, L_position, Env_Uni_inner,Tech )
  E=(Env_Uni_inner[L_position][L_lay_selected]*U_list[L_position][L_lay_selected])[0]
  return E
 
-#####################################     Update mpo_U_up/down & Environment_Left    ################################
-def Update_Unitary_change(U_list, mpo_U_list_up, mpo_U_list_down, mpo_list2, mpo_boundy_list, L_position, d, Environment_Left, L_lay,L):
- mpo_U_up=mpo.make_mpo_U(U_list, L_position, L_lay, L, 'up')
- mpo_U_down=mpo.make_mpo_U(U_list, L_position, L_lay, L, 'down')
+####################     Update mpo_U_up/down & Environment_Left    ################################
+def Update_Unitary_change(U_list, mpo_U_list_up, mpo_U_list_down, mpo_list2, mpo_boundy_list, L_position, d, Environment_Left, L_lay,L,Tech):
+ mpo_U_up=mpo.make_mpo_U(U_list, L_position, L_lay, L, 'up', Tech)
+ mpo_U_down=mpo.make_mpo_U(U_list, L_position, L_lay, L, 'down', Tech)
  mpo_U_list_up[L_position]=mpo_U_up
  mpo_U_list_down[L_position]=mpo_U_down
 # Environment_Left[L_position]=env.Env_left (mpo_U_list_up, mpo_U_list_down, mpo_list2, mpo_boundy_list, L_position, d, Environment_Left)
-################################   Copy U_list       ############################################################
+################################   Copy U_list       ##########################################
 def copy_U_list_function(U_list,L,L_lay):
  U_list_copy=[]
  for i in xrange(L/2):
@@ -205,33 +205,58 @@ def copy_U_list_function(U_list,L,L_lay):
  return U_list_copy
 #############################################################################################
 
-###################################Optimze  ###########################################################
-def optimize_function(U_list,mpo_U_list_up, mpo_U_list_down, mpo_list2, mpo_boundy_list,Environment_Left,Environment_Right,perl_label_up, Environment_Uni,Env_Uni_inner, Bond_IN,d,L,L_lay,L_position,Method ,Max_SVD_iteratoin, Max_Steepest_iteratoin,Max_CG_iteratoin, E_list, Count_list,Gamma):
+###################################Optimze  ###############################################
+def optimize_function(U_list,mpo_U_list_up, mpo_U_list_down, mpo_list2, mpo_boundy_list,Environment_Left,Environment_Right,perl_label_up, Environment_Uni,Env_Uni_inner, Bond_IN,d,L,L_lay,L_position,Method ,Max_SVD_iteratoin, Max_Steepest_iteratoin,Max_CG_iteratoin, E_list, Count_list,Gamma,Tech):
  
  #U_list_copy=copy_U_list_function(U_list,L,L_lay)
  
 # for i in xrange(len(L_lay)):
 #  L_lay_selected=i
 #  optimize_inner_function(U_list,mpo_U_list_up, mpo_U_list_down, mpo_list2, mpo_boundy_list,Environment_Left,Environment_Right,perl_label_up, Environment_Uni,Env_Uni_inner, Bond_IN,d,L,L_lay,L_position, L_lay_selected,Method)
+ if Tech is 'Regular':
+  if L_position is not L/2-1:
+   for i in xrange(len(L_lay)):
+    L_lay_selected=i
+    optimize_inner_function(U_list,mpo_U_list_up, mpo_U_list_down, mpo_list2, mpo_boundy_list,Environment_Left,Environment_Right,perl_label_up, Environment_Uni,Env_Uni_inner, Bond_IN,d,L,L_lay,L_position, L_lay_selected,Method,Max_SVD_iteratoin, Max_Steepest_iteratoin,Max_CG_iteratoin,E_list, Count_list,Gamma,Tech)
+  elif L_position is L/2 -1:
+   for i in xrange(0,len(L_lay),2):
+    L_lay_selected=i
+    optimize_inner_function(U_list,mpo_U_list_up, mpo_U_list_down, mpo_list2, mpo_boundy_list,Environment_Left,Environment_Right,perl_label_up, Environment_Uni,Env_Uni_inner, Bond_IN,d,L,L_lay,L_position, L_lay_selected,Method ,Max_SVD_iteratoin, Max_Steepest_iteratoin,Max_CG_iteratoin,E_list, Count_list,Gamma,Tech)
+ elif Tech is 'MERA':
+  if L_position is 0:
+   for i in xrange(len(L_lay)-3):
+    L_lay_selected=i
+    print 'L=0',L_position, i
+    optimize_inner_function(U_list,mpo_U_list_up, mpo_U_list_down, mpo_list2, mpo_boundy_list,Environment_Left,Environment_Right,perl_label_up, Environment_Uni,Env_Uni_inner, Bond_IN,d,L,L_lay,L_position, L_lay_selected,Method,Max_SVD_iteratoin, Max_Steepest_iteratoin,Max_CG_iteratoin,E_list, Count_list,Gamma,Tech)
+  if (L_position is not  0) and (L_position is not L/2 -1):
+   if L_position % 2 is 0:
+    for i in xrange(len(L_lay)):
+     L_lay_selected=i
+     print 'L=even',L_position, i
+     optimize_inner_function(U_list,mpo_U_list_up, mpo_U_list_down, mpo_list2, mpo_boundy_list,Environment_Left,Environment_Right,perl_label_up, Environment_Uni,Env_Uni_inner, Bond_IN,d,L,L_lay,L_position, L_lay_selected,Method,Max_SVD_iteratoin, Max_Steepest_iteratoin,Max_CG_iteratoin,E_list, Count_list,Gamma,Tech)
+   if L_position % 2 is 1:
+    for i in xrange(len(L_lay)-5):
+     L_lay_selected=i
+     print 'L=odd',L_position, i
+     optimize_inner_function(U_list,mpo_U_list_up, mpo_U_list_down, mpo_list2, mpo_boundy_list,Environment_Left,Environment_Right,perl_label_up, Environment_Uni,Env_Uni_inner, Bond_IN,d,L,L_lay,L_position, L_lay_selected,Method,Max_SVD_iteratoin, Max_Steepest_iteratoin,Max_CG_iteratoin,E_list, Count_list,Gamma,Tech)
 
- if L_position is not L/2-1:
-  for i in xrange(len(L_lay)):
-   L_lay_selected=i
-   optimize_inner_function(U_list,mpo_U_list_up, mpo_U_list_down, mpo_list2, mpo_boundy_list,Environment_Left,Environment_Right,perl_label_up, Environment_Uni,Env_Uni_inner, Bond_IN,d,L,L_lay,L_position, L_lay_selected,Method,Max_SVD_iteratoin, Max_Steepest_iteratoin,Max_CG_iteratoin,E_list, Count_list,Gamma)
- elif L_position is L/2 -1:
-  for i in xrange(0,len(L_lay),2):
-   L_lay_selected=i
-   optimize_inner_function(U_list,mpo_U_list_up, mpo_U_list_down, mpo_list2, mpo_boundy_list,Environment_Left,Environment_Right,perl_label_up, Environment_Uni,Env_Uni_inner, Bond_IN,d,L,L_lay,L_position, L_lay_selected,Method ,Max_SVD_iteratoin, Max_Steepest_iteratoin,Max_CG_iteratoin,E_list, Count_list,Gamma)
 
 
- Energy_f=Energy_newunitary(U_list, mpo_U_list_up, mpo_U_list_down, mpo_list2, mpo_boundy_list, L_position, d, Environment_Left, L_lay,L, Environment_Right,L_lay_selected,Env_Uni_inner,Environment_Uni, perl_label_up, Bond_IN)
+  elif L_position is L/2 -1:
+   for i in xrange(0,(len(L_lay)-3),2):
+    L_lay_selected=i
+    print 'L=Last line',L_position, i
+    optimize_inner_function(U_list,mpo_U_list_up, mpo_U_list_down, mpo_list2, mpo_boundy_list,Environment_Left,Environment_Right,perl_label_up, Environment_Uni,Env_Uni_inner, Bond_IN,d,L,L_lay,L_position, L_lay_selected,Method ,Max_SVD_iteratoin, Max_Steepest_iteratoin,Max_CG_iteratoin,E_list, Count_list,Gamma,Tech)
+  
+
+ Energy_f=Energy_newunitary(U_list, mpo_U_list_up, mpo_U_list_down, mpo_list2, mpo_boundy_list, L_position, d, Environment_Left, L_lay,L, Environment_Right,L_lay_selected,Env_Uni_inner,Environment_Uni, perl_label_up, Bond_IN,Tech)
 
  #print 'E_f', Energy_f
  
 
 ################################ Optimize inner function #########################################
-def optimize_inner_function(U_list, mpo_U_list_up, mpo_U_list_down, mpo_list2, mpo_boundy_list,Environment_Left,Environment_Right,perl_label_up, Environment_Uni,Env_Uni_inner, Bond_IN,d,L,L_lay,L_position, L_lay_selected,Method,Max_SVD_iteratoin, Max_Steepest_iteratoin,Max_CG_iteratoin,E_list, Count_list,Gamma_list):
- Energy_s=Energy_newunitary(U_list, mpo_U_list_up, mpo_U_list_down, mpo_list2, mpo_boundy_list, L_position, d, Environment_Left, L_lay,L, Environment_Right,L_lay_selected,Env_Uni_inner,Environment_Uni, perl_label_up, Bond_IN)
+def optimize_inner_function(U_list, mpo_U_list_up, mpo_U_list_down, mpo_list2, mpo_boundy_list,Environment_Left,Environment_Right,perl_label_up, Environment_Uni,Env_Uni_inner, Bond_IN,d,L,L_lay,L_position, L_lay_selected,Method,Max_SVD_iteratoin, Max_Steepest_iteratoin,Max_CG_iteratoin,E_list, Count_list,Gamma_list,Tech):
+ Energy_s=Energy_newunitary(U_list, mpo_U_list_up, mpo_U_list_down, mpo_list2, mpo_boundy_list, L_position, d, Environment_Left, L_lay,L, Environment_Right,L_lay_selected,Env_Uni_inner,Environment_Uni, perl_label_up, Bond_IN,Tech)
  #print 'E_s=', Energy_s
  
  if Method is 'SVD':
@@ -245,7 +270,7 @@ def optimize_inner_function(U_list, mpo_U_list_up, mpo_U_list_down, mpo_list2, m
   
   for i in xrange(Max_SVD_iteratoin):
    count+=1
-   E1=Energy_newunitary(U_list, mpo_U_list_up, mpo_U_list_down, mpo_list2, mpo_boundy_list, L_position, d, Environment_Left, L_lay,L, Environment_Right,L_lay_selected,Env_Uni_inner,Environment_Uni, perl_label_up, Bond_IN)
+   E1=Energy_newunitary(U_list, mpo_U_list_up, mpo_U_list_down, mpo_list2, mpo_boundy_list, L_position, d, Environment_Left, L_lay,L, Environment_Right,L_lay_selected,Env_Uni_inner,Environment_Uni, perl_label_up, Bond_IN,Tech)
    E_list.append(E1)
    Count_list.append(count)
    #print E1, i, '\n'
@@ -264,7 +289,7 @@ def optimize_inner_function(U_list, mpo_U_list_up, mpo_U_list_down, mpo_list2, m
    temporary_matrix=svd[0]*svd[2]
    U_update=temporary_matrix.transpose()
    U_list[L_position][L_lay_selected].putBlock(U_update)
-  Energy_f=Energy_newunitary(U_list, mpo_U_list_up, mpo_U_list_down, mpo_list2, mpo_boundy_list, L_position, d, Environment_Left, L_lay,L, Environment_Right,L_lay_selected,Env_Uni_inner,Environment_Uni, perl_label_up, Bond_IN)
+  Energy_f=Energy_newunitary(U_list, mpo_U_list_up, mpo_U_list_down, mpo_list2, mpo_boundy_list, L_position, d, Environment_Left, L_lay,L, Environment_Right,L_lay_selected,Env_Uni_inner,Environment_Uni, perl_label_up, Bond_IN,Tech)
   print 'E_s=', Energy_s, '\n', 'E_f=', Energy_f
   if Energy_s > Energy_f:
    print 'Notoptimized= E > E1',  Energy_s, Energy_f
@@ -276,7 +301,7 @@ def optimize_inner_function(U_list, mpo_U_list_up, mpo_U_list_down, mpo_list2, m
  
  
  elif (Method is 'CGarmjo') or (Method is  'CGpoly') or (Method is  'SteepestDescentploy'):
-  E=Energy_newunitary(U_list, mpo_U_list_up, mpo_U_list_down, mpo_list2, mpo_boundy_list, L_position, d, Environment_Left, L_lay,L, Environment_Right,L_lay_selected,Env_Uni_inner,Environment_Uni, perl_label_up, Bond_IN)
+  E=Energy_newunitary(U_list, mpo_U_list_up, mpo_U_list_down, mpo_list2, mpo_boundy_list, L_position, d, Environment_Left, L_lay,L, Environment_Right,L_lay_selected,Env_Uni_inner,Environment_Uni, perl_label_up, Bond_IN,Tech)
   #print 'E=', E
   E2=0.0
   U_update=copy.copy(U_list[L_position][L_lay_selected].getBlock())
@@ -291,7 +316,7 @@ def optimize_inner_function(U_list, mpo_U_list_up, mpo_U_list_down, mpo_list2, m
    if (i % (d*d*d*d)) is 0:
     count+=1
     U_list[L_position][L_lay_selected].putBlock(U_update)
-    E1=Energy_newunitary(U_list, mpo_U_list_up, mpo_U_list_down, mpo_list2, mpo_boundy_list, L_position, d, Environment_Left, L_lay,L, Environment_Right,L_lay_selected,Env_Uni_inner,Environment_Uni, perl_label_up, Bond_IN)
+    E1=Energy_newunitary(U_list, mpo_U_list_up, mpo_U_list_down, mpo_list2, mpo_boundy_list, L_position, d, Environment_Left, L_lay,L, Environment_Right,L_lay_selected,Env_Uni_inner,Environment_Uni, perl_label_up, Bond_IN,Tech)
     E_list.append(E1)
     Count_list.append(count)
     D_u=4.00*Env_Uni_inner[L_position][L_lay_selected].getBlock()
@@ -316,7 +341,7 @@ def optimize_inner_function(U_list, mpo_U_list_up, mpo_U_list_down, mpo_list2, m
    if Method is 'CGarmjo':
     Gamma , count=Line_search(H_direct, Gamma, E1, U_update,count, Norm_Z,U_list, mpo_U_list_up, mpo_U_list_down, mpo_list2, mpo_boundy_list, L_position, d, Environment_Left, L_lay,L, Environment_Right,L_lay_selected,Env_Uni_inner,Environment_Uni, perl_label_up, Bond_IN)
    elif (Method is 'CGpoly') or (Method is  'SteepestDescentploy'):
-    Gamma , count=Line_search_pol(H_direct, U_update,count,U_list, mpo_U_list_up, mpo_U_list_down, mpo_list2, mpo_boundy_list, L_position, d, Environment_Left, L_lay,L, Environment_Right,L_lay_selected,Env_Uni_inner,Environment_Uni, perl_label_up, Bond_IN)
+    Gamma , count=Line_search_pol(H_direct, U_update,count,U_list, mpo_U_list_up, mpo_U_list_down, mpo_list2, mpo_boundy_list, L_position, d, Environment_Left, L_lay,L, Environment_Right,L_lay_selected,Env_Uni_inner,Environment_Uni, perl_label_up, Bond_IN,Tech)
 
 
    print 'Gamma=', Gamma, count
@@ -333,7 +358,7 @@ def optimize_inner_function(U_list, mpo_U_list_up, mpo_U_list_down, mpo_list2, m
    U_update_trans=copy.copy(U_update)
    U_update_trans.transpose()
    U_list[L_position][L_lay_selected].putBlock(U_update)
-   E1=Energy_newunitary(U_list, mpo_U_list_up, mpo_U_list_down, mpo_list2, mpo_boundy_list, L_position, d, Environment_Left, L_lay,L, Environment_Right,L_lay_selected,Env_Uni_inner,Environment_Uni, perl_label_up, Bond_IN)
+   E1=Energy_newunitary(U_list, mpo_U_list_up, mpo_U_list_down, mpo_list2, mpo_boundy_list, L_position, d, Environment_Left, L_lay,L, Environment_Right,L_lay_selected,Env_Uni_inner,Environment_Uni, perl_label_up, Bond_IN,Tech)
    D_u=4.00*Env_Uni_inner[L_position][L_lay_selected].getBlock()
    D_u_trans=copy.copy(D_u)
    D_u_trans.transpose()
@@ -357,7 +382,7 @@ def optimize_inner_function(U_list, mpo_U_list_up, mpo_U_list_down, mpo_list2, m
    Count_list.append(count)
 
   U_list[L_position][L_lay_selected].putBlock(U_update)
-  E_f=Energy_newunitary(U_list, mpo_U_list_up, mpo_U_list_down, mpo_list2, mpo_boundy_list, L_position, d, Environment_Left, L_lay,L, Environment_Right,L_lay_selected,Env_Uni_inner,Environment_Uni, perl_label_up, Bond_IN)
+  E_f=Energy_newunitary(U_list, mpo_U_list_up, mpo_U_list_down, mpo_list2, mpo_boundy_list, L_position, d, Environment_Left, L_lay,L, Environment_Right,L_lay_selected,Env_Uni_inner,Environment_Uni, perl_label_up, Bond_IN,Tech)
   Gamma_list[L_position][L_lay_selected]=Gamma+0.01*Gamma
   print 'E_s=', Energy_s, '\n', 'E_f=', E_f 
   if Energy_s > E_f:

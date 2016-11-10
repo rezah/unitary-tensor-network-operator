@@ -360,446 +360,746 @@ def Environment_uni_function(mpo_U_list_up, mpo_U_list_down, mpo_list2, mpo_boun
  
  
  
-def Env_Uni_inner_function(U_list, Environment_Uni, perl_label_up, Bond_IN, L_lay, L_lay_selected, L_position, Env_Uni_inner):
+def Env_Uni_inner_function(U_list, Environment_Uni, perl_label_up, Bond_IN, L_lay, L_lay_selected, L_position, Env_Uni_inner, Tech):
  U=[copy.copy(U_list[L_position][i]) for i in xrange(len(L_lay))]
- if L_position is 0:
-  if len(L_lay) is 1:
-   bdi=uni10.Bond(uni10.BD_IN, 2)
-   bdo=uni10.Bond(uni10.BD_OUT, 2)
-   bd1=uni10.Bond(uni10.BD_OUT, 1)
-   Environment_Uni_newlabel=uni10.UniTensor([bdi, bdi, bd1, bdo, bdo])
-   Environment_Uni_newlabel.setLabel(perl_label_up[0])
-   Environment_Uni_newlabel.putBlock(Environment_Uni[L_position].getBlock())
-   #print Environment_Uni_newlabel.printDiagram()
-   Uni1=uni10.UniTensor([bd1])
-   Uni1.identity()
-   Uni1.setLabel([4])
-   Environment_Uni_newlabel=Environment_Uni_newlabel*Uni1
-   Environment_Uni_newlabel.permute([0,1, 2, 3],2)
-   #print Environment_Uni_newlabel.printDiagram()
-   Env_Uni_inner[L_position][L_lay_selected]=Environment_Uni_newlabel
-  if len(L_lay) is 2:
-   bdi=uni10.Bond(uni10.BD_IN, 2)
-   bdo=uni10.Bond(uni10.BD_OUT, 2)
-   bd_list=[]
-   for i in xrange(len(perl_label_up[L_position])):
-    if i < Bond_IN[L_position] :
-     bd_list.append(bdi)
-    else:
-     bd_list.append(bdo)
-   Environment_Uni_newlabel=uni10.UniTensor(bd_list)
-   Environment_Uni_newlabel.setLabel(perl_label_up[L_position])
-   Environment_Uni_newlabel.putBlock(Environment_Uni[L_position].getBlock())
-   U0=copy.copy(U[0])
-   U1=copy.copy(U[1]) 
-   U0.setLabel([0,1,2,3])
-   U1.setLabel([3,4,5,6])
-   if L_lay_selected is 0:
-    U_result=Environment_Uni_newlabel*U1
-    U_result.permute([0,1,2,3],2)
-    Env_Uni_inner[L_position][L_lay_selected]=U_result
-   if L_lay_selected is 1:
-    U_result=Environment_Uni_newlabel*U0
-    U_result.permute([3,4,5,6],2)
-    U_result.setLabel([0,1,2,3])
-    Env_Uni_inner[L_position][L_lay_selected]=U_result
-  if len(L_lay) is 3:
-   bdi=uni10.Bond(uni10.BD_IN, 2)
-   bdo=uni10.Bond(uni10.BD_OUT, 2)
-   bd_list=[]
-   for i in xrange(len(perl_label_up[L_position])):
-    if i < Bond_IN[L_position] :
-     bd_list.append(bdi)
-    else:
-     bd_list.append(bdo)
-   Environment_Uni_newlabel=uni10.UniTensor(bd_list)
-   Environment_Uni_newlabel.setLabel(perl_label_up[L_position])
-   Environment_Uni_newlabel.putBlock(Environment_Uni[L_position].getBlock())
-   U0=copy.copy(U[0])
-   U1=copy.copy(U[1])
-   U2=copy.copy(U[2]) 
-   U0.setLabel([0,1,2,3])
-   U1.setLabel([3,4,5,6])
-   U2.setLabel([2,5,7,8])
-   if L_lay_selected is 0:
-    U_result=Environment_Uni_newlabel*(U1*U2)
-    U_result.permute([0,1,2,3],2)
-    Env_Uni_inner[L_position][L_lay_selected]=U_result
-   if L_lay_selected is 1:
-    U_result=(Environment_Uni_newlabel*U0)*U2
-    U_result.permute([3,4,5,6],2)
-    U_result.setLabel([0,1,2,3])
-    Env_Uni_inner[L_position][L_lay_selected]=U_result
-   if L_lay_selected is 2:
-    U_result=Environment_Uni_newlabel*(U0*U1)
-    U_result.permute([2,5,7,8],2)
-    U_result.setLabel([0,1,2,3])
-    Env_Uni_inner[L_position][L_lay_selected]=U_result
-  if len(L_lay) is 4:
-   bdi=uni10.Bond(uni10.BD_IN, 2)
-   bdo=uni10.Bond(uni10.BD_OUT, 2)
-   bd_list=[]
-   for i in xrange(len(perl_label_up[L_position])):
-    if i < Bond_IN[L_position] :
-     bd_list.append(bdi)
-    else:
-     bd_list.append(bdo)
-   Environment_Uni_newlabel=uni10.UniTensor(bd_list)
-   Environment_Uni_newlabel.setLabel(perl_label_up[L_position])
-   Environment_Uni_newlabel.putBlock(Environment_Uni[L_position].getBlock())
-   U0=copy.copy(U[0])
-   U1=copy.copy(U[1])
-   U2=copy.copy(U[2])
-   U3=copy.copy(U[3]) 
-   U0.setLabel([0,1,2,3])
-   U1.setLabel([3,4,5,6])
-   U2.setLabel([2,5,7,8])
-   U3.setLabel([8,9,10,11])
-   if L_lay_selected is 0:
-    U_result=Environment_Uni_newlabel*(U1*U2*U3)
-    U_result.permute([0,1,2,3],2)
-    Env_Uni_inner[L_position][L_lay_selected]=U_result
-   if L_lay_selected is 1:
-    U_result=((Environment_Uni_newlabel*U0)*U2)*U3
-    U_result.permute([3,4,5,6],2)
-    U_result.setLabel([0,1,2,3])
-    Env_Uni_inner[L_position][L_lay_selected]=U_result
-   if L_lay_selected is 2:
-    U_result=(Environment_Uni_newlabel*(U0*U1))*U3
-    U_result.permute([2,5,7,8],2)
-    U_result.setLabel([0,1,2,3])
-    Env_Uni_inner[L_position][L_lay_selected]=U_result
-   if L_lay_selected is 3:
-    U_result=(Environment_Uni_newlabel*(U0*U1*U2))
-    U_result.permute([8,9,10,11],2)
-    U_result.setLabel([0,1,2,3])
-    Env_Uni_inner[L_position][L_lay_selected]=U_result
-  if len(L_lay) is 5:
-   bdi=uni10.Bond(uni10.BD_IN, 2)
-   bdo=uni10.Bond(uni10.BD_OUT, 2)
-   bd_list=[]
-   for i in xrange(len(perl_label_up[L_position])):
-    if i < Bond_IN[L_position] :
-     bd_list.append(bdi)
-    else:
-     bd_list.append(bdo)
-   Environment_Uni_newlabel=uni10.UniTensor(bd_list)
-   Environment_Uni_newlabel.setLabel(perl_label_up[L_position])
-   Environment_Uni_newlabel.putBlock(Environment_Uni[L_position].getBlock())
-   U0=copy.copy(U[0])
-   U1=copy.copy(U[1])
-   U2=copy.copy(U[2])
-   U3=copy.copy(U[3]) 
-   U4=copy.copy(U[4]) 
-   U0.setLabel([0,1,2,3])
-   U1.setLabel([3,4,5,6])
-   U2.setLabel([2,5,7,8])
-   U3.setLabel([8,9,10,11])
-   U4.setLabel([7,10,12,13])
-   if L_lay_selected is 0:
-    U_result=Environment_Uni_newlabel*(U1*U2*U3*U4)
-    U_result.permute([0,1,2,3],2)
-    Env_Uni_inner[L_position][L_lay_selected]=U_result
-   if L_lay_selected is 1:
-    U_result=((Environment_Uni_newlabel*U0)*U2)*(U3*U4)
-    U_result.permute([3,4,5,6],2)
-    U_result.setLabel([0,1,2,3])
-    Env_Uni_inner[L_position][L_lay_selected]=U_result
-   if L_lay_selected is 2:
-    U_result=(Environment_Uni_newlabel*(U0*U1))*(U3*U4)
-    U_result.permute([2,5,7,8],2)
-    U_result.setLabel([0,1,2,3])
-    Env_Uni_inner[L_position][L_lay_selected]=U_result
-   if L_lay_selected is 3:
-    U_result=(Environment_Uni_newlabel*(U0*U1*U2))*U4
-    U_result.permute([8,9,10,11],2)
-    U_result.setLabel([0,1,2,3])
-    Env_Uni_inner[L_position][L_lay_selected]=U_result
-   if L_lay_selected is 4:
-    U_result=(Environment_Uni_newlabel*(U0*U1*U2*U3))
-    U_result.permute([7,10,12,13],2)
-    U_result.setLabel([0,1,2,3])
-    Env_Uni_inner[L_position][L_lay_selected]=U_result
- if L_position is (len(U_list)-1):
-  if len(L_lay) is 1:
-   bdi=uni10.Bond(uni10.BD_IN, 2)
-   bdo=uni10.Bond(uni10.BD_OUT, 2)
-   bd1=uni10.Bond(uni10.BD_IN, 1)
-   Environment_Uni_newlabel=uni10.UniTensor([bdi, bdi, bd1, bdo, bdo])
-   Environment_Uni_newlabel.setLabel(perl_label_up[2])
-   Environment_Uni_newlabel.putBlock(Environment_Uni[L_position].getBlock())
-   #print Environment_Uni_newlabel.printDiagram()
-   Uni1=uni10.UniTensor([bd1])
-   Uni1.identity()
-   Uni1.setLabel([4])
-   Environment_Uni_newlabel=Environment_Uni_newlabel*Uni1
-   Environment_Uni_newlabel.permute([0,1, 2, 3],2)
-   #print Environment_Uni_newlabel.printDiagram()
-   Env_Uni_inner[L_position][L_lay_selected]=Environment_Uni_newlabel
-  if len(L_lay) is 2:
-   bdi=uni10.Bond(uni10.BD_IN, 2)
-   bdo=uni10.Bond(uni10.BD_OUT, 2)
-   bd_list=[]
-   for i in xrange(len(perl_label_up[2])):
-    if i < Bond_IN[2] :
-     bd_list.append(bdi)
-    else:
-     bd_list.append(bdo)
-   Environment_Uni_newlabel=uni10.UniTensor(bd_list)
-   Environment_Uni_newlabel.setLabel(perl_label_up[2])
-   Environment_Uni_newlabel.putBlock(Environment_Uni[L_position].getBlock())
-   U0=copy.copy(U[0]) 
-   U0.setLabel([0,1,2,3])
-   if L_lay_selected is 0:
-    U_result=Environment_Uni_newlabel
-    U_result.permute([0,1,2,3],2)
-    Env_Uni_inner[L_position][L_lay_selected]=U_result
-   else : print 'L_selected is beyond, there is no Unitary'
-  if len(L_lay) is 3:
-   bdi=uni10.Bond(uni10.BD_IN, 2)
-   bdo=uni10.Bond(uni10.BD_OUT, 2)
-   bd_list=[]
-   for i in xrange(len(perl_label_up[2])):
-    if i < Bond_IN[2] :
-     bd_list.append(bdi)
-    else:
-     bd_list.append(bdo)
-   Environment_Uni_newlabel=uni10.UniTensor(bd_list)
-   Environment_Uni_newlabel.setLabel(perl_label_up[2])
-   Environment_Uni_newlabel.putBlock(Environment_Uni[L_position].getBlock())
-   U0=copy.copy(U[0])
-   U0.setLabel([0,1,2,3])
-   U2=copy.copy(U[2])
-   U2.setLabel([4,3,5,6])
-   if L_lay_selected is 0:
-    U_result=Environment_Uni_newlabel*U2
-    U_result.permute([0,1,2,3],2)
-    Env_Uni_inner[L_position][L_lay_selected]=U_result
-   elif L_lay_selected is 2:
-    U_result=Environment_Uni_newlabel*U0
-    U_result.permute([4,3,5,6],2)
-    U_result.setLabel([0,1,2,3])
-    Env_Uni_inner[L_position][L_lay_selected]=U_result
-   else: print 'there is no Unitary with L_selected'
-  if len(L_lay) is 4:
-   bdi=uni10.Bond(uni10.BD_IN, 2)
-   bdo=uni10.Bond(uni10.BD_OUT, 2)
-   bd_list=[]
-   for i in xrange(len(perl_label_up[2])):
-    if i < Bond_IN[2] :
-     bd_list.append(bdi)
-    else:
-     bd_list.append(bdo)
-   Environment_Uni_newlabel=uni10.UniTensor(bd_list)
-   Environment_Uni_newlabel.setLabel(perl_label_up[2])
-   Environment_Uni_newlabel.putBlock(Environment_Uni[L_position].getBlock())
-   U0=copy.copy(U[0])
-   U0.setLabel([0,1,2,3])
-   U2=copy.copy(U[2])
-   U2.setLabel([4,3,5,6])
-   if L_lay_selected is 0:
-    U_result=Environment_Uni_newlabel*U2
-    U_result.permute([0,1,2,3],2)
-    Env_Uni_inner[L_position][L_lay_selected]=U_result
-   elif L_lay_selected is 2:
-    U_result=Environment_Uni_newlabel*U0
-    U_result.permute([4,3,5,6],2)
-    U_result.setLabel([0,1,2,3])
-    Env_Uni_inner[L_position][L_lay_selected]=U_result
-   else: print 'there is no Unitary with L_selected'   
-  if len(L_lay) is 5:
-   bdi=uni10.Bond(uni10.BD_IN, 2)
-   bdo=uni10.Bond(uni10.BD_OUT, 2)
-   bd_list=[]
-   for i in xrange(len(perl_label_up[2])):
-    if i < Bond_IN[2] :
-     bd_list.append(bdi)
-    else:
-     bd_list.append(bdo)
-   Environment_Uni_newlabel=uni10.UniTensor(bd_list)
-   Environment_Uni_newlabel.setLabel(perl_label_up[2])
-   Environment_Uni_newlabel.putBlock(Environment_Uni[L_position].getBlock())
-   U0=copy.copy(U[0])
-   U2=copy.copy(U[2])
-   U4=copy.copy(U[4])
-   U0.setLabel([0,1,2,3])
-   U2.setLabel([4,3,5,6])
-   U4.setLabel([7,6,8,9])
-   if L_lay_selected is 0:
-    U_result=Environment_Uni_newlabel*(U2*U4)
-    U_result.permute([0,1,2,3],2)
-    Env_Uni_inner[L_position][L_lay_selected]=U_result
-   elif L_lay_selected is 2:
-    U_result=(Environment_Uni_newlabel*U0)*U4
-    U_result.permute([4,3,5,6],2)
-    U_result.setLabel([0,1,2,3])
-    Env_Uni_inner[L_position][L_lay_selected]=U_result
-   elif L_lay_selected is 4:
-    U_result=Environment_Uni_newlabel*(U0*U2)
-    U_result.permute([7,6,8,9],2)
-    U_result.setLabel([0,1,2,3])
-    Env_Uni_inner[L_position][L_lay_selected]=U_result
-   else: print 'there is no Unitary with L_selected'   
- if  0<L_position < (len(U_list)-1) :
-  if len(L_lay) is 1:
-   bdi=uni10.Bond(uni10.BD_IN, 2)
-   bdo=uni10.Bond(uni10.BD_OUT, 2)
-   bdi_1=uni10.Bond(uni10.BD_IN, 1)
-   bdo_1=uni10.Bond(uni10.BD_OUT, 1)
-   Environment_Uni_newlabel=uni10.UniTensor([bdi_1, bdi, bdi, bdo_1, bdo, bdo])
-   Environment_Uni_newlabel.setLabel(perl_label_up[1])
-   Environment_Uni_newlabel.putBlock(Environment_Uni[L_position].getBlock())
-   #print Environment_Uni_newlabel.printDiagram()
-   Uni_in=uni10.UniTensor([bdi_1])
-   Uni_out=uni10.UniTensor([bdo_1])
-   Uni_in.identity()
-   Uni_out.identity()
-   Uni_in.setLabel([5])
-   Uni_out.setLabel([4])
-   Environment_Uni_newlabel=Environment_Uni_newlabel*Uni_in*Uni_out
-   Environment_Uni_newlabel.permute([0,1, 2, 3],2)
-   #print Environment_Uni_newlabel.printDiagram()
-   Env_Uni_inner[L_position][L_lay_selected]=Environment_Uni_newlabel
-  if len(L_lay) is 2:
-   bdi=uni10.Bond(uni10.BD_IN, 2)
-   bdo=uni10.Bond(uni10.BD_OUT, 2)
-   bd_list=[]
-   for i in xrange(len(perl_label_up[1])):
-    if i < Bond_IN[1] :
-     bd_list.append(bdi)
-    else:
-     bd_list.append(bdo)
-   Environment_Uni_newlabel=uni10.UniTensor(bd_list)
-   Environment_Uni_newlabel.setLabel(perl_label_up[1])
-   Environment_Uni_newlabel.putBlock(Environment_Uni[L_position].getBlock())
-   U0=copy.copy(U[0])
-   U1=copy.copy(U[1]) 
-   U0.setLabel([0,1,2,3])
-   U1.setLabel([3,4,5,6])
-   if L_lay_selected is 0:
-    U_result=Environment_Uni_newlabel*U1
-    U_result.permute([0,1,2,3],2)
-    Env_Uni_inner[L_position][L_lay_selected]=U_result
-   if L_lay_selected is 1:
-    U_result=Environment_Uni_newlabel*U0
-    U_result.permute([3,4,5,6],2)
-    U_result.setLabel([0,1,2,3])
-    Env_Uni_inner[L_position][L_lay_selected]=U_result
-  if len(L_lay) is 3:
-   bdi=uni10.Bond(uni10.BD_IN, 2)
-   bdo=uni10.Bond(uni10.BD_OUT, 2)
-   bd_list=[]
-   for i in xrange(len(perl_label_up[1])):
-    if i < Bond_IN[1]:
-     bd_list.append(bdi)
-    else:
-     bd_list.append(bdo)
-   Environment_Uni_newlabel=uni10.UniTensor(bd_list)
-   Environment_Uni_newlabel.setLabel(perl_label_up[1])
-   Environment_Uni_newlabel.putBlock(Environment_Uni[L_position].getBlock())
-   U0=copy.copy(U[0])
-   U1=copy.copy(U[1])
-   U2=copy.copy(U[2]) 
-   U0.setLabel([0,1,2,3])
-   U1.setLabel([3,4,5,6])
-   U2.setLabel([7,5,8,9])
-   if L_lay_selected is 0:
-    U_result=Environment_Uni_newlabel*(U1*U2)
-    U_result.permute([0,1,2,3],2)
-    Env_Uni_inner[L_position][L_lay_selected]=U_result
-   if L_lay_selected is 1:
-    U_result=(Environment_Uni_newlabel*U0)*U2
-    U_result.permute([3,4,5,6],2)
-    U_result.setLabel([0,1,2,3])
-    Env_Uni_inner[L_position][L_lay_selected]=U_result
-   if L_lay_selected is 2:
-    U_result=Environment_Uni_newlabel*(U0*U1)
-    U_result.permute([7,5,8,9],2)
-    U_result.setLabel([0,1,2,3])
-    Env_Uni_inner[L_position][L_lay_selected]=U_result
-  if len(L_lay) is 4:
-   bdi=uni10.Bond(uni10.BD_IN, 2)
-   bdo=uni10.Bond(uni10.BD_OUT, 2)
-   bd_list=[]
-   for i in xrange(len(perl_label_up[1])):
-    if i < Bond_IN[1] :
-     bd_list.append(bdi)
-    else:
-     bd_list.append(bdo)
-   Environment_Uni_newlabel=uni10.UniTensor(bd_list)
-   Environment_Uni_newlabel.setLabel(perl_label_up[1])
-   Environment_Uni_newlabel.putBlock(Environment_Uni[L_position].getBlock())
-   U0=copy.copy(U[0])
-   U1=copy.copy(U[1])
-   U2=copy.copy(U[2])
-   U3=copy.copy(U[3]) 
-   U0.setLabel([0,1,2,3])
-   U1.setLabel([3,4,5,6])
-   U2.setLabel([7,5,8,9])
-   U3.setLabel([9,10,11,12])
-   if L_lay_selected is 0:
-    U_result=Environment_Uni_newlabel*(U1*U2*U3)
-    U_result.permute([0,1,2,3],2)
-    Env_Uni_inner[L_position][L_lay_selected]=U_result
-   if L_lay_selected is 1:
-    U_result=((Environment_Uni_newlabel*U0)*U2)*U3
-    U_result.permute([3,4,5,6],2)
-    U_result.setLabel([0,1,2,3])
-    Env_Uni_inner[L_position][L_lay_selected]=U_result
-   if L_lay_selected is 2:
-    U_result=(Environment_Uni_newlabel*(U0*U1))*U3
-    U_result.permute([7,5,8,9],2)
-    U_result.setLabel([0,1,2,3])
-    Env_Uni_inner[L_position][L_lay_selected]=U_result
-   if L_lay_selected is 3:
-    U_result=(Environment_Uni_newlabel*(U0*U1*U2))
-    U_result.permute([9,10,11,12],2)
-    U_result.setLabel([0,1,2,3])
-    Env_Uni_inner[L_position][L_lay_selected]=U_result
-  if len(L_lay) is 5:
-   bdi=uni10.Bond(uni10.BD_IN, 2)
-   bdo=uni10.Bond(uni10.BD_OUT, 2)
-   bd_list=[]
-   for i in xrange(len(perl_label_up[1])):
-    if i < Bond_IN[1] :
-     bd_list.append(bdi)
-    else:
-     bd_list.append(bdo)
-   Environment_Uni_newlabel=uni10.UniTensor(bd_list)
-   Environment_Uni_newlabel.setLabel(perl_label_up[1])
-   Environment_Uni_newlabel.putBlock(Environment_Uni[L_position].getBlock())
-   U0=copy.copy(U[0])
-   U1=copy.copy(U[1])
-   U2=copy.copy(U[2])
-   U3=copy.copy(U[3]) 
-   U4=copy.copy(U[4]) 
-   U0.setLabel([0,1,2,3])
-   U1.setLabel([3,4,5,6])
-   U2.setLabel([7,5,8,9])
-   U3.setLabel([9,10,11,12])
-   U4.setLabel([13,11,14,15])
-   if L_lay_selected is 0:
-    U_result=Environment_Uni_newlabel*(U1*U2*U3*U4)
-    U_result.permute([0,1,2,3],2)
-    Env_Uni_inner[L_position][L_lay_selected]=U_result
-   if L_lay_selected is 1:
-    U_result=((Environment_Uni_newlabel*U0)*U2)*(U3*U4)
-    U_result.permute([3,4,5,6],2)
-    U_result.setLabel([0,1,2,3])
-    Env_Uni_inner[L_position][L_lay_selected]=U_result
-   if L_lay_selected is 2:
-    U_result=(Environment_Uni_newlabel*(U0*U1))*(U3*U4)
-    U_result.permute([7,5,8,9],2)
-    U_result.setLabel([0,1,2,3])
-    Env_Uni_inner[L_position][L_lay_selected]=U_result
-   if L_lay_selected is 3:
-    U_result=(Environment_Uni_newlabel*(U0*U1*U2))*U4
-    U_result.permute([9,10,11,12],2)
-    U_result.setLabel([0,1,2,3])
-    Env_Uni_inner[L_position][L_lay_selected]=U_result
-   if L_lay_selected is 4:
-    U_result=(Environment_Uni_newlabel*(U0*U1*U2*U3))
-    U_result.permute([13,11,14,15],2)
-    U_result.setLabel([0,1,2,3])
-    Env_Uni_inner[L_position][L_lay_selected]=U_result
+ if Tech is 'Regular': 
+  if L_position is 0:
+   if len(L_lay) is 1:
+    bdi=uni10.Bond(uni10.BD_IN, 2)
+    bdo=uni10.Bond(uni10.BD_OUT, 2)
+    bd1=uni10.Bond(uni10.BD_OUT, 1)
+    Environment_Uni_newlabel=uni10.UniTensor([bdi, bdi, bd1, bdo, bdo])
+    Environment_Uni_newlabel.setLabel(perl_label_up[0])
+    Environment_Uni_newlabel.putBlock(Environment_Uni[L_position].getBlock())
+    #print Environment_Uni_newlabel.printDiagram()
+    Uni1=uni10.UniTensor([bd1])
+    Uni1.identity()
+    Uni1.setLabel([4])
+    Environment_Uni_newlabel=Environment_Uni_newlabel*Uni1
+    Environment_Uni_newlabel.permute([0,1, 2, 3],2)
+    #print Environment_Uni_newlabel.printDiagram()
+    Env_Uni_inner[L_position][L_lay_selected]=Environment_Uni_newlabel
+   if len(L_lay) is 2:
+    bdi=uni10.Bond(uni10.BD_IN, 2)
+    bdo=uni10.Bond(uni10.BD_OUT, 2)
+    bd_list=[]
+    for i in xrange(len(perl_label_up[L_position])):
+     if i < Bond_IN[L_position] :
+      bd_list.append(bdi)
+     else:
+      bd_list.append(bdo)
+    Environment_Uni_newlabel=uni10.UniTensor(bd_list)
+    Environment_Uni_newlabel.setLabel(perl_label_up[L_position])
+    Environment_Uni_newlabel.putBlock(Environment_Uni[L_position].getBlock())
+    U0=copy.copy(U[0])
+    U1=copy.copy(U[1]) 
+    U0.setLabel([0,1,2,3])
+    U1.setLabel([3,4,5,6])
+    if L_lay_selected is 0:
+     U_result=Environment_Uni_newlabel*U1
+     U_result.permute([0,1,2,3],2)
+     Env_Uni_inner[L_position][L_lay_selected]=U_result
+    if L_lay_selected is 1:
+     U_result=Environment_Uni_newlabel*U0
+     U_result.permute([3,4,5,6],2)
+     U_result.setLabel([0,1,2,3])
+     Env_Uni_inner[L_position][L_lay_selected]=U_result
+   if len(L_lay) is 3:
+    bdi=uni10.Bond(uni10.BD_IN, 2)
+    bdo=uni10.Bond(uni10.BD_OUT, 2)
+    bd_list=[]
+    for i in xrange(len(perl_label_up[L_position])):
+     if i < Bond_IN[L_position] :
+      bd_list.append(bdi)
+     else:
+      bd_list.append(bdo)
+    Environment_Uni_newlabel=uni10.UniTensor(bd_list)
+    Environment_Uni_newlabel.setLabel(perl_label_up[L_position])
+    Environment_Uni_newlabel.putBlock(Environment_Uni[L_position].getBlock())
+    U0=copy.copy(U[0])
+    U1=copy.copy(U[1])
+    U2=copy.copy(U[2]) 
+    U0.setLabel([0,1,2,3])
+    U1.setLabel([3,4,5,6])
+    U2.setLabel([2,5,7,8])
+    if L_lay_selected is 0:
+     U_result=Environment_Uni_newlabel*(U1*U2)
+     U_result.permute([0,1,2,3],2)
+     Env_Uni_inner[L_position][L_lay_selected]=U_result
+    if L_lay_selected is 1:
+     U_result=(Environment_Uni_newlabel*U0)*U2
+     U_result.permute([3,4,5,6],2)
+     U_result.setLabel([0,1,2,3])
+     Env_Uni_inner[L_position][L_lay_selected]=U_result
+    if L_lay_selected is 2:
+     U_result=Environment_Uni_newlabel*(U0*U1)
+     U_result.permute([2,5,7,8],2)
+     U_result.setLabel([0,1,2,3])
+     Env_Uni_inner[L_position][L_lay_selected]=U_result
+   if len(L_lay) is 4:
+    bdi=uni10.Bond(uni10.BD_IN, 2)
+    bdo=uni10.Bond(uni10.BD_OUT, 2)
+    bd_list=[]
+    for i in xrange(len(perl_label_up[L_position])):
+     if i < Bond_IN[L_position] :
+      bd_list.append(bdi)
+     else:
+      bd_list.append(bdo)
+    Environment_Uni_newlabel=uni10.UniTensor(bd_list)
+    Environment_Uni_newlabel.setLabel(perl_label_up[L_position])
+    Environment_Uni_newlabel.putBlock(Environment_Uni[L_position].getBlock())
+    U0=copy.copy(U[0])
+    U1=copy.copy(U[1])
+    U2=copy.copy(U[2])
+    U3=copy.copy(U[3]) 
+    U0.setLabel([0,1,2,3])
+    U1.setLabel([3,4,5,6])
+    U2.setLabel([2,5,7,8])
+    U3.setLabel([8,9,10,11])
+    if L_lay_selected is 0:
+     U_result=Environment_Uni_newlabel*(U1*U2*U3)
+     U_result.permute([0,1,2,3],2)
+     Env_Uni_inner[L_position][L_lay_selected]=U_result
+    if L_lay_selected is 1:
+     U_result=((Environment_Uni_newlabel*U0)*U2)*U3
+     U_result.permute([3,4,5,6],2)
+     U_result.setLabel([0,1,2,3])
+     Env_Uni_inner[L_position][L_lay_selected]=U_result
+    if L_lay_selected is 2:
+     U_result=(Environment_Uni_newlabel*(U0*U1))*U3
+     U_result.permute([2,5,7,8],2)
+     U_result.setLabel([0,1,2,3])
+     Env_Uni_inner[L_position][L_lay_selected]=U_result
+    if L_lay_selected is 3:
+     U_result=(Environment_Uni_newlabel*(U0*U1*U2))
+     U_result.permute([8,9,10,11],2)
+     U_result.setLabel([0,1,2,3])
+     Env_Uni_inner[L_position][L_lay_selected]=U_result
+   if len(L_lay) is 5:
+    bdi=uni10.Bond(uni10.BD_IN, 2)
+    bdo=uni10.Bond(uni10.BD_OUT, 2)
+    bd_list=[]
+    for i in xrange(len(perl_label_up[L_position])):
+     if i < Bond_IN[L_position] :
+      bd_list.append(bdi)
+     else:
+      bd_list.append(bdo)
+    Environment_Uni_newlabel=uni10.UniTensor(bd_list)
+    Environment_Uni_newlabel.setLabel(perl_label_up[L_position])
+    Environment_Uni_newlabel.putBlock(Environment_Uni[L_position].getBlock())
+    U0=copy.copy(U[0])
+    U1=copy.copy(U[1])
+    U2=copy.copy(U[2])
+    U3=copy.copy(U[3]) 
+    U4=copy.copy(U[4]) 
+    U0.setLabel([0,1,2,3])
+    U1.setLabel([3,4,5,6])
+    U2.setLabel([2,5,7,8])
+    U3.setLabel([8,9,10,11])
+    U4.setLabel([7,10,12,13])
+    if L_lay_selected is 0:
+     U_result=Environment_Uni_newlabel*(U1*U2*U3*U4)
+     U_result.permute([0,1,2,3],2)
+     Env_Uni_inner[L_position][L_lay_selected]=U_result
+    if L_lay_selected is 1:
+     U_result=((Environment_Uni_newlabel*U0)*U2)*(U3*U4)
+     U_result.permute([3,4,5,6],2)
+     U_result.setLabel([0,1,2,3])
+     Env_Uni_inner[L_position][L_lay_selected]=U_result
+    if L_lay_selected is 2:
+     U_result=(Environment_Uni_newlabel*(U0*U1))*(U3*U4)
+     U_result.permute([2,5,7,8],2)
+     U_result.setLabel([0,1,2,3])
+     Env_Uni_inner[L_position][L_lay_selected]=U_result
+    if L_lay_selected is 3:
+     U_result=(Environment_Uni_newlabel*(U0*U1*U2))*U4
+     U_result.permute([8,9,10,11],2)
+     U_result.setLabel([0,1,2,3])
+     Env_Uni_inner[L_position][L_lay_selected]=U_result
+    if L_lay_selected is 4:
+     U_result=(Environment_Uni_newlabel*(U0*U1*U2*U3))
+     U_result.permute([7,10,12,13],2)
+     U_result.setLabel([0,1,2,3])
+     Env_Uni_inner[L_position][L_lay_selected]=U_result
+  if L_position is (len(U_list)-1):
+   if len(L_lay) is 1:
+    bdi=uni10.Bond(uni10.BD_IN, 2)
+    bdo=uni10.Bond(uni10.BD_OUT, 2)
+    bd1=uni10.Bond(uni10.BD_IN, 1)
+    Environment_Uni_newlabel=uni10.UniTensor([bdi, bdi, bd1, bdo, bdo])
+    Environment_Uni_newlabel.setLabel(perl_label_up[3])
+    Environment_Uni_newlabel.putBlock(Environment_Uni[L_position].getBlock())
+    #print Environment_Uni_newlabel.printDiagram()
+    Uni1=uni10.UniTensor([bd1])
+    Uni1.identity()
+    Uni1.setLabel([4])
+    Environment_Uni_newlabel=Environment_Uni_newlabel*Uni1
+    Environment_Uni_newlabel.permute([0,1, 2, 3],2)
+    #print Environment_Uni_newlabel.printDiagram()
+    Env_Uni_inner[L_position][L_lay_selected]=Environment_Uni_newlabel
+   if len(L_lay) is 2:
+    bdi=uni10.Bond(uni10.BD_IN, 2)
+    bdo=uni10.Bond(uni10.BD_OUT, 2)
+    bd_list=[]
+    for i in xrange(len(perl_label_up[3])):
+     if i < Bond_IN[3] :
+      bd_list.append(bdi)
+     else:
+      bd_list.append(bdo)
+    Environment_Uni_newlabel=uni10.UniTensor(bd_list)
+    Environment_Uni_newlabel.setLabel(perl_label_up[3])
+    Environment_Uni_newlabel.putBlock(Environment_Uni[L_position].getBlock())
+    U0=copy.copy(U[0]) 
+    U0.setLabel([0,1,2,3])
+    if L_lay_selected is 0:
+     U_result=Environment_Uni_newlabel
+     U_result.permute([0,1,2,3],2)
+     Env_Uni_inner[L_position][L_lay_selected]=U_result
+    else : print 'L_selected is beyond, there is no Unitary'
+   if len(L_lay) is 3:
+    bdi=uni10.Bond(uni10.BD_IN, 2)
+    bdo=uni10.Bond(uni10.BD_OUT, 2)
+    bd_list=[]
+    for i in xrange(len(perl_label_up[3])):
+     if i < Bond_IN[3] :
+      bd_list.append(bdi)
+     else:
+      bd_list.append(bdo)
+    Environment_Uni_newlabel=uni10.UniTensor(bd_list)
+    Environment_Uni_newlabel.setLabel(perl_label_up[3])
+    Environment_Uni_newlabel.putBlock(Environment_Uni[L_position].getBlock())
+    U0=copy.copy(U[0])
+    U0.setLabel([0,1,2,3])
+    U2=copy.copy(U[2])
+    U2.setLabel([4,3,5,6])
+    if L_lay_selected is 0:
+     U_result=Environment_Uni_newlabel*U2
+     U_result.permute([0,1,2,3],2)
+     Env_Uni_inner[L_position][L_lay_selected]=U_result
+    elif L_lay_selected is 2:
+     U_result=Environment_Uni_newlabel*U0
+     U_result.permute([4,3,5,6],2)
+     U_result.setLabel([0,1,2,3])
+     Env_Uni_inner[L_position][L_lay_selected]=U_result
+    else: print 'there is no Unitary with L_selected'
+   if len(L_lay) is 4:
+    bdi=uni10.Bond(uni10.BD_IN, 2)
+    bdo=uni10.Bond(uni10.BD_OUT, 2)
+    bd_list=[]
+    for i in xrange(len(perl_label_up[3])):
+     if i < Bond_IN[3] :
+      bd_list.append(bdi)
+     else:
+      bd_list.append(bdo)
+    Environment_Uni_newlabel=uni10.UniTensor(bd_list)
+    Environment_Uni_newlabel.setLabel(perl_label_up[3])
+    Environment_Uni_newlabel.putBlock(Environment_Uni[L_position].getBlock())
+    U0=copy.copy(U[0])
+    U0.setLabel([0,1,2,3])
+    U2=copy.copy(U[2])
+    U2.setLabel([4,3,5,6])
+    if L_lay_selected is 0:
+     U_result=Environment_Uni_newlabel*U2
+     U_result.permute([0,1,2,3],2)
+     Env_Uni_inner[L_position][L_lay_selected]=U_result
+    elif L_lay_selected is 2:
+     U_result=Environment_Uni_newlabel*U0
+     U_result.permute([4,3,5,6],2)
+     U_result.setLabel([0,1,2,3])
+     Env_Uni_inner[L_position][L_lay_selected]=U_result
+    else: print 'there is no Unitary with L_selected'   
+   if len(L_lay) is 5:
+    bdi=uni10.Bond(uni10.BD_IN, 2)
+    bdo=uni10.Bond(uni10.BD_OUT, 2)
+    bd_list=[]
+    for i in xrange(len(perl_label_up[3])):
+     if i < Bond_IN[3] :
+      bd_list.append(bdi)
+     else:
+      bd_list.append(bdo)
+    Environment_Uni_newlabel=uni10.UniTensor(bd_list)
+    Environment_Uni_newlabel.setLabel(perl_label_up[3])
+    Environment_Uni_newlabel.putBlock(Environment_Uni[L_position].getBlock())
+    U0=copy.copy(U[0])
+    U2=copy.copy(U[2])
+    U4=copy.copy(U[4])
+    U0.setLabel([0,1,2,3])
+    U2.setLabel([4,3,5,6])
+    U4.setLabel([7,6,8,9])
+    if L_lay_selected is 0:
+     U_result=Environment_Uni_newlabel*(U2*U4)
+     U_result.permute([0,1,2,3],2)
+     Env_Uni_inner[L_position][L_lay_selected]=U_result
+    elif L_lay_selected is 2:
+     U_result=(Environment_Uni_newlabel*U0)*U4
+     U_result.permute([4,3,5,6],2)
+     U_result.setLabel([0,1,2,3])
+     Env_Uni_inner[L_position][L_lay_selected]=U_result
+    elif L_lay_selected is 4:
+     U_result=Environment_Uni_newlabel*(U0*U2)
+     U_result.permute([7,6,8,9],2)
+     U_result.setLabel([0,1,2,3])
+     Env_Uni_inner[L_position][L_lay_selected]=U_result
+    else: print 'there is no Unitary with L_selected'   
+  if  0 < L_position < (len(U_list)-1) :
+   if len(L_lay) is 1:
+    bdi=uni10.Bond(uni10.BD_IN, 2)
+    bdo=uni10.Bond(uni10.BD_OUT, 2)
+    bdi_1=uni10.Bond(uni10.BD_IN, 1)
+    bdo_1=uni10.Bond(uni10.BD_OUT, 1)
+    Environment_Uni_newlabel=uni10.UniTensor([bdi_1, bdi, bdi, bdo_1, bdo, bdo])
+    Environment_Uni_newlabel.setLabel(perl_label_up[1])
+    Environment_Uni_newlabel.putBlock(Environment_Uni[L_position].getBlock())
+    #print Environment_Uni_newlabel.printDiagram()
+    Uni_in=uni10.UniTensor([bdi_1])
+    Uni_out=uni10.UniTensor([bdo_1])
+    Uni_in.identity()
+    Uni_out.identity()
+    Uni_in.setLabel([5])
+    Uni_out.setLabel([4])
+    Environment_Uni_newlabel=Environment_Uni_newlabel*Uni_in*Uni_out
+    Environment_Uni_newlabel.permute([0,1, 2, 3],2)
+    #print Environment_Uni_newlabel.printDiagram()
+    Env_Uni_inner[L_position][L_lay_selected]=Environment_Uni_newlabel
+   if len(L_lay) is 2:
+    bdi=uni10.Bond(uni10.BD_IN, 2)
+    bdo=uni10.Bond(uni10.BD_OUT, 2)
+    bd_list=[]
+    for i in xrange(len(perl_label_up[1])):
+     if i < Bond_IN[1] :
+      bd_list.append(bdi)
+     else:
+      bd_list.append(bdo)
+    Environment_Uni_newlabel=uni10.UniTensor(bd_list)
+    Environment_Uni_newlabel.setLabel(perl_label_up[1])
+    Environment_Uni_newlabel.putBlock(Environment_Uni[L_position].getBlock())
+    U0=copy.copy(U[0])
+    U1=copy.copy(U[1]) 
+    U0.setLabel([0,1,2,3])
+    U1.setLabel([3,4,5,6])
+    if L_lay_selected is 0:
+     U_result=Environment_Uni_newlabel*U1
+     U_result.permute([0,1,2,3],2)
+     Env_Uni_inner[L_position][L_lay_selected]=U_result
+    if L_lay_selected is 1:
+     U_result=Environment_Uni_newlabel*U0
+     U_result.permute([3,4,5,6],2)
+     U_result.setLabel([0,1,2,3])
+     Env_Uni_inner[L_position][L_lay_selected]=U_result
+   if len(L_lay) is 3:
+    bdi=uni10.Bond(uni10.BD_IN, 2)
+    bdo=uni10.Bond(uni10.BD_OUT, 2)
+    bd_list=[]
+    for i in xrange(len(perl_label_up[1])):
+     if i < Bond_IN[1]:
+      bd_list.append(bdi)
+     else:
+      bd_list.append(bdo)
+    Environment_Uni_newlabel=uni10.UniTensor(bd_list)
+    Environment_Uni_newlabel.setLabel(perl_label_up[1])
+    Environment_Uni_newlabel.putBlock(Environment_Uni[L_position].getBlock())
+    U0=copy.copy(U[0])
+    U1=copy.copy(U[1])
+    U2=copy.copy(U[2]) 
+    U0.setLabel([0,1,2,3])
+    U1.setLabel([3,4,5,6])
+    U2.setLabel([7,5,8,9])
+    if L_lay_selected is 0:
+     U_result=Environment_Uni_newlabel*(U1*U2)
+     U_result.permute([0,1,2,3],2)
+     Env_Uni_inner[L_position][L_lay_selected]=U_result
+    if L_lay_selected is 1:
+     U_result=(Environment_Uni_newlabel*U0)*U2
+     U_result.permute([3,4,5,6],2)
+     U_result.setLabel([0,1,2,3])
+     Env_Uni_inner[L_position][L_lay_selected]=U_result
+    if L_lay_selected is 2:
+     U_result=Environment_Uni_newlabel*(U0*U1)
+     U_result.permute([7,5,8,9],2)
+     U_result.setLabel([0,1,2,3])
+     Env_Uni_inner[L_position][L_lay_selected]=U_result
+   if len(L_lay) is 4:
+    bdi=uni10.Bond(uni10.BD_IN, 2)
+    bdo=uni10.Bond(uni10.BD_OUT, 2)
+    bd_list=[]
+    for i in xrange(len(perl_label_up[1])):
+     if i < Bond_IN[1] :
+      bd_list.append(bdi)
+     else:
+      bd_list.append(bdo)
+    Environment_Uni_newlabel=uni10.UniTensor(bd_list)
+    Environment_Uni_newlabel.setLabel(perl_label_up[1])
+    Environment_Uni_newlabel.putBlock(Environment_Uni[L_position].getBlock())
+    U0=copy.copy(U[0])
+    U1=copy.copy(U[1])
+    U2=copy.copy(U[2])
+    U3=copy.copy(U[3]) 
+    U0.setLabel([0,1,2,3])
+    U1.setLabel([3,4,5,6])
+    U2.setLabel([7,5,8,9])
+    U3.setLabel([9,10,11,12])
+    if L_lay_selected is 0:
+     U_result=Environment_Uni_newlabel*(U1*U2*U3)
+     U_result.permute([0,1,2,3],2)
+     Env_Uni_inner[L_position][L_lay_selected]=U_result
+    if L_lay_selected is 1:
+     U_result=((Environment_Uni_newlabel*U0)*U2)*U3
+     U_result.permute([3,4,5,6],2)
+     U_result.setLabel([0,1,2,3])
+     Env_Uni_inner[L_position][L_lay_selected]=U_result
+    if L_lay_selected is 2:
+     U_result=(Environment_Uni_newlabel*(U0*U1))*U3
+     U_result.permute([7,5,8,9],2)
+     U_result.setLabel([0,1,2,3])
+     Env_Uni_inner[L_position][L_lay_selected]=U_result
+    if L_lay_selected is 3:
+     U_result=(Environment_Uni_newlabel*(U0*U1*U2))
+     U_result.permute([9,10,11,12],2)
+     U_result.setLabel([0,1,2,3])
+     Env_Uni_inner[L_position][L_lay_selected]=U_result
+   if len(L_lay) is 5:
+    bdi=uni10.Bond(uni10.BD_IN, 2)
+    bdo=uni10.Bond(uni10.BD_OUT, 2)
+    bd_list=[]
+    for i in xrange(len(perl_label_up[1])):
+     if i < Bond_IN[1] :
+      bd_list.append(bdi)
+     else:
+      bd_list.append(bdo)
+    Environment_Uni_newlabel=uni10.UniTensor(bd_list)
+    Environment_Uni_newlabel.setLabel(perl_label_up[1])
+    Environment_Uni_newlabel.putBlock(Environment_Uni[L_position].getBlock())
+    U0=copy.copy(U[0])
+    U1=copy.copy(U[1])
+    U2=copy.copy(U[2])
+    U3=copy.copy(U[3]) 
+    U4=copy.copy(U[4]) 
+    U0.setLabel([0,1,2,3])
+    U1.setLabel([3,4,5,6])
+    U2.setLabel([7,5,8,9])
+    U3.setLabel([9,10,11,12])
+    U4.setLabel([13,11,14,15])
+    if L_lay_selected is 0:
+     U_result=Environment_Uni_newlabel*(U1*U2*U3*U4)
+     U_result.permute([0,1,2,3],2)
+     Env_Uni_inner[L_position][L_lay_selected]=U_result
+    if L_lay_selected is 1:
+     U_result=((Environment_Uni_newlabel*U0)*U2)*(U3*U4)
+     U_result.permute([3,4,5,6],2)
+     U_result.setLabel([0,1,2,3])
+     Env_Uni_inner[L_position][L_lay_selected]=U_result
+    if L_lay_selected is 2:
+     U_result=(Environment_Uni_newlabel*(U0*U1))*(U3*U4)
+     U_result.permute([7,5,8,9],2)
+     U_result.setLabel([0,1,2,3])
+     Env_Uni_inner[L_position][L_lay_selected]=U_result
+    if L_lay_selected is 3:
+     U_result=(Environment_Uni_newlabel*(U0*U1*U2))*U4
+     U_result.permute([9,10,11,12],2)
+     U_result.setLabel([0,1,2,3])
+     Env_Uni_inner[L_position][L_lay_selected]=U_result
+    if L_lay_selected is 4:
+     U_result=(Environment_Uni_newlabel*(U0*U1*U2*U3))
+     U_result.permute([13,11,14,15],2)
+     U_result.setLabel([0,1,2,3])
+     Env_Uni_inner[L_position][L_lay_selected]=U_result
 
+
+
+
+ elif Tech is 'MERA':
+  if L_position is 0:
+   if len(L_lay) is 4:
+    bdi=uni10.Bond(uni10.BD_IN, 2)
+    bdo=uni10.Bond(uni10.BD_OUT, 2)
+    bd_list=[]
+    for i in xrange(len(perl_label_up[L_position])):
+     if i < Bond_IN[L_position] :
+      bd_list.append(bdi)
+     else:
+      bd_list.append(bdo)
+    Environment_Uni_newlabel=uni10.UniTensor(bd_list)
+    Environment_Uni_newlabel.setLabel(perl_label_up[L_position])
+    Environment_Uni_newlabel.putBlock(Environment_Uni[L_position].getBlock())
+    U0=copy.copy(U[0])
+    U1=copy.copy(U[1])
+    U2=copy.copy(U[2]) 
+    U0.setLabel([0,1,2,3])
+    U1.setLabel([3,4,5,6])
+    U2.setLabel([2,5,7,8])
+    if L_lay_selected is 0:
+     U_result=Environment_Uni_newlabel*(U1*U2)
+     U_result.permute([0,1,2,3],2)
+     Env_Uni_inner[L_position][L_lay_selected]=U_result
+    if L_lay_selected is 1:
+     U_result=(Environment_Uni_newlabel*U0)*U2
+     U_result.permute([3,4,5,6],2)
+     U_result.setLabel([0,1,2,3])
+     Env_Uni_inner[L_position][L_lay_selected]=U_result
+    if L_lay_selected is 2:
+     U_result=Environment_Uni_newlabel*(U0*U1)
+     U_result.permute([2,5,7,8],2)
+     U_result.setLabel([0,1,2,3])
+     Env_Uni_inner[L_position][L_lay_selected]=U_result
+   if len(L_lay) is 8:
+    bdi=uni10.Bond(uni10.BD_IN, 2)
+    bdo=uni10.Bond(uni10.BD_OUT, 2)
+    bd_list=[]
+    for i in xrange(len(perl_label_up[L_position])):
+     if i < Bond_IN[L_position] :
+      bd_list.append(bdi)
+     else:
+      bd_list.append(bdo)
+    Environment_Uni_newlabel=uni10.UniTensor(bd_list)
+    Environment_Uni_newlabel.setLabel(perl_label_up[L_position])
+    Environment_Uni_newlabel.putBlock(Environment_Uni[L_position].getBlock())
+    U0=copy.copy(U[0])
+    U1=copy.copy(U[1])
+    U2=copy.copy(U[2])
+    U3=copy.copy(U[3]) 
+    U4=copy.copy(U[4]) 
+    U0.setLabel([0,1,2,3])
+    U1.setLabel([3,4,5,6])
+    U2.setLabel([2,5,7,8])
+    U3.setLabel([8,9,10,11])
+    U4.setLabel([7,10,12,13])
+    if L_lay_selected is 0:
+     U_result=Environment_Uni_newlabel*(U1*U2*U3*U4)
+     U_result.permute([0,1,2,3],2)
+     Env_Uni_inner[L_position][L_lay_selected]=U_result
+    if L_lay_selected is 1:
+     U_result=((Environment_Uni_newlabel*U0)*U2)*(U3*U4)
+     U_result.permute([3,4,5,6],2)
+     U_result.setLabel([0,1,2,3])
+     Env_Uni_inner[L_position][L_lay_selected]=U_result
+    if L_lay_selected is 2:
+     U_result=(Environment_Uni_newlabel*(U0*U1))*(U3*U4)
+     U_result.permute([2,5,7,8],2)
+     U_result.setLabel([0,1,2,3])
+     Env_Uni_inner[L_position][L_lay_selected]=U_result
+    if L_lay_selected is 3:
+     U_result=(Environment_Uni_newlabel*(U0*U1*U2))*U4
+     U_result.permute([8,9,10,11],2)
+     U_result.setLabel([0,1,2,3])
+     Env_Uni_inner[L_position][L_lay_selected]=U_result
+    if L_lay_selected is 4:
+     U_result=(Environment_Uni_newlabel*(U0*U1*U2*U3))
+     U_result.permute([7,10,12,13],2)
+     U_result.setLabel([0,1,2,3])
+     Env_Uni_inner[L_position][L_lay_selected]=U_result
+
+
+
+
+
+
+  if L_position is (len(U_list)-1):
+   if len(L_lay) is 4:
+    bdi=uni10.Bond(uni10.BD_IN, 2)
+    bdo=uni10.Bond(uni10.BD_OUT, 2)
+    bd_list=[]
+    for i in xrange(len(perl_label_up[3])):
+     if i < Bond_IN[3]:
+      bd_list.append(bdi)
+     else:
+      bd_list.append(bdo)
+    Environment_Uni_newlabel=uni10.UniTensor(bd_list)
+    Environment_Uni_newlabel.setLabel(perl_label_up[3])
+    Environment_Uni_newlabel.putBlock(Environment_Uni[L_position].getBlock())
+    U0=copy.copy(U[0])
+    U0.setLabel([0,1,2,3])
+    U2=copy.copy(U[2])
+    U2.setLabel([4,3,5,6])
+    if L_lay_selected is 0:
+     U_result=Environment_Uni_newlabel*U2
+     U_result.permute([0,1,2,3],2)
+     Env_Uni_inner[L_position][L_lay_selected]=U_result
+    elif L_lay_selected is 2:
+     U_result=Environment_Uni_newlabel*U0
+     U_result.permute([4,3,5,6],2)
+     U_result.setLabel([0,1,2,3])
+     Env_Uni_inner[L_position][L_lay_selected]=U_result
+    else: print 'there is no Unitary with L_selected'
+
+
+   if len(L_lay) is 8:
+    bdi=uni10.Bond(uni10.BD_IN, 2)
+    bdo=uni10.Bond(uni10.BD_OUT, 2)
+    bd_list=[]
+    for i in xrange(len(perl_label_up[3])):
+     if i < Bond_IN[3] :
+      bd_list.append(bdi)
+     else:
+      bd_list.append(bdo)
+    Environment_Uni_newlabel=uni10.UniTensor(bd_list)
+    Environment_Uni_newlabel.setLabel(perl_label_up[3])
+    Environment_Uni_newlabel.putBlock(Environment_Uni[L_position].getBlock())
+    U0=copy.copy(U[0])
+    U2=copy.copy(U[2])
+    U4=copy.copy(U[4])
+    U0.setLabel([0,1,2,3])
+    U2.setLabel([4,3,5,6])
+    U4.setLabel([7,6,8,9])
+    if L_lay_selected is 0:
+     U_result=Environment_Uni_newlabel*(U2*U4)
+     U_result.permute([0,1,2,3],2)
+     Env_Uni_inner[L_position][L_lay_selected]=U_result
+    elif L_lay_selected is 2:
+     U_result=(Environment_Uni_newlabel*U0)*U4
+     U_result.permute([4,3,5,6],2)
+     U_result.setLabel([0,1,2,3])
+     Env_Uni_inner[L_position][L_lay_selected]=U_result
+    elif L_lay_selected is 4:
+     U_result=Environment_Uni_newlabel*(U0*U2)
+     U_result.permute([7,6,8,9],2)
+     U_result.setLabel([0,1,2,3])
+     Env_Uni_inner[L_position][L_lay_selected]=U_result
+    else: print 'there is no Unitary with L_selected'   
+
+
+  if  0 < L_position < (len(U_list)-1) :
+   if len(L_lay) is 4:
+    bdi=uni10.Bond(uni10.BD_IN, 2)
+    bdo=uni10.Bond(uni10.BD_OUT, 2)
+    bd_list=[]
+    for i in xrange(len(perl_label_up[1])):
+     if i < Bond_IN[1] :
+      bd_list.append(bdi)
+     else:
+      bd_list.append(bdo)
+    Environment_Uni_newlabel=uni10.UniTensor(bd_list)
+    Environment_Uni_newlabel.setLabel(perl_label_up[1])
+    Environment_Uni_newlabel.putBlock(Environment_Uni[L_position].getBlock())
+    U0=copy.copy(U[0])
+    U1=copy.copy(U[1])
+    U2=copy.copy(U[2])
+    U3=copy.copy(U[3]) 
+    U0.setLabel([0,1,2,3])
+    U1.setLabel([3,4,5,6])
+    U2.setLabel([5,6,7,8])
+    U3.setLabel([9,7,10,11])
+    if L_lay_selected is 0:
+     U_result=Environment_Uni_newlabel*(U1*U2*U3)
+     U_result.permute([0,1,2,3],2)
+     Env_Uni_inner[L_position][L_lay_selected]=U_result
+    if L_lay_selected is 1:
+     U_result=((Environment_Uni_newlabel*U0)*U2)*U3
+     U_result.permute([3,4,5,6],2)
+     U_result.setLabel([0,1,2,3])
+     Env_Uni_inner[L_position][L_lay_selected]=U_result
+    if L_lay_selected is 2:
+     U_result=(Environment_Uni_newlabel*(U0*U1))*U3
+     U_result.permute([5,6,7,8],2)
+     U_result.setLabel([0,1,2,3])
+     Env_Uni_inner[L_position][L_lay_selected]=U_result
+    if L_lay_selected is 3:
+     U_result=(Environment_Uni_newlabel*(U0*U1*U2))
+     U_result.permute([9,7,10,11],2)
+     U_result.setLabel([0,1,2,3])
+     Env_Uni_inner[L_position][L_lay_selected]=U_result
+
+   if (len(L_lay) is 8) and (L_position % 2 is 1) :
+    bdi=uni10.Bond(uni10.BD_IN, 2)
+    bdo=uni10.Bond(uni10.BD_OUT, 2)
+    bd_list=[]
+    for i in xrange(len(perl_label_up[1])):
+     if i < Bond_IN[1] :
+      bd_list.append(bdi)
+     else:
+      bd_list.append(bdo)
+    Environment_Uni_newlabel=uni10.UniTensor(bd_list)
+    Environment_Uni_newlabel.setLabel(perl_label_up[1])
+    Environment_Uni_newlabel.putBlock(Environment_Uni[L_position].getBlock())
+    U0=copy.copy(U[0])
+    U1=copy.copy(U[1])
+    U2=copy.copy(U[2])
+    U0.setLabel([0,1,2,3])
+    U1.setLabel([4,5,6,7])
+    U2.setLabel([8,9,10,11])
+    if L_lay_selected is 0:
+     U_result=Environment_Uni_newlabel*(U1*U2)
+     U_result.permute([0,1,2,3],2)
+     Env_Uni_inner[L_position][L_lay_selected]=U_result
+    if L_lay_selected is 1:
+     U_result=Environment_Uni_newlabel*(U0*U2)
+     U_result.permute([4,5,6,7],2)
+     U_result.setLabel([0,1,2,3])
+     Env_Uni_inner[L_position][L_lay_selected]=U_result
+    if L_lay_selected is 2:
+     U_result=Environment_Uni_newlabel*(U0*U1)
+     U_result.permute([8,9,10,11],2)
+     U_result.setLabel([0,1,2,3])
+     Env_Uni_inner[L_position][L_lay_selected]=U_result
+
+   if (len(L_lay) is 8) and (L_position % 2 is 0) :
+    bdi=uni10.Bond(uni10.BD_IN, 2)
+    bdo=uni10.Bond(uni10.BD_OUT, 2)
+    bd_list=[]
+    for i in xrange(len(perl_label_up[2])):
+     if i < Bond_IN[2] :
+      bd_list.append(bdi)
+     else:
+      bd_list.append(bdo)
+    Environment_Uni_newlabel=uni10.UniTensor(bd_list)
+    Environment_Uni_newlabel.setLabel(perl_label_up[2])
+    Environment_Uni_newlabel.putBlock(Environment_Uni[L_position].getBlock())
+    U0=copy.copy(U[0])
+    U1=copy.copy(U[1])
+    U2=copy.copy(U[2])
+    U3=copy.copy(U[3]) 
+    U4=copy.copy(U[4]) 
+    U5=copy.copy(U[5])
+    U6=copy.copy(U[6])
+    U7=copy.copy(U[7])
+    U0.setLabel([0,1,2,3])
+    U1.setLabel([4,2,5,6])
+    U2.setLabel([3,7,8,9])
+    U3.setLabel([6,8,10,11])
+    U4.setLabel([12,13,14,15])
+    U5.setLabel([5,14,17,18])
+    U6.setLabel([15,9,19,16])
+    U7.setLabel([18,19,20,21])
+    if L_lay_selected is 0:
+     U_result=(Environment_Uni_newlabel*(U4*U5*U6*U7))*(U1*U2*U3)
+     U_result.permute([0,1,2,3],2)
+     Env_Uni_inner[L_position][L_lay_selected]=U_result
+    if L_lay_selected is 1:
+     U_result=(Environment_Uni_newlabel*(U4*U5*U6*U7))*(U0*U2*U3)
+     U_result.permute([4,2,5,6],2)
+     U_result.setLabel([0,1,2,3])
+     Env_Uni_inner[L_position][L_lay_selected]=U_result
+    if L_lay_selected is 2:
+     U_result=(Environment_Uni_newlabel*(U4*U5*U6*U7))*(U0*U1*U3)
+     U_result.permute([3,7,8,9],2)
+     U_result.setLabel([0,1,2,3])
+     Env_Uni_inner[L_position][L_lay_selected]=U_result
+    if L_lay_selected is 3:
+     U_result=(Environment_Uni_newlabel*(U4*U5*U6*U7))*(U0*U1*U2)
+     U_result.permute([6,8,10,11],2)
+     U_result.setLabel([0,1,2,3])
+     Env_Uni_inner[L_position][L_lay_selected]=U_result
+    if L_lay_selected is 4:
+     U_result=(Environment_Uni_newlabel*(U0*U1*U2*U3))*(U5*U6*U7)
+     U_result.permute([12,13,14,15],2)
+     U_result.setLabel([0,1,2,3])
+     Env_Uni_inner[L_position][L_lay_selected]=U_result
+    if L_lay_selected is 5:
+     U_result=(Environment_Uni_newlabel*(U0*U1*U2*U3))*(U4*U6*U7)
+     U_result.permute([5,14,17,18],2)
+     U_result.setLabel([0,1,2,3])
+     Env_Uni_inner[L_position][L_lay_selected]=U_result
+    if L_lay_selected is 6:
+     U_result=(Environment_Uni_newlabel*(U0*U1*U2*U3))*(U5*U4*U7)
+     U_result.permute([15,9,19,16],2)
+     U_result.setLabel([0,1,2,3])
+     Env_Uni_inner[L_position][L_lay_selected]=U_result
+    if L_lay_selected is 7:
+     U_result=(Environment_Uni_newlabel*(U0*U1*U2*U3))*(U4*U5*U6)
+     U_result.permute([18,19,20,21],2)
+     U_result.setLabel([0,1,2,3])
+     Env_Uni_inner[L_position][L_lay_selected]=U_result
+
+   
+   
+   
+   
