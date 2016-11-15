@@ -72,7 +72,7 @@ def Line_search_pol(H_direct, U_update,count,U_list, mpo_U_list_up, mpo_U_list_d
 # print 'Wk', Wk,'\n',np.dot(R_mu_poly,Wk), '\n', Temporary
 # U_list[L_position][L_lay_selected].putBlock(Temporary)
 # print U_list[L_position][L_lay_selected]
-# E2=Energy_newunitary(U_list, mpo_U_list_up, mpo_U_list_down, mpo_list2, mpo_boundy_list, L_position, d, Environment_Left, L_lay,L, Environment_Right,L_lay_selected,Env_Uni_inner,Environment_Uni, perl_label_up, Bond_IN)
+# E2=Energy_newunitary(U_list, mpo_U_list_up, mpo_U_list_down, mpo_list2, mpo_boundy_list, L_position, d, Environment_Left, L_lay,L, Environment_Right,L_lay_selected,Env_Uni_inner,Environment_Uni, perl_label_up, Bond_IN,Tech)
 # print 'E2=', E2, (U_list[L_position][L_lay_selected]*Env_Uni_inner[L_position][L_lay_selected])[0]
 # Temporary=4.00*Env_Uni_inner[L_position][L_lay_selected].getBlock(); Dk=Mat_uni_to_np(Temporary)
 # print Temporary, Dk
@@ -125,7 +125,7 @@ def Line_search_pol(H_direct, U_update,count,U_list, mpo_U_list_up, mpo_U_list_d
 
 
 #################################   Line Search    #################################
-def Line_search(Z_decent, Gamma, E1, U_update,count, Norm_Z,U_list, mpo_U_list_up, mpo_U_list_down, mpo_list2, mpo_boundy_list, L_position, d, Environment_Left, L_lay,L, Environment_Right,L_lay_selected,Env_Uni_inner,Environment_Uni, perl_label_up, Bond_IN):
+def Line_search(Z_decent, Gamma, E1, U_update,count, Norm_Z,U_list, mpo_U_list_up, mpo_U_list_down, mpo_list2, mpo_boundy_list, L_position, d, Environment_Left, L_lay,L, Environment_Right,L_lay_selected,Env_Uni_inner,Environment_Uni, perl_label_up, Bond_IN,Tech):
  Break_loop=1
  Temporary=exp_matrix(Z_decent,-Gamma,U_update)
  while Break_loop is 1:
@@ -133,7 +133,7 @@ def Line_search(Z_decent, Gamma, E1, U_update,count, Norm_Z,U_list, mpo_U_list_u
   Temporary=Temporary*Temporary
   Temporary_trans=copy.copy(Temporary)
   U_list[L_position][L_lay_selected].putBlock(Temporary)
-  E2=Energy_newunitary(U_list, mpo_U_list_up, mpo_U_list_down, mpo_list2, mpo_boundy_list, L_position, d, Environment_Left, L_lay,L, Environment_Right,L_lay_selected,Env_Uni_inner,Environment_Uni, perl_label_up, Bond_IN)
+  E2=Energy_newunitary(U_list, mpo_U_list_up, mpo_U_list_down, mpo_list2, mpo_boundy_list, L_position, d, Environment_Left, L_lay,L, Environment_Right,L_lay_selected,Env_Uni_inner,Environment_Uni, perl_label_up, Bond_IN,Tech)
   if E1-E2 <= -Norm_Z*Gamma:
    Gamma*=1.000
   else:
@@ -145,7 +145,7 @@ def Line_search(Z_decent, Gamma, E1, U_update,count, Norm_Z,U_list, mpo_U_list_u
   Temporary=exp_matrix(Z_decent,-Gamma, U_update)
   Temporary_trans=copy.copy(Temporary)
   U_list[L_position][L_lay_selected].putBlock(Temporary)
-  E2=Energy_newunitary(U_list, mpo_U_list_up, mpo_U_list_down, mpo_list2, mpo_boundy_list, L_position, d, Environment_Left, L_lay,L, Environment_Right,L_lay_selected,Env_Uni_inner,Environment_Uni, perl_label_up, Bond_IN)
+  E2=Energy_newunitary(U_list, mpo_U_list_up, mpo_U_list_down, mpo_list2, mpo_boundy_list, L_position, d, Environment_Left, L_lay,L, Environment_Right,L_lay_selected,Env_Uni_inner,Environment_Uni, perl_label_up, Bond_IN,Tech)
   if Gamma < 1.0e-11:
    Break_loop=0
    
@@ -276,6 +276,199 @@ def optimize_inner_function(U_list, mpo_U_list_up, mpo_U_list_down, mpo_list2, m
   E_list.append(Energy_f)
   #print 'E_s=', Energy_s, '\n', 'E_f=', Energy_f
   if Energy_s > Energy_f:
-   #print 'Notoptimized= E > E1',  Energy_s, Energy_f
+   print 'Notoptimized= E > E1, SVD',  Energy_s, Energy_f
    U_list[L_position][L_lay_selected].putBlock(U_first)
 
+ elif (Method is 'CGarmjo') or (Method is  'CGpoly') or (Method is  'SteepestDescentploy'):
+  E=Energy_newunitary(U_list, mpo_U_list_up, mpo_U_list_down, mpo_list2, mpo_boundy_list, L_position, d, Environment_Left, L_lay,L, Environment_Right,L_lay_selected,Env_Uni_inner,Environment_Uni, perl_label_up, Bond_IN,Tech)
+  #print 'E=', E
+  E2=0.0
+  U_update=copy.copy(U_list[L_position][L_lay_selected].getBlock())
+  U_first=copy.copy(U_update)
+  Gamma= Gamma_list[L_position][L_lay_selected]
+  #Gamma=1.00
+  if len(Count_list) is 0: count=0;
+  else: count = Count_list[len(Count_list)-1];
+  E_previous=0
+  #print 'Max_CG_iteratoin', Max_CG_iteratoin 
+  for i in xrange(Max_CG_iteratoin):
+   if (i % (d*d*d*d)) is 0:
+    count+=1
+    U_list[L_position][L_lay_selected].putBlock(U_update)
+    E1=Energy_newunitary(U_list, mpo_U_list_up, mpo_U_list_down, mpo_list2, mpo_boundy_list, L_position, d, Environment_Left, L_lay,L, Environment_Right,L_lay_selected,Env_Uni_inner,Environment_Uni, perl_label_up, Bond_IN,Tech)
+    #E_list.append(E1)
+    #Count_list.append(count)
+    D_u=4.00*Env_Uni_inner[L_position][L_lay_selected].getBlock()
+    D_u_trans=copy.copy(D_u)
+    D_u_trans.transpose()
+    U_update_trans=copy.copy(U_update)
+    U_update_trans.transpose() 
+    Z_decent=(-1.00)*(D_u*U_update_trans+(-1.00)*U_update*D_u_trans)
+    H_direct=copy.copy(Z_decent)
+   Z_decent_trans=copy.copy(Z_decent)
+   Z_decent_trans.transpose()
+   H_direct_trans=copy.copy(H_direct)
+   H_direct_trans.transpose()
+   Norm_Z=Z_decent_trans*Z_decent
+   Norm_Z=Norm_Z.trace() / 2.00
+   if Norm_Z < 1.0e-7:
+    #print 'Break Norm=', Norm_Z
+    break
+   Norm_Z=H_direct_trans*Z_decent
+   Norm_Z=Norm_Z.trace() / 2.00
+   Gamma=1.00
+   if Method is 'CGarmjo':
+    Gamma , count=Line_search(H_direct, Gamma, E1, U_update,count, Norm_Z,U_list, mpo_U_list_up, mpo_U_list_down, mpo_list2, mpo_boundy_list, L_position, d, Environment_Left, L_lay,L, Environment_Right,L_lay_selected,Env_Uni_inner,Environment_Uni, perl_label_up, Bond_IN,Tech)
+   elif (Method is 'CGpoly') or (Method is  'SteepestDescentploy'):
+    Gamma , count=Line_search_pol(H_direct, U_update,count,U_list, mpo_U_list_up, mpo_U_list_down, mpo_list2, mpo_boundy_list, L_position, d, Environment_Left, L_lay,L, Environment_Right,L_lay_selected,Env_Uni_inner,Environment_Uni, perl_label_up, Bond_IN,Tech)
+
+
+   #print 'Gamma=', Gamma, count
+   if E1>E_previous or i is 0:
+    if abs((E_previous-E1)/E1) < 1.0e-8:
+     #print E_previous, E1, abs((E_previous-E1)/E1), i
+     break
+    E_previous=E1
+
+
+
+   Temporary=exp_matrix(H_direct,-Gamma, U_update)
+   U_update=Temporary
+   U_update_trans=copy.copy(U_update)
+   U_update_trans.transpose()
+   U_list[L_position][L_lay_selected].putBlock(U_update)
+   E1=Energy_newunitary(U_list, mpo_U_list_up, mpo_U_list_down, mpo_list2, mpo_boundy_list, L_position, d, Environment_Left, L_lay,L, Environment_Right,L_lay_selected,Env_Uni_inner,Environment_Uni, perl_label_up, Bond_IN,Tech)
+   D_u=4.00*Env_Uni_inner[L_position][L_lay_selected].getBlock()
+   D_u_trans=copy.copy(D_u)
+   D_u_trans.transpose()
+   Z_decent1=(-1.00)*(D_u*U_update_trans+(-1.00)*U_update*D_u_trans)
+   Z_decent1_trans=copy.copy(Z_decent1)
+   Z_decent1_trans.transpose()
+   Z_decent_h=Z_decent1+(-1.00)*Z_decent
+   A=(Z_decent_h*Z_decent1_trans).trace()
+   B=(Z_decent*Z_decent_trans).trace()
+   norm_gamma=A/B
+   #norm_gamma=0
+   #print norm_gamma 
+   if Method is  'SteepestDescentploy': norm_gamma=0.0;
+   H_direct1=Z_decent1+(1.0)*norm_gamma*H_direct
+   Check=(H_direct1*Z_decent1_trans).trace()
+   if Check<0: H_direct1=Z_decent1;
+   H_direct=copy.copy(H_direct1)
+   Z_decent=copy.copy(Z_decent1)
+   count+=1
+   #E_list.append(E1)
+   #Count_list.append(count)
+
+  U_list[L_position][L_lay_selected].putBlock(U_update)
+  E_f=Energy_newunitary(U_list, mpo_U_list_up, mpo_U_list_down, mpo_list2, mpo_boundy_list, L_position, d, Environment_Left, L_lay,L, Environment_Right,L_lay_selected,Env_Uni_inner,Environment_Uni, perl_label_up, Bond_IN,Tech)
+  Gamma_list[L_position][L_lay_selected]=Gamma+0.01*Gamma
+  E_list.append(E_f)
+  Count_list.append(count)
+
+  #print 'E_s=', Energy_s, '\n', 'E_f=', E_f 
+  if Energy_s > E_f:
+   print 'Notoptimized= E > E1, CGPOLY', E_f,  Energy_s
+   U_list[L_position][L_lay_selected].putBlock(U_first)
+ 
+ 
+ elif Method is 'SteepestDescent':
+  E=Energy_newunitary(U_list, mpo_U_list_up, mpo_U_list_down, mpo_list2, mpo_boundy_list, L_position, d, Environment_Left, L_lay,L, Environment_Right,L_lay_selected,Env_Uni_inner,Environment_Uni, perl_label_up, Bond_IN,Tech)
+  #print 'E=', E
+  
+  E2=0.0
+  U_update=copy.copy(U_list[L_position][L_lay_selected].getBlock())
+  U_first=copy.copy(U_update)
+  Gamma= Gamma_list[L_position][L_lay_selected]
+  #Gamma=1.0
+  if len(Count_list) is 0: count=0 
+  else: count = Count_list[len(Count_list)-1]
+  E_previous=0
+  for i in xrange(Max_Steepest_iteratoin):
+   count+=1
+   U_list[L_position][L_lay_selected].putBlock(U_update)
+   E1=Energy_newunitary(U_list, mpo_U_list_up, mpo_U_list_down, mpo_list2, mpo_boundy_list, L_position, d, Environment_Left, L_lay,L, Environment_Right,L_lay_selected,Env_Uni_inner,Environment_Uni, perl_label_up, Bond_IN,Tech)
+   #print 'E=', E1, count
+   #E_list.append(E1)
+   #Count_list.append(count)
+   #print 'test', (Env_Uni_inner[L_position][L_lay_selected].transpose().getBlock()*U_update).trace()
+   D_u=-4.00*Env_Uni_inner[L_position][L_lay_selected].getBlock()
+   D_u_trans=copy.copy(D_u)
+   D_u_trans.transpose()
+   #print D_u, D_u_trans, (-1.00)*D_u, U_update*D_u_trans*U_update 
+   Z_decent=U_update*D_u_trans*U_update+(-1.00)*D_u
+   Z_decent_trans=copy.copy(Z_decent)
+   Z_decent_trans.transpose()
+   Norm_Z=(Z_decent_trans*Z_decent).trace() / 2.00
+    
+    
+   if E1>E_previous or i is 0:
+    if abs((E_previous-E1)/E1) < 1.0e-8:
+     #print E_previous, E1, abs((E_previous-E1)/E1), i
+     break
+   E_previous=E1
+   
+   if Norm_Z < 1.0e-7:
+    #print 'Break Norm=', Norm_Z
+    break
+   Break_loop=1
+   Gamma=1.0
+   while Break_loop is 1:
+    count+=1
+    Temporary=U_update+(2.00)*Gamma*Z_decent
+    svd=Temporary.svd()
+    Temporary=svd[0]*svd[2]
+    U_list[L_position][L_lay_selected].putBlock(Temporary)
+    #print U_list[L_position][L_lay_selected], Temporary
+    E2=Energy_newunitary(U_list, mpo_U_list_up, mpo_U_list_down, mpo_list2, mpo_boundy_list, L_position, d, Environment_Left, L_lay,L, Environment_Right,L_lay_selected,Env_Uni_inner,Environment_Uni, perl_label_up, Bond_IN,Tech)
+    #print 'E2=', E2, E1-E2, -Norm_Z*Gamma 
+    if E1-E2 <=(-Norm_Z*Gamma):
+     Gamma*=2.00
+    else:
+     Break_loop=0
+   
+   Break_loop=1
+   while Break_loop is 1:
+    count+=1
+    #print 'Numbers=', count 
+    Temporary=U_update+Gamma*Z_decent
+    svd=Temporary.svd()
+    Temporary=svd[0]*svd[2]
+    U_list[L_position][L_lay_selected].putBlock(Temporary)
+    E2=Energy_newunitary(U_list, mpo_U_list_up, mpo_U_list_down, mpo_list2, mpo_boundy_list, L_position, d, Environment_Left, L_lay,L, Environment_Right,L_lay_selected,Env_Uni_inner,Environment_Uni, perl_label_up, Bond_IN,Tech)
+    #print 'E2s=', E2, 'Gamma=', Gamma
+    #print 'abs=', abs((0.5)*Norm_Z*Gamma) 
+    if abs((0.5)*Norm_Z*Gamma) <1.0e-11 or  abs(E1-E2)<1.0e-11 :
+     #print 'break, Gamma is too small', 'E1-E2=', abs(E1-E2)
+     Temporary=U_update+Gamma*Z_decent
+     svd=Temporary.svd()
+     Temporary=svd[0]*svd[2]
+     break
+    #print E1-E2, (-0.5)*Norm_Z*Gamma  
+    if E1-E2 > (-0.5)*Norm_Z*Gamma:
+     Gamma*=0.5
+    else:
+     Break_loop=0
+
+   Temporary=U_update+Gamma*Z_decent
+   svd=Temporary.svd()
+   U_update=svd[0]*svd[2]
+  
+  U_list[L_position][L_lay_selected].putBlock(U_update)
+  E_f=Energy_newunitary(U_list, mpo_U_list_up, mpo_U_list_down, mpo_list2, mpo_boundy_list, L_position, d, Environment_Left, L_lay,L, Environment_Right,L_lay_selected,Env_Uni_inner,Environment_Uni, perl_label_up, Bond_IN,Tech)
+  Gamma_list[L_position][L_lay_selected]=Gamma+0.01*Gamma
+  E_list.append(E_f)
+  Count_list.append(count)
+  #print 'E_s=', Energy_s, '\n', 'E_f=', E_f 
+  if Energy_s > E_f:
+   print 'Notoptimized= E > E1, Steepest', E_f,  Energy_s
+   U_list[L_position][L_lay_selected].putBlock(U_first)
+
+
+    
+    
+    
+  
+  
+ 
+ 

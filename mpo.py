@@ -7,7 +7,7 @@ import pyUni10 as uni10
 import random 
 import copy
 import env
-
+from datetime import datetime
 
 ##################### Spin 1/2 Pauli Operators ###############################################
 def matS0():
@@ -29,6 +29,7 @@ def intialize_coupling(L, hz_list, W,Randomness, Model):
  del hz_list[:]
  if Randomness is 'Fixed':
   random.seed(5)
+ else: random.seed(datetime.now());
  if Model is 'Heisenberg':
   for i in xrange(L):
    hz_list.append(random.uniform(-W,W))
@@ -36,7 +37,7 @@ def intialize_coupling(L, hz_list, W,Randomness, Model):
   for i in xrange(L):
    rand_w=random.uniform(-W,W)
    hz_list.append(1.00+rand_w)
-  print hz_list
+ print hz_list
 
 def print_trH2(L, hz_list,J): 
  hz_list_2=[x**2 for x in hz_list]
