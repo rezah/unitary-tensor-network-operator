@@ -12,11 +12,11 @@ import env
 import optimize 
 import plotdata
 ################################## Set parameter #######################################
-Tech='Regular'                  # MERA, Regular  
+Tech='MERA'                  # MERA, Regular  
 Model='Heisenberg'              #could be: 'Ising' and or 'Heisenberg'
-L=16                            #Numbers of particles should be even!
-L_lay=[0,1,2,3,4]               #Numbers of layers <= 5
-realizations=50                  #Number of realizations        
+L=12                            #Numbers of particles should be even!
+L_lay=[0,1,2,3,4,5]               #Numbers of layers <= 5
+realizations=1                  #Number of realizations        
 Accuracy=1.00e-7                #Accuracy of variational variance  
 d=2                              #pysical bond-dimension  
 chi=5                            #bond-dimension of MPO
@@ -25,10 +25,10 @@ J=1.0                            #coupling, 1.0
 J2=0.30                          #coupling, 0.3
 Fieldz=0.60                      #Field in z direction, 0.6
 hz_list=[]                       # list of randomness 
-U_delta=0.020                     #if it's zero, U_list is intialized by Identity
+U_delta=0.00                     #if it's zero, U_list is intialized by Identity
 Method='SteepestDescent'         #methods: CGarmjo, CGpoly, SVD, SteepestDescent, SteepestDescentploy 
 Randomness='Not-Fixed'               #Fixed
-Max_number_iteratoin_SVD=400       # maximum number of sweeps for SVD method 
+Max_number_iteratoin_SVD=2       # maximum number of sweeps for SVD method 
 Max_number_iteratoin_Steepest=400  # maximum number of sweeps for SteepestDescent method
 Max_number_iteratoin_CG=400         #maximum number of sweeps for CG method
 
@@ -81,17 +81,21 @@ mpo.intialize_coupling(L, hz_list, W, Randomness, Model)
 #print hz_list
 
 ##########    only works for Heisenberg    ##########################
-#trH2=mpo.print_trH2(L, hz_list,J)
-#print trH2 
-#mpo.avarage_Energy_power_2(L, hz_list,J)
+trH2=mpo.print_trH2(L, hz_list,J)
+print trH2 
+mpo.avarage_Energy_power_2(L, hz_list,J)
 
 ######### retrun MPO list, 1: one-site MPO, 2: two-site MPO; mpo_uni10_bl, mpo_uni10_br, mpo_uni10_bl2, mpo_uni10_br2###########################################
-mpo_list1, mpo_list2, mpo_boundy_list=mpo.make_mpo_H( L, J, hz_list, Fieldz, J2,Model )
-trH2=mpo.contraction_MPO_trH2( mpo_list2, mpo_boundy_list, L )
+mpo_list1, mpo_list2, mpo_boundy_list=mpo.make_mpo_H( L, J, hz_list, Fieldz, J2,Model, Tech, L_lay )
+trH2=mpo.contraction_MPO_trH2( mpo_list2, mpo_boundy_list, L, Tech, L_lay )
 print trH2
 
-U_list=mpo.intialize_unitary_list( L, L_lay, d, U_delta)
-copy_U_list=optimize.copy_U_list_function(U_list, L, L_lay)
+U_list=mpo.intialize_unitary_list( L, L_lay, d, U_delta,Tech)
+
+#print U_list[0][1].printDiagram(), U_list[(L/4)-1][1].printDiagram(), U_list[1][1].printDiagram(), #U_list[1][4].printDiagram()
+
+
+copy_U_list=optimize.copy_U_list_function(U_list, L, L_lay,Tech)
 
 ######### make a mpo representation of unitary U, up stand for U, down for U^{T} ######### 
 mpo_U_list_up= mpo.make_mpo_U_list(U_list, L_lay, L, 'up', Tech)
@@ -101,7 +105,13 @@ mpo_U_list_down= mpo.make_mpo_U_list(U_list, L_lay, L, 'down', Tech)
 perl_label_up=[None]*4
 perl_label_up=[None]*4
 Bond_IN=[None]*4
-List_position=[ 0, 1, 2, (L/2)-1]
+
+if (Tech is 'MERA') and (len(L_lay) is 6):
+  L_m=L/2
+else: L_m=L;
+
+
+List_position=[ 0, 1, 2, (L_m/2)-1]
 for i in xrange(4):
  L_position=List_position[i]
  perl_label_up[i], Bond_IN[i]= mpo.make_mpo_U_Label( L_position, L_lay, L, 'up',  Tech)
@@ -109,20 +119,27 @@ for i in xrange(4):
 
 
 
-Environment_Left=[None]*(L/2)
-Environment_Right=[None]*(L/2)
-Environment_Uni=[None]*(L/2)
-Env_Uni_inner, Gamma=Initialize_function(L, L_lay)
+#Environment_Left=[None]*(L_m/2)
+#Environment_Right=[None]*(L_m/2)
+#Environment_Uni=[None]*(L_m/2)
+#Env_Uni_inner, Gamma=Initialize_function(L_m, L_lay)
 
 
 
 file = open("Data/varianceAll.txt", "w")
 variance_final1=[]
 variance_final2=[]
-Count_final2=[]
+variance_final3=[]
+
 Count_final1=[]
+Count_final2=[]
+Count_final3=[]
+
+
+
+
 for q in xrange(realizations):
- print '\n', 'q_regular=', q, '\n'
+ print '\n', 'q_MERA1=', q, '\n'
  variance_list1=[]
  variance_list2=[]
 
@@ -130,15 +147,73 @@ for q in xrange(realizations):
  Count_list1=[]
  E_list2=[]
  Count_list2=[]
+ E_list3=[]
+ Count_list3=[]
+ 
+ 
+ 
+ Randomness='Not-Fixed'
+ mpo.intialize_coupling(L, hz_list, W, Randomness, Model)
+ Tech='MERA'
+ L_lay=[0,1,2,3,4,5]
+ mpo_list1, mpo_list2, mpo_boundy_list=mpo.make_mpo_H( L, J, hz_list, Fieldz, J2,Model,Tech,L_lay )
+ trH2=mpo.contraction_MPO_trH2( mpo_list2, mpo_boundy_list, L, Tech,L_lay)
+
+ Method='SVD'
+ U_list=mpo.intialize_unitary_list( L, L_lay, d, U_delta,Tech)
+ mpo_U_list_up = mpo.make_mpo_U_list(U_list, L_lay, L, 'up', Tech)
+ mpo_U_list_down= mpo.make_mpo_U_list(U_list, L_lay, L, 'down', Tech)
+
+
+ if (Tech is 'MERA') and (len(L_lay) is 6):
+  L_m=L/2
+ else: L_m=L;
+
+
+ List_position=[ 0, 1, 2, (L_m/2)-1]
+ for i in xrange(4):
+  L_position=List_position[i]
+  perl_label_up[i], Bond_IN[i]= mpo.make_mpo_U_Label( L_position, L_lay, L, 'up',  Tech)
+
+ Environment_Left=[None]*(L_m/2)
+ Environment_Right=[None]*(L_m/2)
+ Environment_Uni=[None]*(L_m/2)
+ Env_Uni_inner, Gamma=Initialize_function(L_m, L_lay)
+ 
+ print 'Hi'
+ E_f=mpo.Energy_through_env(U_list, L_lay, L, mpo_U_list_up, mpo_U_list_down, mpo_list2, mpo_boundy_list, L_position, d, Environment_Left,Tech)
+ print E_f
+ 
+ Optimi_full_process(U_list,mpo_U_list_up, mpo_U_list_down, mpo_list2, mpo_boundy_list,Environment_Left,Environment_Right,perl_label_up, Environment_Uni,Env_Uni_inner, Bond_IN,d,L_m,L_lay,L_position,Method ,Max_SVD_iteratoin, Max_Steepest_iteratoin,Max_CG_iteratoin, E_list3, Count_list3,Gamma,Tech,trH2 )
+ 
+
+ 
+ 
+ 
+ 
+ 
  Randomness='Not-Fixed'
  Tech='Regular'
  L_lay=[0,1,2,3,4]
- mpo.intialize_coupling(L, hz_list, W, Randomness, Model)
- mpo_list1, mpo_list2, mpo_boundy_list=mpo.make_mpo_H( L, J, hz_list, Fieldz, J2,Model )
- trH2=mpo.contraction_MPO_trH2( mpo_list2, mpo_boundy_list, L )
+ U_list=mpo.intialize_unitary_list( L, L_lay, d, U_delta,Tech)
+ mpo_list1, mpo_list2, mpo_boundy_list=mpo.make_mpo_H( L, J, hz_list, Fieldz, J2,Model,Tech,L_lay )
+ trH2=mpo.contraction_MPO_trH2( mpo_list2, mpo_boundy_list, L, Tech,L_lay)
+ print 'trH2=', trH2
+
+ List_position=[ 0, 1, 2, (L/2)-1]
+ for i in xrange(4):
+  L_position=List_position[i]
+  perl_label_up[i], Bond_IN[i]= mpo.make_mpo_U_Label( L_position, L_lay, L, 'up',  Tech)
+
+ Environment_Left=[None]*(L/2)
+ Environment_Right=[None]*(L/2)
+ Environment_Uni=[None]*(L/2)
+ Env_Uni_inner, Gamma=Initialize_function(L, L_lay)
+
+
 
  Method='SVD'
- U_list=mpo.intialize_unitary_list( L, L_lay, d, U_delta)
+ U_list=mpo.intialize_unitary_list( L, L_lay, d, U_delta,Tech)
  mpo_U_list_up = mpo.make_mpo_U_list(U_list, L_lay, L, 'up', Tech)
  mpo_U_list_down= mpo.make_mpo_U_list(U_list, L_lay, L, 'down', Tech)
  Env_Uni_inner, Gamma=Initialize_function(L, L_lay)
@@ -157,7 +232,7 @@ for q in xrange(realizations):
   L_position=List_position[i]
   perl_label_up[i], Bond_IN[i]= mpo.make_mpo_U_Label( L_position, L_lay, L, 'up',  Tech)
  Env_Uni_inner, Gamma=Initialize_function(L, L_lay)
- U_list=mpo.intialize_unitary_list( L, L_lay, d, U_delta)
+ U_list=mpo.intialize_unitary_list( L, L_lay, d, U_delta,Tech)
  copy_U_list1=optimize.copy_U_list_function(U_list, L, L_lay)
  U_list=copy_U_list1
 
