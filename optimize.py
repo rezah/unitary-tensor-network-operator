@@ -173,7 +173,7 @@ def exp_matrix(H_direct,Gamma, U_update):
    M_return1[i*dim1+j]=M0[i,j]
  M_return1=M_return1*U_update
  return M_return1 
-####################################      Energy           #####################################
+################################      Energy           ##########################
 def Energy_newunitary(U_list, mpo_U_list_up, mpo_U_list_down, mpo_list2, mpo_boundy_list, L_position, d, Environment_Left, L_lay,L, Environment_Right,L_lay_selected,Env_Uni_inner,Environment_Uni, perl_label_up, Bond_IN,Tech):
  
  Update_Unitary_change(U_list, mpo_U_list_up, mpo_U_list_down, mpo_list2, mpo_boundy_list, L_position, d, Environment_Left, L_lay,L,Tech)
@@ -184,14 +184,14 @@ def Energy_newunitary(U_list, mpo_U_list_up, mpo_U_list_down, mpo_list2, mpo_bou
  E=(Env_Uni_inner[L_position][L_lay_selected]*U_list[L_position][L_lay_selected])[0]
  return E
 
-####################     Update mpo_U_up/down & Environment_Left    ################################
+####################     Update mpo_U_up/down & Environment_Left    ##################
 def Update_Unitary_change(U_list, mpo_U_list_up, mpo_U_list_down, mpo_list2, mpo_boundy_list, L_position, d, Environment_Left, L_lay,L,Tech):
  mpo_U_up=mpo.make_mpo_U(U_list, L_position, L_lay, L, 'up', Tech)
  mpo_U_down=mpo.make_mpo_U(U_list, L_position, L_lay, L, 'down', Tech)
  mpo_U_list_up[L_position]=mpo_U_up
  mpo_U_list_down[L_position]=mpo_U_down
 # Environment_Left[L_position]=env.Env_left (mpo_U_list_up, mpo_U_list_down, mpo_list2, mpo_boundy_list, L_position, d, Environment_Left)
-################################   Copy U_list       ##########################################
+################################   Copy U_list       ###################################
 def copy_U_list_function(U_list,L,L_lay,Tech):
 
 
@@ -298,7 +298,7 @@ def optimize_inner_function(U_list, mpo_U_list_up, mpo_U_list_down, mpo_list2, m
   Energy_f=Energy_newunitary(U_list, mpo_U_list_up, mpo_U_list_down, mpo_list2, mpo_boundy_list, L_position, d, Environment_Left, L_lay,L, Environment_Right,L_lay_selected,Env_Uni_inner,Environment_Uni, perl_label_up, Bond_IN,Tech)
   Count_list.append(count)
   E_list.append(Energy_f)
-  #print 'E_s=', Energy_s, '\n', 'E_f=', Energy_f
+  print 'E_s=', Energy_s, '\n', 'E_f=', Energy_f
   if Energy_s > Energy_f:
    print 'Notoptimized= E > E1, SVD',  Energy_s, Energy_f
    U_list[L_position][L_lay_selected].putBlock(U_first)

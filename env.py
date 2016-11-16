@@ -70,6 +70,45 @@ def Reduction_lastbond(U_up_1, n, Letter):
  
  
  
+def Reduction_lastbond1(U_up_1, n, Letter):
+ Mat=U_up_1.getBlock()
+ dim1=U_up_1.bond(0).dim()
+ dim2=U_up_1.bond(1).dim()
+ dim3=U_up_1.bond(2).dim()
+ if Letter is 'up':
+  Mat1=uni10.Matrix(dim1, dim2)
+  Mat1.set_zero()
+  for j in xrange(dim1):
+   for m in xrange(dim2):
+     Mat1[j*dim2+m]=U_up_1[j*dim2*dim3+m*dim3+n]
+  bond_list=list(U_up_1.bond())
+  #print list(bond_list)
+  bond_list=list(bond_list)
+  bond_list.pop()
+  #print bond_list
+  Uni_tensor=uni10.UniTensor(bond_list,U_up_1.getName())
+  Uni_tensor.putBlock(Mat1)
+  #print Uni_tensor.printDiagram(), n
+  return Uni_tensor
+ elif Letter is 'down':
+  Mat1=uni10.Matrix(1,dim2*dim3)
+  Mat1.set_zero()
+  for j in xrange(dim3):
+    for m in xrange(dim2):
+     Mat1[m*dim3+j]=U_up_1[n*dim2*dim3+m*dim3+j]
+  bond_list=list(U_up_1.bond())
+  #print 'hi', list(bond_list)
+  bond_list=list(bond_list)
+  A=bond_list.pop()
+  B=bond_list.pop()
+  C=bond_list.pop()
+  bond_list.append(B)
+  bond_list.append(A)
+  #print bond_list
+  Uni_tensor=uni10.UniTensor(bond_list,U_up_1.getName())
+  Uni_tensor.putBlock(Mat1)
+  #print Uni_tensor.printDiagram(), n
+  return Uni_tensor
  
  
   
@@ -107,7 +146,7 @@ def Env_left ( mpo_U_list_up, mpo_U_list_down, mpo_list2, mpo_boundy_list, L_pos
   #print Environment_Left
   return Environment_Left
  else: 
-  print 'L_position=', L_position
+  #print 'L_position=', L_position
   Env_left_copy=copy.copy(Environment_Left[L_position-1]) 
   U_up_1=copy.copy(mpo_U_list_up[L_position])
   U_down_1=copy.copy(mpo_U_list_down[L_position])
@@ -251,6 +290,15 @@ def put_uni10(U_up_2,Result_final, Result_uni10, n):
     for m in xrange(dim2):
      Result_final[i*dim1*dim2*dim3+j*dim2*dim3+m*dim3+n]=matH[i*dim1*dim2+j*dim2+m]
 
+def put_uni101(U_up_2,Result_final, Result_uni10, n):
+  dim1=U_up_2.bond(0).dim()
+  dim2=U_up_2.bond(1).dim()
+  dim3=U_up_2.bond(2).dim()
+  matH=Result_uni10.getBlock()
+  for j in xrange(dim1):
+    for m in xrange(dim2):
+     Result_final[j*dim2*dim3+m*dim3+n]=matH[j*dim2+m]
+
 
  
   
@@ -266,24 +314,36 @@ def Environment_uni_function(mpo_U_list_up, mpo_U_list_down, mpo_list2, mpo_boun
   mpo_boundy_down=copy.copy(mpo_boundy_list[0])
   Iden_up=Iden_uni10(U_up_2.bond(2).dim())
   Iden_down=Iden_uni10(U_up_2.bond(2).dim())
-  ##### assign label#####
-  U_up_2.setLabel([-9,3,-7])
-  U_down_1.setLabel([-4,2,-3])
-  U_down_2.setLabel([-8,5,-11])
-  mpo_up.setLabel([-2,-3,1,-1])
-  mpo_down.setLabel([-10,-11,4,-9])
-  mpo_boundy_up.setLabel([-2])
-  mpo_boundy_down.setLabel([-10])
-  Iden_up.setLabel([-6,-4,-5])
-  Iden_down.setLabel([-6,-8,-7])
   ##########  Contraction  ##############
-  Environment_Uni=(((Env_Right_copy*(mpo_boundy_up*mpo_up*U_down_1))*Iden_up)*(U_up_2*mpo_down*mpo_boundy_down))*(U_down_2*Iden_down)
-  Environment_Uni.permute([-1,0,-5],1)
-  Environment_Uni.setName('Environment_Uni')
-  Environment_Uni.setLabel([0,1,2])
-  #print Environment_Uni.printDiagram()
-  #print Environment_Uni
-  return Environment_Uni
+  dim0=U_up_2.bond(0).dim()
+  dim1=U_up_2.bond(1).dim()
+  dim2=U_up_2.bond(2).dim()
+  Result_final=uni10.Matrix(dim0,dim1*dim2)
+  Result_final.set_zero()
+  EnvUni1_net = uni10.Network("EnvUni1.net")
+  EnvUni1_net.putTensor('Env_Right_copy',Env_Right_copy)
+  EnvUni1_net.putTensor('mpo_up',mpo_up)
+  EnvUni1_net.putTensor('mpo_down',mpo_down)
+  EnvUni1_net.putTensor('mpo_boundy_up',mpo_boundy_up)
+  EnvUni1_net.putTensor('mpo_boundy_down',mpo_boundy_down)
+  
+
+  for i in xrange(dim2):
+   U_down_11=Reduction_lastbond1(U_down_1, i, 'down')
+   U_up_22=Reduction_lastbond1(U_up_2, i, 'up')
+   U_down_22=Reduction_lastbond1(U_down_2, i, 'down')
+   EnvUni1_net.putTensor('U_up_22',U_up_22)
+   EnvUni1_net.putTensor('U_down_11',U_down_11)
+   EnvUni1_net.putTensor('U_down_22',U_down_22)
+   Result_uni10=EnvUni1_net.launch()
+   put_uni101(U_up_2, Result_final, Result_uni10, i)
+   
+  Result_final_uni=uni10.UniTensor(U_up_2.bond())
+  Result_final_uni.putBlock(Result_final)
+  Result_final_uni.setLabel([0,1,2])
+  return Result_final_uni
+
+
  elif L_position is (len(mpo_list2)-1):
   Env_Left_copy=copy.copy(Environment_Left[L_position-1])
   U_down_1=copy.copy(mpo_U_list_down[L_position])
@@ -310,8 +370,6 @@ def Environment_uni_function(mpo_U_list_up, mpo_U_list_down, mpo_list2, mpo_boun
   Environment_Uni.permute([-1,0,-5],2)
   Environment_Uni.setName('Environment_Uni')
   Environment_Uni.setLabel([0,1,2]) 
-  #print Environment_Uni.printDiagram()
-  #print Environment_Uni
   return Environment_Uni
  else:
   Env_Right_copy=copy.copy(Environment_Right[L_position+1])
@@ -324,8 +382,6 @@ def Environment_uni_function(mpo_U_list_up, mpo_U_list_down, mpo_list2, mpo_boun
   Iden_up=Iden_uni10(U_up_2.bond(3).dim())
   Iden_down=Iden_uni10(U_up_2.bond(3).dim())
   ############## Contraction using Network ###############
-  
-  
   dim0=U_up_2.bond(0).dim()
   dim1=U_up_2.bond(1).dim()
   dim2=U_up_2.bond(2).dim()
@@ -804,17 +860,27 @@ def Env_Uni_inner_function(U_list, Environment_Uni, perl_label_up, Bond_IN, L_la
  elif Tech is 'MERA':
   if L_position is 0:
    if len(L_lay) is 6:
-    print 'hi'
-    bdi=uni10.Bond(uni10.BD_IN, 4)
-    bdo=uni10.Bond(uni10.BD_OUT, 4)
+    bdi2=uni10.Bond(uni10.BD_IN, 2)
+    bdi8=uni10.Bond(uni10.BD_IN, 8)
+    bdi4=uni10.Bond(uni10.BD_IN, 4)
+ 
+    bdo4=uni10.Bond(uni10.BD_OUT, 4)
+    bdo2=uni10.Bond(uni10.BD_OUT, 2)
+    bdo8=uni10.Bond(uni10.BD_OUT, 8)
+  
     bd_list=[]
-    for i in xrange(len(perl_label_up[L_position])):
-     if i < Bond_IN[L_position] :
-      bd_list.append(bdi)
-     else:
-      bd_list.append(bdo)
+
+
+    bd_list.append(bdi8)
+    bd_list.append(bdi2)
+    bd_list.append(bdo2)
+    bd_list.append(bdo4)
+    bd_list.append(bdo8)
+    bd_list.append(bdo4)
+
     Environment_Uni_newlabel=uni10.UniTensor(bd_list)
     Environment_Uni_newlabel.setLabel(perl_label_up[L_position])
+    print perl_label_up[L_position]
     Environment_Uni_newlabel.putBlock(Environment_Uni[L_position].getBlock())
     U0=copy.copy(U[0])
     U1=copy.copy(U[1]) 
@@ -879,14 +945,24 @@ def Env_Uni_inner_function(U_list, Environment_Uni, perl_label_up, Bond_IN, L_la
 
   if L_position is (len(U_list)-1):
    if len(L_lay) is 6:
-    bdi=uni10.Bond(uni10.BD_IN, 4)
-    bdo=uni10.Bond(uni10.BD_OUT, 4)
+    bdi2=uni10.Bond(uni10.BD_IN, 2)
+    bdi8=uni10.Bond(uni10.BD_IN, 8)
+    bdi4=uni10.Bond(uni10.BD_IN, 4)
+ 
+    bdo4=uni10.Bond(uni10.BD_OUT, 4)
+    bdo2=uni10.Bond(uni10.BD_OUT, 2)
+    bdo8=uni10.Bond(uni10.BD_OUT, 8)
+  
     bd_list=[]
-    for i in xrange(len(perl_label_up[3])):
-     if i < Bond_IN[3]:
-      bd_list.append(bdi)
-     else:
-      bd_list.append(bdo)
+
+
+    bd_list.append(bdi4)
+    bd_list.append(bdi4)
+    bd_list.append(bdi2)
+    bd_list.append(bdi4)
+    bd_list.append(bdo2)
+    bd_list.append(bdo4)
+
     Environment_Uni_newlabel=uni10.UniTensor(bd_list)
     Environment_Uni_newlabel.setLabel(perl_label_up[3])
     Environment_Uni_newlabel.putBlock(Environment_Uni[L_position].getBlock())
@@ -896,6 +972,27 @@ def Env_Uni_inner_function(U_list, Environment_Uni, perl_label_up, Bond_IN, L_la
     U0.setLabel([0,1,2,3])
     U1.setLabel([4,2,5,6])
     U2.setLabel([6,3,7,8])
+
+    if L_lay_selected is 0:
+     U_result=Environment_Uni_newlabel*(U1*U2)
+     U_result.permute([0,1,2,3],2)
+     Env_Uni_inner[L_position][L_lay_selected]=U_result
+    if L_lay_selected is 1:
+     U_result=Environment_Uni_newlabel*(U0*U2)
+     U_result.permute([4,2,5,6],2)
+     U_result.setLabel([0,1,2,3])
+     Env_Uni_inner[L_position][L_lay_selected]=U_result
+    if L_lay_selected is 2:
+     U_result=(Environment_Uni_newlabel)*(U0*U1)
+     U_result.permute([6,3,7,8],2)
+     U_result.setLabel([0,1,2,3])
+     Env_Uni_inner[L_position][L_lay_selected]=U_result
+
+
+
+
+
+
 
 
    if len(L_lay) is 8:
@@ -942,28 +1039,25 @@ def Env_Uni_inner_function(U_list, Environment_Uni, perl_label_up, Bond_IN, L_la
 
 
     bd_list=[]
-    for i in xrange(len(perl_label_up[1])):
-     if i < Bond_IN[1] :
-      bd_list.append(bdi)
-     else:
-      bd_list.append(bdo)
+#    for i in xrange(len(perl_label_up[1])):
+#     if i < Bond_IN[1] :
+#      bd_list.append(bdi)
+#     else:
+#      bd_list.append(bdo)
+    bd_list.append(bdi)
     bd_list.append(bdi1)
-    bd_list.append(bdi1)
     bd_list.append(bdi)
     bd_list.append(bdi)
     bd_list.append(bdi)
     bd_list.append(bdi)
+    bd_list.append(bdo)
     bd_list.append(bdo1)
     bd_list.append(bdo1)
     bd_list.append(bdo1)
-    bd_list.append(bdo1)
-    
-    
-    
-      
     
     Environment_Uni_newlabel=uni10.UniTensor(bd_list)
     Environment_Uni_newlabel.setLabel(perl_label_up[1])
+    print perl_label_up[1]
     Environment_Uni_newlabel.putBlock(Environment_Uni[L_position].getBlock())
     U0=copy.copy(U[0])
     U1=copy.copy(U[1])

@@ -461,7 +461,7 @@ def intialize_unitary_list( L, L_lay,d, delta,Tech):
   bdi_spin1 = uni10.Bond(uni10.BD_IN, d*d);
   bdo_spin = uni10.Bond(uni10.BD_OUT, d);
   bdo_spin1 = uni10.Bond(uni10.BD_OUT, d*d);
-  U_uni10=uni10.UniTensor([bdi_spin, bdi_spin1, bdo_spin1,bdo_spin], "Unitary_uni10")
+  U_uni10=uni10.UniTensor([bdi_spin, bdi_spin1, bdo_spin,bdo_spin1], "Unitary_uni10")
   matrix_random1=copy.copy(matrix_randomB)
   matrix_random1.randomize()
   matrix_random1=matrix_randomB+(delta)*matrix_random1

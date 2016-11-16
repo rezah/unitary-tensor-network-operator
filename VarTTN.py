@@ -16,7 +16,7 @@ Tech='MERA'                  # MERA, Regular
 Model='Heisenberg'              #could be: 'Ising' and or 'Heisenberg'
 L=12                            #Numbers of particles should be even!
 L_lay=[0,1,2,3,4,5]               #Numbers of layers <= 5
-realizations=1                  #Number of realizations        
+realizations=0                  #Number of realizations        
 Accuracy=1.00e-7                #Accuracy of variational variance  
 d=2                              #pysical bond-dimension  
 chi=5                            #bond-dimension of MPO
@@ -83,16 +83,16 @@ mpo.intialize_coupling(L, hz_list, W, Randomness, Model)
 ##########    only works for Heisenberg    ##########################
 trH2=mpo.print_trH2(L, hz_list,J)
 print trH2 
-mpo.avarage_Energy_power_2(L, hz_list,J)
-
+variance_Energy=mpo.avarage_Energy_power_2(L, hz_list,J)
+print variance_Energy
 ######### retrun MPO list, 1: one-site MPO, 2: two-site MPO; mpo_uni10_bl, mpo_uni10_br, mpo_uni10_bl2, mpo_uni10_br2###########################################
 mpo_list1, mpo_list2, mpo_boundy_list=mpo.make_mpo_H( L, J, hz_list, Fieldz, J2,Model, Tech, L_lay )
 trH2=mpo.contraction_MPO_trH2( mpo_list2, mpo_boundy_list, L, Tech, L_lay )
-print trH2
+#print trH2
 
 U_list=mpo.intialize_unitary_list( L, L_lay, d, U_delta,Tech)
 
-#print U_list[0][1].printDiagram(), U_list[(L/4)-1][1].printDiagram(), U_list[1][1].printDiagram(), #U_list[1][4].printDiagram()
+#print U_list[0][1].printDiagram(), U_list[0][0].printDiagram(), U_list[(L/4)-1][0].printDiagram(), U_list[(L/4)-1][1].printDiagram(),U_list[(L/4)-1][2].printDiagram(), U_list[1][1].printDiagram(), U_list[1][4].printDiagram()
 
 
 copy_U_list=optimize.copy_U_list_function(U_list, L, L_lay,Tech)
@@ -100,6 +100,11 @@ copy_U_list=optimize.copy_U_list_function(U_list, L, L_lay,Tech)
 ######### make a mpo representation of unitary U, up stand for U, down for U^{T} ######### 
 mpo_U_list_up= mpo.make_mpo_U_list(U_list, L_lay, L, 'up', Tech)
 mpo_U_list_down= mpo.make_mpo_U_list(U_list, L_lay, L, 'down', Tech)
+
+
+
+
+
 
 
 perl_label_up=[None]*4
@@ -116,8 +121,67 @@ for i in xrange(4):
  L_position=List_position[i]
  perl_label_up[i], Bond_IN[i]= mpo.make_mpo_U_Label( L_position, L_lay, L, 'up',  Tech)
 
+if (Tech is 'MERA') and (len(L_lay) is 6):
+  L_m=L/2
+else: L_m=L;
+
+Environment_Left=[None]*(L_m/2)
+Environment_Right=[None]*(L_m/2)
+Environment_Uni=[None]*(L_m/2)
+Env_Uni_inner, Gamma=Initialize_function(L_m, L_lay)
+
+t0=time.time()
+for i in xrange((L_m/2)-1):
+ L_position=i
+ #print 'i',i
+ Environment_Left[i]=env.Env_left (mpo_U_list_up, mpo_U_list_down, mpo_list2, mpo_boundy_list, L_position, d, Environment_Left)
+print 'L, calculated'
+print time.time() - t0, "Seconds, Left"
+
+t0=time.time()
+for i in xrange((L_m/2)-1):
+ L_position=(L_m/2)-1-i
+ #print L_position
+ Environment_Right[L_position]=env.Env_right (mpo_U_list_up, mpo_U_list_down, mpo_list2, mpo_boundy_list, L_position, d, Environment_Right)
+print 'R, calculated'
+print time.time() - t0, "Seconds, Right"
+
+print (Environment_Right[1] * Environment_Left[0])[0] 
+
+t0=time.time()
+for i in xrange(1):
+ for j in xrange(2):
+  L_position=0
+  #print 'i', i
+  L_lay_selected=j
+  Environment_Uni[L_position]=env.Environment_uni_function(mpo_U_list_up, mpo_U_list_down, mpo_list2, mpo_boundy_list, L_position, d, Environment_Left, Environment_Right) 
+  env.Env_Uni_inner_function(U_list, Environment_Uni, perl_label_up, Bond_IN, L_lay,L_lay_selected, L_position, Env_Uni_inner,Tech )
+  print (Env_Uni_inner[L_position][L_lay_selected]*U_list[L_position][L_lay_selected])[0], 'L'
+print time.time() - t0, "Seconds, L"
 
 
+t0=time.time()
+for i in xrange(1):
+ for j in xrange(6):
+  L_position=1
+  print 'i=', i
+  L_lay_selected=j
+  Environment_Uni[L_position]=env.Environment_uni_function(mpo_U_list_up, mpo_U_list_down, mpo_list2, mpo_boundy_list, L_position, d, Environment_Left, Environment_Right) 
+  env.Env_Uni_inner_function(U_list, Environment_Uni, perl_label_up, Bond_IN, L_lay,L_lay_selected, L_position, Env_Uni_inner,Tech )
+  print (Env_Uni_inner[L_position][L_lay_selected]*U_list[L_position][L_lay_selected])[0], 'M'
+print time.time() - t0, "Seconds, M"
+
+
+t0=time.time()
+for i in xrange(1):
+ for j in xrange(3):
+  L_position=2
+  print 'j=', i
+  L_lay_selected=j
+  Environment_Uni[L_position]=env.Environment_uni_function(mpo_U_list_up, mpo_U_list_down, mpo_list2, mpo_boundy_list, L_position, d, Environment_Left, Environment_Right) 
+  env.Env_Uni_inner_function(U_list, Environment_Uni, perl_label_up, Bond_IN, L_lay,L_lay_selected, L_position, Env_Uni_inner,Tech )
+  print (Env_Uni_inner[L_position][L_lay_selected]*U_list[L_position][L_lay_selected])[0], 'R'
+print time.time() - t0, "Seconds, R"
 
 #Environment_Left=[None]*(L_m/2)
 #Environment_Right=[None]*(L_m/2)
@@ -259,5 +323,19 @@ for q in xrange(realizations):
 #############################################################################################################33
 
 file.close()
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
