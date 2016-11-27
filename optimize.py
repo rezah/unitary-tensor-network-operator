@@ -194,10 +194,12 @@ def Update_Unitary_change(U_list, mpo_U_list_up, mpo_U_list_down, mpo_list2, mpo
 ################################   Copy U_list       ###################################
 def copy_U_list_function(U_list,L,L_lay,Tech):
 
-
  if (Tech is 'MERA') and (len(L_lay) is 6):
   L_m=L/2
+ elif (Tech is 'MERA') and (len(L_lay) is 9):
+  L_m=((L-8)/3)+4
  else: L_m=L;
+ 
  
  U_list_copy=[]
  
@@ -219,20 +221,23 @@ def optimize_function(U_list,mpo_U_list_up, mpo_U_list_down, mpo_list2, mpo_boun
   if L_position is not L/2-1:
    for i in xrange(len(L_lay)):
     L_lay_selected=i
+    print 'L_position, L, L_lay', L_position, L, L_lay_selected
     optimize_inner_function(U_list,mpo_U_list_up, mpo_U_list_down, mpo_list2, mpo_boundy_list,Environment_Left,Environment_Right,perl_label_up, Environment_Uni,Env_Uni_inner, Bond_IN,d,L,L_lay,L_position, L_lay_selected,Method,Max_SVD_iteratoin, Max_Steepest_iteratoin,Max_CG_iteratoin,E_list, Count_list,Gamma,Tech)
   elif L_position is L/2 -1:
    for i in xrange(0,len(L_lay),2):
     L_lay_selected=i
+    print 'L_position, L, L_lay', L_position, L, L_lay_selected
     optimize_inner_function(U_list,mpo_U_list_up, mpo_U_list_down, mpo_list2, mpo_boundy_list,Environment_Left,Environment_Right,perl_label_up, Environment_Uni,Env_Uni_inner, Bond_IN,d,L,L_lay,L_position, L_lay_selected,Method ,Max_SVD_iteratoin, Max_Steepest_iteratoin,Max_CG_iteratoin,E_list, Count_list,Gamma,Tech)
  elif Tech is 'MERA':
   if (L_position is 0) and (len(L_lay) is 8) :
    for i in xrange(len(L_lay)-3):
     L_lay_selected=i
+    print 'L_position, L, L_lay', L_position, L, L_lay_selected
     optimize_inner_function(U_list,mpo_U_list_up, mpo_U_list_down, mpo_list2, mpo_boundy_list,Environment_Left,Environment_Right,perl_label_up, Environment_Uni,Env_Uni_inner, Bond_IN,d,L,L_lay,L_position, L_lay_selected,Method,Max_SVD_iteratoin, Max_Steepest_iteratoin,Max_CG_iteratoin,E_list, Count_list,Gamma,Tech)
-  elif  (L_position is 0) and (len(L_lay) is 6):
-   for i in xrange(len(L_lay)-4):
+  elif  (L_position is 0) and ( (len(L_lay) is 6) or (len(L_lay) is 9) ) :
+   for i in xrange(2):
     L_lay_selected=i
-    print 'L_position, L, L_lay', L_position, L, L_lay
+    print 'L_position, L, L_lay', L_position, L, L_lay_selected
     optimize_inner_function(U_list,mpo_U_list_up, mpo_U_list_down, mpo_list2, mpo_boundy_list,Environment_Left,Environment_Right,perl_label_up, Environment_Uni,Env_Uni_inner, Bond_IN,d,L,L_lay,L_position, L_lay_selected,Method,Max_SVD_iteratoin, Max_Steepest_iteratoin,Max_CG_iteratoin,E_list, Count_list,Gamma,Tech)
   
   
@@ -241,25 +246,33 @@ def optimize_function(U_list,mpo_U_list_up, mpo_U_list_down, mpo_list2, mpo_boun
    if L_position % 2 is 0:
     for i in xrange(len(L_lay)):
      L_lay_selected=i
+     print 'L_position, L, L_lay', L_position, L, L_lay_selected
      optimize_inner_function(U_list,mpo_U_list_up, mpo_U_list_down, mpo_list2, mpo_boundy_list,Environment_Left,Environment_Right,perl_label_up, Environment_Uni,Env_Uni_inner, Bond_IN,d,L,L_lay,L_position, L_lay_selected,Method,Max_SVD_iteratoin, Max_Steepest_iteratoin,Max_CG_iteratoin,E_list, Count_list,Gamma,Tech)
    if L_position % 2 is 1:
     for i in xrange(len(L_lay)-5):
      L_lay_selected=i
+     print 'L_position, L, L_lay', L_position, L, L_lay_selected
      optimize_inner_function(U_list,mpo_U_list_up, mpo_U_list_down, mpo_list2, mpo_boundy_list,Environment_Left,Environment_Right,perl_label_up, Environment_Uni,Env_Uni_inner, Bond_IN,d,L,L_lay,L_position, L_lay_selected,Method,Max_SVD_iteratoin, Max_Steepest_iteratoin,Max_CG_iteratoin,E_list, Count_list,Gamma,Tech)
   elif (L_position is not  0) and (L_position is not L/2 -1) and (len(L_lay) is 6) :
    for i in xrange(len(L_lay)):
      L_lay_selected=i
-     print 'L_position, L, L_lay', L_position, L, L_lay
+     print 'L_position, L, L_lay', L_position, L, L_lay_selected
+     optimize_inner_function(U_list,mpo_U_list_up, mpo_U_list_down, mpo_list2, mpo_boundy_list,Environment_Left,Environment_Right,perl_label_up, Environment_Uni,Env_Uni_inner, Bond_IN,d,L,L_lay,L_position, L_lay_selected,Method,Max_SVD_iteratoin, Max_Steepest_iteratoin,Max_CG_iteratoin,E_list, Count_list,Gamma,Tech)
+  elif (L_position is not  0) and (L_position is not L/2 -1) and (len(L_lay) is 9) :
+   for i in xrange(len(L_lay)-1):
+     L_lay_selected=i
+     print 'L_position, L, L_lay', L_position, L, L_lay_selected
      optimize_inner_function(U_list,mpo_U_list_up, mpo_U_list_down, mpo_list2, mpo_boundy_list,Environment_Left,Environment_Right,perl_label_up, Environment_Uni,Env_Uni_inner, Bond_IN,d,L,L_lay,L_position, L_lay_selected,Method,Max_SVD_iteratoin, Max_Steepest_iteratoin,Max_CG_iteratoin,E_list, Count_list,Gamma,Tech)
   
   if L_position is L/2 -1 and (len(L_lay) is 8) :
    for i in xrange(0,(len(L_lay)-3),2):
     L_lay_selected=i
+    print 'L_position, L, L_lay', L_position, L, L_lay_selected
     optimize_inner_function(U_list,mpo_U_list_up, mpo_U_list_down, mpo_list2, mpo_boundy_list,Environment_Left,Environment_Right,perl_label_up, Environment_Uni,Env_Uni_inner, Bond_IN,d,L,L_lay,L_position, L_lay_selected,Method ,Max_SVD_iteratoin, Max_Steepest_iteratoin,Max_CG_iteratoin,E_list, Count_list,Gamma,Tech)
-  elif L_position is L/2 -1 and (len(L_lay) is 6) :
-   for i in xrange(len(L_lay)-3):
+  elif (L_position is L/2 -1) and ( (len(L_lay) is 6) or (len(L_lay) is 9) )  :
+   for i in xrange(3):
     L_lay_selected=i
-    print 'L_position, L, L_lay', L_position, L, L_lay
+    print 'L_position, L, L_lay', L_position, L, L_lay_selected
     optimize_inner_function(U_list,mpo_U_list_up, mpo_U_list_down, mpo_list2, mpo_boundy_list,Environment_Left,Environment_Right,perl_label_up, Environment_Uni,Env_Uni_inner, Bond_IN,d,L,L_lay,L_position, L_lay_selected,Method ,Max_SVD_iteratoin, Max_Steepest_iteratoin,Max_CG_iteratoin,E_list, Count_list,Gamma,Tech)
 
 
@@ -288,7 +301,7 @@ def optimize_inner_function(U_list, mpo_U_list_up, mpo_U_list_down, mpo_list2, m
     E2=E1
    else:
     U_update=U_update_copy
-    #print 'Notoptimized=i, E1, E2=', i,'  ', E1, '   ', E2
+    print 'Notoptimized=i, E1, E2=', i,'  ', E1, '   ', E2
     U_list[L_position][L_lay_selected].putBlock(U_update)
     break
    svd=Env_Uni_inner[L_position][L_lay_selected].transpose().getBlock().svd()

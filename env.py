@@ -411,7 +411,7 @@ def Environment_uni_function(mpo_U_list_up, mpo_U_list_down, mpo_list2, mpo_boun
  
  
 def Env_Uni_inner_function(U_list, Environment_Uni, perl_label_up, Bond_IN, L_lay, L_lay_selected, L_position, Env_Uni_inner, Tech):
- U=[copy.copy(U_list[L_position][i]) for i in xrange(len(L_lay))]
+ U=[copy.copy(U_list[L_position][i]) for i in xrange(len(U_list[L_position]))]
  if Tech is 'Regular': 
   if L_position is 0:
    if len(L_lay) is 1:
@@ -859,7 +859,7 @@ def Env_Uni_inner_function(U_list, Environment_Uni, perl_label_up, Bond_IN, L_la
 
  elif Tech is 'MERA':
   if L_position is 0:
-   if len(L_lay) is 6:
+   if (len(L_lay) is 6) or (len(L_lay) is 9):
     bdi2=uni10.Bond(uni10.BD_IN, 2)
     bdi8=uni10.Bond(uni10.BD_IN, 8)
     bdi4=uni10.Bond(uni10.BD_IN, 4)
@@ -880,7 +880,7 @@ def Env_Uni_inner_function(U_list, Environment_Uni, perl_label_up, Bond_IN, L_la
 
     Environment_Uni_newlabel=uni10.UniTensor(bd_list)
     Environment_Uni_newlabel.setLabel(perl_label_up[L_position])
-    print perl_label_up[L_position]
+    #print perl_label_up[L_position]
     Environment_Uni_newlabel.putBlock(Environment_Uni[L_position].getBlock())
     U0=copy.copy(U[0])
     U1=copy.copy(U[1]) 
@@ -944,7 +944,7 @@ def Env_Uni_inner_function(U_list, Environment_Uni, perl_label_up, Bond_IN, L_la
 
 
   if L_position is (len(U_list)-1):
-   if len(L_lay) is 6:
+   if (len(L_lay) is 6) or (len(L_lay) is 9):
     bdi2=uni10.Bond(uni10.BD_IN, 2)
     bdi8=uni10.Bond(uni10.BD_IN, 8)
     bdi4=uni10.Bond(uni10.BD_IN, 4)
@@ -1057,7 +1057,7 @@ def Env_Uni_inner_function(U_list, Environment_Uni, perl_label_up, Bond_IN, L_la
     
     Environment_Uni_newlabel=uni10.UniTensor(bd_list)
     Environment_Uni_newlabel.setLabel(perl_label_up[1])
-    print perl_label_up[1]
+    #print perl_label_up[1]
     Environment_Uni_newlabel.putBlock(Environment_Uni[L_position].getBlock())
     U0=copy.copy(U[0])
     U1=copy.copy(U[1])
@@ -1107,6 +1107,116 @@ def Env_Uni_inner_function(U_list, Environment_Uni, perl_label_up, Bond_IN, L_la
      U_result.permute([14,15,16,17],2)
      U_result.setLabel([0,1,2,3])
      Env_Uni_inner[L_position][L_lay_selected]=U_result
+
+
+
+   if len(L_lay) is 9:
+    bdi=uni10.Bond(uni10.BD_IN, 2)
+    bdo=uni10.Bond(uni10.BD_OUT, 2)
+    bdi1=uni10.Bond(uni10.BD_IN, 4)
+    bdo1=uni10.Bond(uni10.BD_OUT, 4)
+
+
+    bd_list=[]
+#    for i in xrange(len(perl_label_up[1])):
+#     if i < Bond_IN[1] :
+#      bd_list.append(bdi)
+#     else:
+#      bd_list.append(bdo)
+    bd_list.append(bdi)
+    bd_list.append(bdi1)
+    
+    bd_list.append(bdi)
+    bd_list.append(bdi)
+    bd_list.append(bdi)
+    bd_list.append(bdi)
+    bd_list.append(bdi)
+    bd_list.append(bdi)
+    bd_list.append(bdo)
+    bd_list.append(bdo1)
+
+    bd_list.append(bdo1)
+    bd_list.append(bdo1)
+    bd_list.append(bdo1)
+    
+    Environment_Uni_newlabel=uni10.UniTensor(bd_list)
+    Environment_Uni_newlabel.setLabel(perl_label_up[1])
+    #print 'L_position',L_position, 'L_lay_selected', L_lay_selected, perl_label_up[1]
+    Environment_Uni_newlabel.putBlock(Environment_Uni[L_position].getBlock())
+    U0=copy.copy(U[0])
+    U1=copy.copy(U[1])
+    U2=copy.copy(U[2])
+    U3=copy.copy(U[3])
+    U4=copy.copy(U[4])
+    U5=copy.copy(U[5])
+    U6=copy.copy(U[6])
+    U7=copy.copy(U[7])
+    U0.setLabel([0,1,4,8])
+    U1.setLabel([2,3,9,10])
+    U2.setLabel([11,12,14,13])
+    U3.setLabel([5,4,6,7])
+    U3.combineBond([6,7])
+    U4.setLabel([8,9,15,16])
+    U4.combineBond([15,16])
+    U5.setLabel([10,14,17,18])
+    U5.combineBond([17,18])
+    U6.setLabel([6,15,19,20])
+    U7.setLabel([20,17,21,22,23,24])
+    
+    if L_lay_selected is 0:
+     U_result=(Environment_Uni_newlabel)*((U1*U2*U3*U4*U5*U6)*(U7))
+     U_result.permute([0,1,4,8],2)
+     U_result.setLabel([0,1,2,3])
+     Env_Uni_inner[L_position][L_lay_selected]=U_result
+    if L_lay_selected is 1:
+     U_result=(Environment_Uni_newlabel)*((U0*U2*U3*U4*U5*U6)*(U7))
+     U_result.permute([2,3,9,10],2)
+     U_result.setLabel([0,1,2,3])
+     Env_Uni_inner[L_position][L_lay_selected]=U_result
+    if L_lay_selected is 2:
+     U_result=(Environment_Uni_newlabel)*((U0*U1*U3*U4*U5*U6)*(U7))
+     U_result.permute([11,12,14,13],2)
+     U_result.setLabel([0,1,2,3])
+     Env_Uni_inner[L_position][L_lay_selected]=U_result
+    if L_lay_selected is 3:
+     U_result=(Environment_Uni_newlabel)*((U0*U1*U2*U4*U5*U6)*(U7))
+     U_result.permute([5,4,6],2)
+     Uni_h=uni10.UniTensor([bdi,bdi,bdo,bdo])
+     Uni_h.putBlock(U_result.getBlock())
+     Uni_h.setLabel([0,1,2,3])     
+     Env_Uni_inner[L_position][L_lay_selected]=Uni_h
+    if L_lay_selected is 4:
+     U_result=(Environment_Uni_newlabel)*((U0*U1*U2*U3*U5*U6)*(U7))
+     U_result.permute([8,9,15],2)
+     Uni_h=uni10.UniTensor([bdi,bdi,bdo,bdo])
+     Uni_h.putBlock(U_result.getBlock())
+     Uni_h.setLabel([0,1,2,3])
+     Env_Uni_inner[L_position][L_lay_selected]=Uni_h
+    if L_lay_selected is 5:
+     U_result=(Environment_Uni_newlabel)*((U1*U2*U3*U4*U0*U6)*(U7))
+     U_result.permute([10,14,17],2)
+     Uni_h=uni10.UniTensor([bdi,bdi,bdo,bdo])
+     Uni_h.putBlock(U_result.getBlock())
+     Uni_h.setLabel([0,1,2,3])
+     Env_Uni_inner[L_position][L_lay_selected]=Uni_h
+    if L_lay_selected is 6:
+     U_result=(Environment_Uni_newlabel)*((U0*U1*U2*U3*U4*U5)*(U7))
+     U_result.permute([6,15,19,20],2)
+     U_result.setLabel([0,1,2,3])
+     Env_Uni_inner[L_position][L_lay_selected]=U_result
+    if L_lay_selected is 6:
+     U_result=(Environment_Uni_newlabel)*((U1*U0*U3*U4*U5*U2)*(U7))
+     U_result.permute([6,15,19,20],2)
+     U_result.setLabel([0,1,2,3])
+     Env_Uni_inner[L_position][L_lay_selected]=U_result
+   if L_lay_selected is 7:
+     U_result=(Environment_Uni_newlabel)*((U0*U1*U2*U3*U4*U5*U6))
+     U_result.permute([20,17,21,22,23,24],3)
+     U_result.setLabel([0,1,2,3,4,5])
+     Env_Uni_inner[L_position][L_lay_selected]=U_result
+
+
+
 
 
    if (len(L_lay) is 8) and (L_position % 2 is 1) :

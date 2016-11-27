@@ -28,7 +28,7 @@ def matSz():
 def intialize_coupling(L, hz_list, W,Randomness, Model): 
  del hz_list[:]
  if Randomness is 'Fixed':
-  random.seed(5)
+  random.seed(1)
  else: random.seed(datetime.now());
  if Model is 'Heisenberg':
   for i in xrange(L):
@@ -60,22 +60,19 @@ def variance_Energy_function(trH2, Avarage_E_power2, L):
 
 
 def Energy_through_env(U_list, L_lay, L, mpo_U_list_up, mpo_U_list_down, mpo_list2, mpo_boundy_list, L_position, d, Environment_Left, Tech):
- if (Tech is 'MERA') and (len(L_lay) is 6):
-  L_m=L/2
- else: L_m=L;
  mpo_U_list_up= make_mpo_U_list(U_list, L_lay, L, 'up',Tech)
  mpo_U_list_down= make_mpo_U_list(U_list, L_lay, L, 'down',Tech)
- Environment_Left=[None]*(L_m/2)
- Environment_Right=[None]*(L_m/2)
+ Environment_Left=[None]*(L/2)
+ Environment_Right=[None]*(L/2)
  
  
- for i in xrange((L_m/2)-1):
+ for i in xrange((L/2)-1):
   L_position=i
-  print 'i',i
+  #print 'i',i
   Environment_Left[i]=env.Env_left (mpo_U_list_up, mpo_U_list_down, mpo_list2, mpo_boundy_list, L_position, d, Environment_Left)
 
- for i in xrange((L_m/2)-1):
-  L_position=(L_m/2)-1-i
+ for i in xrange((L/2)-1):
+  L_position=(L/2)-1-i
   #print L_position
   Environment_Right[L_position]=env.Env_right (mpo_U_list_up, mpo_U_list_down, mpo_list2, mpo_boundy_list, L_position, d, Environment_Right)
 
@@ -159,6 +156,7 @@ def make_mpo_H(L, J, hz_list, Fieldz, J2,Model,Tech, L_lay ):
   mpo_uni10_1_list=[]
   mpo_uni10_4_list=[]
   mpo_uni10_5_list=[]
+  mpo_uni10_6_list=[]
   
   for num in xrange(L):
    mpo_matrix.set_zero()
@@ -204,19 +202,44 @@ def make_mpo_H(L, J, hz_list, Fieldz, J2,Model,Tech, L_lay ):
      mpo_uni10_cotraction.setName('mpo_uni10_4')
      mpo_uni10_4_list.append(mpo_uni10_cotraction)
      
-  if (Tech is 'MERA') and (len(L_lay) is 6):
-   mpo_uni10_5_list_prime=[copy.copy(mpo_uni10_4_list[i]) for i in xrange(len(mpo_uni10_4_list)) ]
+     
+  mpo_uni10_5_list_prime=[copy.copy(mpo_uni10_4_list[i]) for i in xrange(len(mpo_uni10_4_list)) ]
 
-   for i in xrange(0,L/2,2):
-     mpo_uni10_5_list_prime[i+1].setLabel([2,4,5,6])
-     mpo_uni10_cotraction=uni10.contract(mpo_uni10_5_list_prime[i],mpo_uni10_5_list_prime[i+1] )
-     mpo_uni10_cotraction.permute([0,1,4,5,3,6],3)
-     mpo_uni10_cotraction.combineBond([1,4])
-     mpo_uni10_cotraction.combineBond([3,6])
-     mpo_uni10_cotraction.setLabel([0,1,2,3])
-     mpo_uni10_cotraction.setName('mpo_uni10_5')
-     mpo_uni10_5_list.append(mpo_uni10_cotraction)
+  for i in xrange(0,L/2,2):
+    mpo_uni10_5_list_prime[i+1].setLabel([2,4,5,6])
+    mpo_uni10_cotraction=uni10.contract(mpo_uni10_5_list_prime[i],mpo_uni10_5_list_prime[i+1] )
+    mpo_uni10_cotraction.permute([0,1,4,5,3,6],3)
+    mpo_uni10_cotraction.combineBond([1,4])
+    mpo_uni10_cotraction.combineBond([3,6])
+    mpo_uni10_cotraction.setLabel([0,1,2,3])
+    mpo_uni10_cotraction.setName('mpo_uni10_5')
+    mpo_uni10_5_list.append(mpo_uni10_cotraction)
+
+     
+  if (Tech is 'MERA') and (len(L_lay) is 6) :
    return mpo_uni10_1_list, mpo_uni10_5_list, mpo_uni10_list_boundry
+  elif (Tech is 'MERA') and (len(L_lay) is 9) :
+   mpo_uni10_4_list_prime=[copy.copy(mpo_uni10_4_list[i]) for i in xrange(len(mpo_uni10_4_list)) ]
+   mpo_uni10_4_list_prime1=[copy.copy(mpo_uni10_4_list[i]) for i in xrange(len(mpo_uni10_4_list)) ]
+   mpo_uni10_4_list_prime2=[copy.copy(mpo_uni10_4_list[i]) for i in xrange(len(mpo_uni10_4_list)) ]
+
+
+   mpo_uni10_6_list.append(mpo_uni10_5_list[0])
+   for i in xrange(0,((L-8)/2),3):
+      #print ((L-8)/2),i
+      mpo_uni10_4_list_prime[i+2].setLabel([0,1,2,3])
+      mpo_uni10_4_list_prime1[i+3].setLabel([2,4,5,6])
+      mpo_uni10_4_list_prime2[i+4].setLabel([5,7,8,9])
+      mpo_uni10_cotraction=mpo_uni10_4_list_prime[i+2]*mpo_uni10_4_list_prime1[i+3]*mpo_uni10_4_list_prime2[i+4]
+      mpo_uni10_cotraction.permute([0,1,4,7,8,3,6,9],4)
+      mpo_uni10_cotraction.combineBond([1,4,7])
+      mpo_uni10_cotraction.combineBond([3,6,9])
+      mpo_uni10_cotraction.permute([0,1,8,3],2)
+      mpo_uni10_cotraction.setLabel([0,1,2,3])
+      mpo_uni10_cotraction.setName('mpo_uni10_6')
+      mpo_uni10_6_list.append(mpo_uni10_cotraction)
+   mpo_uni10_6_list.append(mpo_uni10_5_list[len(mpo_uni10_5_list)-1])
+   return mpo_uni10_1_list, mpo_uni10_6_list, mpo_uni10_list_boundry
   else: return mpo_uni10_1_list, mpo_uni10_4_list, mpo_uni10_list_boundry     
      
      
@@ -232,6 +255,8 @@ def make_mpo_H(L, J, hz_list, Fieldz, J2,Model,Tech, L_lay ):
 
   mpo_uni10_1_list=[]
   mpo_uni10_4_list=[]
+  mpo_uni10_5_list=[]
+  mpo_uni10_6_list=[]
   #print (-float(hz_list[0])*uni10.otimes(sz,sz)+float(Fieldz)*uni10.otimes(sx,s0)+float(Fieldz)*uni10.otimes(s0,sx))
   #print (float(J2)*uni10.otimes(sz,s0)+float(hz_list[1])*uni10.otimes(s0,sz))
   for num in xrange(0,L,2):
@@ -256,25 +281,46 @@ def make_mpo_H(L, J, hz_list, Fieldz, J2,Model,Tech, L_lay ):
    mpo_uni10_4_list.append(mpo_uni10)
   #print mpo_uni10_4_list[0]
   
+
+  mpo_uni10_5_list_prime=[copy.copy(mpo_uni10_4_list[i]) for i in xrange(len(mpo_uni10_4_list)) ]
+
+  for i in xrange(0,L/2,2):
+    mpo_uni10_5_list_prime[i+1].setLabel([2,4,5,6])
+    mpo_uni10_cotraction=uni10.contract(mpo_uni10_5_list_prime[i],mpo_uni10_5_list_prime[i+1] )
+    mpo_uni10_cotraction.permute([0,1,4,5,3,6],3)
+    mpo_uni10_cotraction.combineBond([1,4])
+    mpo_uni10_cotraction.combineBond([3,6])
+    mpo_uni10_cotraction.setLabel([0,1,2,3])
+    mpo_uni10_cotraction.setName('mpo_uni10_5')
+    mpo_uni10_5_list.append(mpo_uni10_cotraction)
+
   if (Tech is 'MERA') and (len(L_lay) is 6):
-   mpo_uni10_5_list_prime=[copy.copy(mpo_uni10_4_list[i]) for i in xrange(len(mpo_uni10_4_list)) ]
+    return None, mpo_uni10_5_list, mpo_uni10_list_boundry
+  elif (Tech is 'MERA') and (len(L_lay) is 9) :
+   mpo_uni10_4_list_prime=[copy.copy(mpo_uni10_4_list[i]) for i in xrange(len(mpo_uni10_4_list)) ]
+   mpo_uni10_4_list_prime1=[copy.copy(mpo_uni10_4_list[i]) for i in xrange(len(mpo_uni10_4_list)) ]
+   mpo_uni10_4_list_prime2=[copy.copy(mpo_uni10_4_list[i]) for i in xrange(len(mpo_uni10_4_list)) ]
 
-   for i in xrange(0,L/2,2):
-     mpo_uni10_5_list_prime[i+1].setLabel([2,4,5,6])
-     mpo_uni10_cotraction=uni10.contract(mpo_uni10_5_list_prime[i],mpo_uni10_5_list_prime[i+1] )
-     mpo_uni10_cotraction.permute([0,1,4,5,3,6],3)
-     mpo_uni10_cotraction.combineBond([1,4])
-     mpo_uni10_cotraction.combineBond([3,6])
-     mpo_uni10_cotraction.setLabel([0,1,2,3])
-     mpo_uni10_cotraction.setName('mpo_uni10_5')
-     mpo_uni10_5_list.append(mpo_uni10_cotraction)
-   return mpo_uni10_1_list, mpo_uni10_5_list, mpo_uni10_list_boundry
-  else: return mpo_uni10_1_list, mpo_uni10_4_list, mpo_uni10_list_boundry     
 
-  
-  
-  return None, mpo_uni10_4_list, mpo_uni10_list_boundry
-  
+   mpo_uni10_6_list.append(mpo_uni10_5_list[0])
+   for i in xrange(0,((L-8)/2),3):
+      print ((L-8)/2),i
+      mpo_uni10_4_list_prime[i+2].setLabel([0,1,2,3])
+      mpo_uni10_4_list_prime1[i+3].setLabel([2,4,5,6])
+      mpo_uni10_4_list_prime2[i+4].setLabel([5,7,8,9])
+      mpo_uni10_cotraction=mpo_uni10_4_list_prime[i+2]*mpo_uni10_4_list_prime1[i+3]*mpo_uni10_4_list_prime2[i+4]
+      mpo_uni10_cotraction.permute([0,1,4,7,8,3,6,9],4)
+      mpo_uni10_cotraction.combineBond([1,4,7])
+      mpo_uni10_cotraction.combineBond([3,6,9])
+      mpo_uni10_cotraction.permute([0,1,8,3],2)
+      mpo_uni10_cotraction.setLabel([0,1,2,3])
+      mpo_uni10_cotraction.setName('mpo_uni10_6')
+      mpo_uni10_6_list.append(mpo_uni10_cotraction)
+   mpo_uni10_6_list.append(mpo_uni10_5_list[len(mpo_uni10_5_list)-1])
+   return mpo_uni10_1_list, mpo_uni10_6_list, mpo_uni10_list_boundry
+
+  else: return None, mpo_uni10_4_list, mpo_uni10_list_boundry     
+
 
 
 
@@ -285,6 +331,8 @@ def contraction_MPO_trH2( mpo_uni10_4_list,  mpo_boundy_list,L, Tech, L_lay):
 
  if (Tech is 'MERA') and (len(L_lay) is 6):
   L_m=L/2
+ elif (Tech is 'MERA') and (len(L_lay) is 9):
+  L_m=((L-8)/3)+4
  else: L_m=L;
   
  for i in xrange(0,L_m,2):
@@ -376,10 +424,20 @@ def intialize_unitary_list( L, L_lay,d, delta,Tech):
    else:
     matrix_randomC[i*d*d*d*d*d+j]=0.0
 
+ matrix_randomD=uni10.Matrix(d*d*d*d*d*d, d*d*d*d*d*d)
+ for i in xrange(d*d*d*d*d*d):
+  for j in xrange(d*d*d*d*d*d):
+   if(i==j):
+    matrix_randomD[i*d*d*d*d*d*d+j]=1.0
+   else:
+    matrix_randomD[i*d*d*d*d*d*d+j]=0.0
+
+
  if (Tech is 'MERA') and (len(L_lay) is 6):
   L_m=L/2
+ elif (Tech is 'MERA') and (len(L_lay) is 9):
+  L_m=((L-8)/3)+4
  else: L_m=L;
-
 
  #matrix_random.setIdentity()
  for i in xrange(L_m/2):
@@ -406,8 +464,25 @@ def intialize_unitary_list( L, L_lay,d, delta,Tech):
      Svd=matrix_random1.svd()
      U_uni10.putBlock( Svd[0]*Svd[2] )
      U_list[i][j]=U_uni10
-
-
+     
+ elif (Tech is 'MERA') and (len(L_lay) is 9):
+  for i in xrange(L_m/2):
+     bdi_spin = uni10.Bond(uni10.BD_IN, d*d);
+     bdo_spin = uni10.Bond(uni10.BD_OUT, d*d);
+     U_uni10=uni10.UniTensor([bdi_spin, bdi_spin, bdo_spin,bdo_spin], "Unitary_uni10")
+     matrix_random1=copy.copy(matrix_randomA)
+     matrix_random1.randomize()
+     matrix_random1=matrix_randomA+(delta)*matrix_random1
+     Svd=matrix_random1.svd()
+     U_uni10.putBlock( Svd[0]*Svd[2] )
+     U_list[i][6]=U_uni10
+     U_uni10=uni10.UniTensor([bdi_spin, bdi_spin,bdi_spin, bdo_spin,bdo_spin,bdo_spin], "Unitary_uni10")
+     matrix_random1=copy.copy(matrix_randomD)
+     matrix_random1.randomize()
+     matrix_random1=matrix_randomD+(delta)*matrix_random1
+     Svd=matrix_random1.svd()
+     U_uni10.putBlock( Svd[0]*Svd[2] )
+     U_list[i][7]=U_uni10
 
 
   bdi_spin = uni10.Bond(uni10.BD_IN, d*d*d);
@@ -510,7 +585,9 @@ def unitary_list_transpose( U_list, L, L_lay):
     
 
 def  make_mpo_U(U_list, L_position, L_lay, L, Letter, Tech):
- U=[copy.copy(U_list[L_position][i]) for i in xrange(len(L_lay))]
+ #print 'L_position=', L_position
+ 
+ U=[copy.copy(U_list[L_position][i]) for i in xrange(len(U_list[L_position]))]
  bdo = uni10.Bond(uni10.BD_OUT, 1)
  bdi = uni10.Bond(uni10.BD_IN, 1)
  Uni_out_1=uni10.UniTensor([bdo], "Uni_out_1")
@@ -806,10 +883,8 @@ def  make_mpo_U(U_list, L_position, L_lay, L, Letter, Tech):
       U_result.setLabel([0,1,2,3])
       return U_result
  elif Tech is 'MERA':
-  
-  
   if (L_position==0):
-   if len(L_lay) == 6  :
+   if (len(L_lay) == 6) or (len(L_lay) == 9)  :
      U0=copy.copy(U[0])
      U1=copy.copy(U[1]) 
      U0.setLabel([0,1,2,3])
@@ -850,12 +925,10 @@ def  make_mpo_U(U_list, L_position, L_lay, L, Letter, Tech):
       U_result.setLabel([0,1,2])
       return U_result    
    
-  if (Tech is 'MERA') and (len(L_lay) is 6):
-   L_m=L/2
-  else: L_m=L;
-  
-  if L_position==((L_m/2) - 1):
-   if len(L_lay) == 6  :
+  #print 'L_position, ((L/2) - 1)=', L_position, ((L/2) - 1)  
+
+  if L_position==((L/2) - 1):
+   if (len(L_lay) == 6) or (len(L_lay) == 9)   :
        U0=copy.copy(U[0])
        U1=copy.copy(U[1])
        U2=copy.copy(U[2])
@@ -894,7 +967,7 @@ def  make_mpo_U(U_list, L_position, L_lay, L, Letter, Tech):
         U_result.setLabel([0,1,2])
         return U_result        
 
-  if  (L_position is not ((L_m/2) - 1)) and (L_position is not 0): 
+  if  (L_position is not ((L/2) - 1)) and (L_position is not 0): 
    if len(L_lay) == 6 :
      U0=copy.copy(U[0])
      U1=copy.copy(U[1])
@@ -916,6 +989,42 @@ def  make_mpo_U(U_list, L_position, L_lay, L, Letter, Tech):
      U_result.combineBond([5,13])
      U_result.combineBond([10,15])
      U_result.permute([5,0,10,16],2)
+     U_result.setLabel([0,1,2,3])
+     if Letter is 'up':
+      return U_result
+     elif Letter is 'down':
+      U_result.permute([0,3,2,1],2)
+      U_result.setLabel([0,1,2,3])
+      return U_result
+   if len(L_lay) == 9 :
+     U0=copy.copy(U[0])
+     U1=copy.copy(U[1])
+     U2=copy.copy(U[2])
+     U3=copy.copy(U[3])
+     U4=copy.copy(U[4])
+     U5=copy.copy(U[5])
+     U6=copy.copy(U[6])
+     U7=copy.copy(U[7])
+     U0.setLabel([0,1,4,8])
+     U1.setLabel([2,3,9,10])
+     U2.setLabel([11,12,14,13])
+     U3.setLabel([5,4,6,7])
+     U3.combineBond([6,7])
+     U4.setLabel([8,9,15,16])
+     U4.combineBond([15,16])
+     U5.setLabel([10,14,17,18])
+     U5.combineBond([17,18])
+     U6.setLabel([6,15,19,20])
+     U7.setLabel([20,17,21,22,23,24])
+     
+     
+     U_result=(((((U0*U3)*(U1*U4))*U6)*(U5*U2))*U7)
+     U_result.combineBond([0,1,2,3,11,12])
+     U_result.combineBond([13,21])
+     U_result.combineBond([5,19])
+     U_result.combineBond([22,23,24])
+     #print U_result.printDiagram()
+     U_result.permute([5,0,13,22],2)
      U_result.setLabel([0,1,2,3])
      if Letter is 'up':
       return U_result
@@ -1123,7 +1232,7 @@ def make_mpo_U_Label( L_position,L_lay, L, Letter, Tech):
  
   if (L_position==0):
    Bond_IN=2
-   if (len(L_lay) == 6 ):
+   if (len(L_lay) == 6 ) or ( len(L_lay) == 9 ):
      if Letter=='up':
       per_labels=[ 0, 1, 3, 4, 5, 6 ]
       return per_labels, Bond_IN
@@ -1140,12 +1249,13 @@ def make_mpo_U_Label( L_position,L_lay, L, Letter, Tech):
 
   if (Tech is 'MERA') and (len(L_lay) is 6):
    L_m=L/2
+  elif (Tech is 'MERA') and (len(L_lay) is 9):
+   L_m=((L-8)/3)+4
   else: L_m=L;
-  
 
   if L_position==((L_m/2)-1):
    
-   if (len(L_lay) == 6 ):
+   if (len(L_lay) == 6 ) or ( len(L_lay) == 9 ) :
      Bond_IN=4    
      if Letter=='up':
       per_labels=[0,1,4,5,7,8]
@@ -1165,13 +1275,24 @@ def make_mpo_U_Label( L_position,L_lay, L, Letter, Tech):
 
   if  (L_position is not ((L_m/2) - 1)) and (L_position is not 0)  : 
    if (len(L_lay) == 6 ):
-     Bond_IN=4
+     Bond_IN=4  #should be 6
      if Letter=='up':
       per_labels=[5,13,0,1,2,3,10,15,16,17]
       return per_labels, Bond_IN
      elif Letter=='down':
       per_labels=[2,9,10,11,4,8,0,1]
       return per_labels, Bond_IN
+   if (len(L_lay) == 9 ):
+     Bond_IN=8
+     if Letter=='up':
+      per_labels=[5,19,0,1,2,3,11,12,13,21,22,23,24]
+      return per_labels, Bond_IN
+     elif Letter=='down':
+      per_labels=[5,19,0,1,2,3,11,12,13,21,22,23,24]
+      return per_labels, Bond_IN
+
+
+
 
    if (len(L_lay) == 8) and (L_position % 2 is 1) :
      Bond_IN=6    
@@ -1195,10 +1316,7 @@ def make_mpo_U_Label( L_position,L_lay, L, Letter, Tech):
 
 def make_mpo_U_list(U_list, L_lay, L, Letter,Tech):
  mpo_U_list=[]
- if (Tech is 'MERA') and (len(L_lay) is 6):
-       L_m=L/2
- else: L_m=L;
- for i in xrange(L_m/2):
+ for i in xrange(L/2):
   mpo_U_list.append(make_mpo_U(U_list,i, L_lay, L, Letter, Tech))
  return mpo_U_list
 
