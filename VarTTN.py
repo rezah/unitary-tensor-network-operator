@@ -17,7 +17,7 @@ Model='Heisenberg'              #could be: 'Ising' and or 'Heisenberg'
 L=8+6*(2*1)                            #Numbers of particles should be 4*k, k={1,2,3,4,...}!6*(2k)+8
 L_lay=[0,1,2,3,4,5,6,7,8]               #Numbers of layers <= 5
 realizations=1                  #Number of realizations        
-Accuracy=8.00e-7                #Accuracy of variational variance  
+Accuracy=8.00e-5                #Accuracy of variational variance  
 d=2                              #pysical bond-dimension  
 chi=5                            #bond-dimension of MPO
 W=8                              #random interval, [-W,W]
@@ -28,11 +28,11 @@ hz_list=[]                       # list of randomness
 U_delta=0.00                     #if it's zero, U_list is intialized by Identity
 Method='SteepestDescent'         #methods: CGarmjo, CGpoly, SVD, SteepestDescent, SteepestDescentploy 
 Randomness='Fixed'               #Fixed
-Max_number_iteratoin_SVD=50       # maximum number of sweeps for SVD method 
+Max_number_iteratoin_SVD=1       # maximum number of sweeps for SVD method 
 Max_number_iteratoin_Steepest=400  # maximum number of sweeps for SteepestDescent method
 Max_number_iteratoin_CG=400         #maximum number of sweeps for CG method
 
-Max_SVD_iteratoin=20               #maximum number of SVD iteration
+Max_SVD_iteratoin=1               #maximum number of SVD iteration
 Max_Steepest_iteratoin=20          #maximum number of SteepestDescent iteration
 Max_CG_iteratoin=20                #maximum number of SteepestDescent iteration
 #######################################################################################3
@@ -214,7 +214,7 @@ Count_final4=[]
 
 
 for q in xrange(realizations):
- print '\n', 'q_MERA1=', q, '\n'
+ print '\n', 'q_MERA_ternary=', q, '\n'
  variance_list1=[]
  variance_list2=[]
 

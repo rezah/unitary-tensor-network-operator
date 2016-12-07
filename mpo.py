@@ -464,7 +464,70 @@ def intialize_unitary_list( L, L_lay,d, delta,Tech):
      Svd=matrix_random1.svd()
      U_uni10.putBlock( Svd[0]*Svd[2] )
      U_list[i][j]=U_uni10
+
+  bdi_spin = uni10.Bond(uni10.BD_IN, d*d*d);
+  bdi_spin1 = uni10.Bond(uni10.BD_IN, d);
+  bdo_spin = uni10.Bond(uni10.BD_OUT, d*d*d);
+  bdo_spin1 = uni10.Bond(uni10.BD_OUT, d);
+  U_uni10=uni10.UniTensor([bdi_spin, bdi_spin1, bdo_spin,bdo_spin1], "Unitary_uni10")
+  matrix_random1=copy.copy(matrix_randomA)
+  matrix_random1.randomize()
+  matrix_random1=matrix_randomA+(delta)*matrix_random1
+  Svd=matrix_random1.svd()
+  U_uni10.putBlock( Svd[0]*Svd[2] )
+  U_list[0][0]=U_uni10
+
+  bdi_spin = uni10.Bond(uni10.BD_IN, d*d*d);
+  bdi_spin1 = uni10.Bond(uni10.BD_IN, d*d);
+  bdo_spin = uni10.Bond(uni10.BD_OUT, d*d*d);
+  bdo_spin1 = uni10.Bond(uni10.BD_OUT, d*d);
+  U_uni10=uni10.UniTensor([bdi_spin, bdi_spin1, bdo_spin,bdo_spin1], "Unitary_uni10")
+  matrix_random1=copy.copy(matrix_randomC)
+  matrix_random1.randomize()
+  matrix_random1=matrix_randomC+(delta)*matrix_random1
+  Svd=matrix_random1.svd()
+  U_uni10.putBlock( Svd[0]*Svd[2] )
+  U_list[0][1]=U_uni10
+
+
+  bdi_spin = uni10.Bond(uni10.BD_IN, d*d);
+  bdo_spin = uni10.Bond(uni10.BD_OUT, d*d);
+  U_uni10=uni10.UniTensor([bdi_spin, bdi_spin, bdo_spin,bdo_spin], "Unitary_uni10")
+  matrix_random1=copy.copy(matrix_randomA)
+  matrix_random1.randomize()
+  matrix_random1=matrix_randomA+(delta)*matrix_random1
+  Svd=matrix_random1.svd()
+  U_uni10.putBlock( Svd[0]*Svd[2] )
+  U_list[(L_m/2)-1][0]=U_uni10
+
+  bdi_spin = uni10.Bond(uni10.BD_IN, d);
+  bdi_spin1 = uni10.Bond(uni10.BD_IN, d*d);
+  bdo_spin = uni10.Bond(uni10.BD_OUT, d);
+  bdo_spin1 = uni10.Bond(uni10.BD_OUT, d*d);
+  U_uni10=uni10.UniTensor([bdi_spin, bdi_spin1, bdo_spin1,bdo_spin], "Unitary_uni10")
+  matrix_random1=copy.copy(matrix_randomB)
+  matrix_random1.randomize()
+  matrix_random1=matrix_randomB+(delta)*matrix_random1
+  Svd=matrix_random1.svd()
+  U_uni10.putBlock( Svd[0]*Svd[2] )
+  U_list[(L_m/2)-1][1]=U_uni10
      
+  bdi_spin = uni10.Bond(uni10.BD_IN, d);
+  bdi_spin1 = uni10.Bond(uni10.BD_IN, d*d);
+  bdo_spin = uni10.Bond(uni10.BD_OUT, d);
+  bdo_spin1 = uni10.Bond(uni10.BD_OUT, d*d);
+  U_uni10=uni10.UniTensor([bdi_spin, bdi_spin1, bdo_spin,bdo_spin1], "Unitary_uni10")
+  matrix_random1=copy.copy(matrix_randomB)
+  matrix_random1.randomize()
+  matrix_random1=matrix_randomB+(delta)*matrix_random1
+  Svd=matrix_random1.svd()
+  U_uni10.putBlock( Svd[0]*Svd[2] )
+  U_list[(L_m/2)-1][2]=U_uni10
+
+
+
+
+
  elif (Tech is 'MERA') and (len(L_lay) is 9):
   for i in xrange(L_m/2):
      bdi_spin = uni10.Bond(uni10.BD_IN, d*d);

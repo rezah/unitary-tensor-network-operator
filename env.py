@@ -1109,7 +1109,7 @@ def Env_Uni_inner_function(U_list, Environment_Uni, perl_label_up, Bond_IN, L_la
      Env_Uni_inner[L_position][L_lay_selected]=U_result
 
 
-
+ 
    if len(L_lay) is 9:
     bdi=uni10.Bond(uni10.BD_IN, 2)
     bdo=uni10.Bond(uni10.BD_OUT, 2)
@@ -1209,7 +1209,7 @@ def Env_Uni_inner_function(U_list, Environment_Uni, perl_label_up, Bond_IN, L_la
      U_result.permute([6,15,19,20],2)
      U_result.setLabel([0,1,2,3])
      Env_Uni_inner[L_position][L_lay_selected]=U_result
-   if L_lay_selected is 7:
+    if L_lay_selected is 7:
      U_result=(Environment_Uni_newlabel)*((U0*U1*U2*U3*U4*U5*U6))
      U_result.permute([20,17,21,22,23,24],3)
      U_result.setLabel([0,1,2,3,4,5])
