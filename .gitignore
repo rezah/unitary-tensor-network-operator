@@ -3,4 +3,4 @@
 *~
 *.pyc
 *.pdf
-/Data/*.txt
+Data/*.txt
