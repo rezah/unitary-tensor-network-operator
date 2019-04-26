@@ -229,7 +229,7 @@ def optimize_function(U_list,mpo_U_list_up, mpo_U_list_down, mpo_list2, mpo_boun
  #print 'E_f', Energy_f
  
 
-################################ Optimize inner function #########################################
+################################ Optimize inner function ########################
 def optimize_inner_function(U_list, mpo_U_list_up, mpo_U_list_down, mpo_list2, mpo_boundy_list,Environment_Left,Environment_Right,perl_label_up, Environment_Uni,Env_Uni_inner, Bond_IN,d,L,L_lay,L_position, L_lay_selected,Method,Max_SVD_iteratoin, Max_Steepest_iteratoin,Max_CG_iteratoin,E_list, Count_list,Gamma_list):
  Energy_s=Energy_newunitary(U_list, mpo_U_list_up, mpo_U_list_down, mpo_list2, mpo_boundy_list, L_position, d, Environment_Left, L_lay,L, Environment_Right,L_lay_selected,Env_Uni_inner,Environment_Uni, perl_label_up, Bond_IN)
  #print 'E_s=', Energy_s
@@ -252,12 +252,12 @@ def optimize_inner_function(U_list, mpo_U_list_up, mpo_U_list_down, mpo_list2, m
    if E1>E2 or i is 0:
     U_update_copy=copy.copy(U_update)
     if abs((E2-E1)/E1) < 1.0e-8:
-     print E2, E1, abs((E2-E1)/E1), i
+     #print E2, E1, abs((E2-E1)/E1), i
      break
     E2=E1
    else:
     U_update=U_update_copy
-    print 'Notoptimized=', i
+    #print 'Notoptimized=', i
     U_list[L_position][L_lay_selected].putBlock(U_update)
     break
    svd=Env_Uni_inner[L_position][L_lay_selected].transpose().getBlock().svd()
@@ -265,9 +265,9 @@ def optimize_inner_function(U_list, mpo_U_list_up, mpo_U_list_down, mpo_list2, m
    U_update=temporary_matrix.transpose()
    U_list[L_position][L_lay_selected].putBlock(U_update)
   Energy_f=Energy_newunitary(U_list, mpo_U_list_up, mpo_U_list_down, mpo_list2, mpo_boundy_list, L_position, d, Environment_Left, L_lay,L, Environment_Right,L_lay_selected,Env_Uni_inner,Environment_Uni, perl_label_up, Bond_IN)
-  print 'E_s=', Energy_s, '\n', 'E_f=', Energy_f
+  #print 'E_s=', Energy_s, '\n', 'E_f=', Energy_f
   if Energy_s > Energy_f:
-   print 'Notoptimized= E > E1',  Energy_s, Energy_f
+   #print 'Notoptimized= E > E1',  Energy_s, Energy_f
    U_list[L_position][L_lay_selected].putBlock(U_first)
 
  
@@ -286,7 +286,7 @@ def optimize_inner_function(U_list, mpo_U_list_up, mpo_U_list_down, mpo_list2, m
   if len(Count_list) is 0: count=0;
   else: count = Count_list[len(Count_list)-1];
   E_previous=0
-  print 'Max_CG_iteratoin', Max_CG_iteratoin 
+  #print 'Max_CG_iteratoin', Max_CG_iteratoin 
   for i in xrange(Max_CG_iteratoin):
    if (i % (d*d*d*d)) is 0:
     count+=1
@@ -308,7 +308,7 @@ def optimize_inner_function(U_list, mpo_U_list_up, mpo_U_list_down, mpo_list2, m
    Norm_Z=Z_decent_trans*Z_decent
    Norm_Z=Norm_Z.trace() / 2.00
    if Norm_Z < 1.0e-7:
-    print 'Break Norm=', Norm_Z
+    #print 'Break Norm=', Norm_Z
     break
    Norm_Z=H_direct_trans*Z_decent
    Norm_Z=Norm_Z.trace() / 2.00
@@ -319,10 +319,10 @@ def optimize_inner_function(U_list, mpo_U_list_up, mpo_U_list_down, mpo_list2, m
     Gamma , count=Line_search_pol(H_direct, U_update,count,U_list, mpo_U_list_up, mpo_U_list_down, mpo_list2, mpo_boundy_list, L_position, d, Environment_Left, L_lay,L, Environment_Right,L_lay_selected,Env_Uni_inner,Environment_Uni, perl_label_up, Bond_IN)
 
 
-   print 'Gamma=', Gamma, count
+   #print 'Gamma=', Gamma, count
    if E1>E_previous or i is 0:
     if abs((E_previous-E1)/E1) < 1.0e-8:
-     print E_previous, E1, abs((E_previous-E1)/E1), i
+     #print E_previous, E1, abs((E_previous-E1)/E1), i
      break
     E_previous=E1
 
@@ -359,9 +359,9 @@ def optimize_inner_function(U_list, mpo_U_list_up, mpo_U_list_down, mpo_list2, m
   U_list[L_position][L_lay_selected].putBlock(U_update)
   E_f=Energy_newunitary(U_list, mpo_U_list_up, mpo_U_list_down, mpo_list2, mpo_boundy_list, L_position, d, Environment_Left, L_lay,L, Environment_Right,L_lay_selected,Env_Uni_inner,Environment_Uni, perl_label_up, Bond_IN)
   Gamma_list[L_position][L_lay_selected]=Gamma+0.01*Gamma
-  print 'E_s=', Energy_s, '\n', 'E_f=', E_f 
+  #print 'E_s=', Energy_s, '\n', 'E_f=', E_f 
   if Energy_s > E_f:
-   print 'Notoptimized= E > E1', E_f,  Energy_s
+   #print 'Notoptimized= E > E1', E_f,  Energy_s
    U_list[L_position][L_lay_selected].putBlock(U_first)
  
  
@@ -397,12 +397,12 @@ def optimize_inner_function(U_list, mpo_U_list_up, mpo_U_list_down, mpo_list2, m
     
    if E1>E_previous or i is 0:
     if abs((E_previous-E1)/E1) < 1.0e-8:
-     print E_previous, E1, abs((E_previous-E1)/E1), i
+     #print E_previous, E1, abs((E_previous-E1)/E1), i
      break
    E_previous=E1
    
    if Norm_Z < 1.0e-7:
-    print 'Break Norm=', Norm_Z
+    #print 'Break Norm=', Norm_Z
     break
    Break_loop=1
    Gamma=1.0
@@ -450,9 +450,9 @@ def optimize_inner_function(U_list, mpo_U_list_up, mpo_U_list_down, mpo_list2, m
   U_list[L_position][L_lay_selected].putBlock(U_update)
   E_f=Energy_newunitary(U_list, mpo_U_list_up, mpo_U_list_down, mpo_list2, mpo_boundy_list, L_position, d, Environment_Left, L_lay,L, Environment_Right,L_lay_selected,Env_Uni_inner,Environment_Uni, perl_label_up, Bond_IN)
   Gamma_list[L_position][L_lay_selected]=Gamma+0.01*Gamma
-  print 'E_s=', Energy_s, '\n', 'E_f=', E_f 
+  #print 'E_s=', Energy_s, '\n', 'E_f=', E_f 
   if Energy_s > E_f:
-   print 'Notoptimized= E > E1', E_f,  Energy_s
+   #print 'Notoptimized= E > E1', E_f,  Energy_s
    U_list[L_position][L_lay_selected].putBlock(U_first)
 
 

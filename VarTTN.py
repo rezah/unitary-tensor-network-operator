@@ -4,6 +4,7 @@ import pyUni10 as uni10
 import matplotlib.pyplot as plt
 import matplotlib
 import pylab
+#matplotlib.use('Agg')
 import random
 import copy
 import time
@@ -11,9 +12,9 @@ import mpo
 import env
 import optimize
 ################################## Set parameter #######################################
-Model='Ising'               #could be: 'Ising' and or 'Heisenberg'
-L=20                             #Numbers of particles should be even!
-L_lay=[0,1,2]                  #Numbers of layers <= 5
+Model='Heisenberg'               #could be: 'Ising' and or 'Heisenberg'
+L=8                             #Numbers of particles should be even!
+L_lay=[0,1]                  #Numbers of layers <= 5
 d=2                              #pysical bond-dimension  
 chi=5                            #bond-dimension of MPO
 W=8                              #random interval, [-W,W]
@@ -21,8 +22,8 @@ J=1.0                            #coupling, 1.0
 J2=0.30                           #coupling, 0.3
 Fieldz=0.60                            #Field in z direction, 0.6
 hz_list=[]                        # list of randomness 
-U_delta=1.0                     #if it's zero, U_list is intialize by Identity
-Method='SteepestDescent'          #methods: CGarmjo,CGploy, SVD, SteepestDescent, SteepestDescentploy 
+U_delta=0.0                     #if it's zero, U_list is intialize by Identity
+Method='CGploy'          #methods: CGarmjo,CGploy, SVD, SteepestDescent, SteepestDescentploy 
 Randomness='Fixed'
 Max_number_iteratoin_SVD=40        # maximum number of sweeps for SVD method 
 Max_number_iteratoin_Steepest=20   # maximum number of sweeps for SteepestDescent method
@@ -30,7 +31,7 @@ Max_number_iteratoin_CG=20   # maximum number of sweeps for SteepestDescent meth
 Max_SVD_iteratoin=16               #maximum number of SVD iteration
 Max_Steepest_iteratoin=16          #maximum number of SteepestDescent iteration
 Max_CG_iteratoin=16          #maximum number of SteepestDescent iteration
-#######################################################################################3
+######################################################
 def Optimi_full_process(U_list,mpo_U_list_up, mpo_U_list_down, mpo_list2, mpo_boundy_list,Environment_Left,Environment_Right,perl_label_up, Environment_Uni,Env_Uni_inner, Bond_IN,d,L,L_lay,L_position,Method ,Max_SVD_iteratoin, Max_Steepest_iteratoin,Max_CG_iteratoin, E_list, Count_list, Gamma):
  if Method is 'SVD':
   Length=Max_number_iteratoin_SVD
@@ -47,12 +48,12 @@ def Optimi_full_process(U_list,mpo_U_list_up, mpo_U_list_down, mpo_list2, mpo_bo
      #print L_position
      Environment_Right[L_position1]=env.Env_right (mpo_U_list_up, mpo_U_list_down, mpo_list2, mpo_boundy_list, L_position1, d, Environment_Right)
 
-   print i
+   #print i
    L_position=i
    optimize.optimize_function(U_list,mpo_U_list_up, mpo_U_list_down, mpo_list2, mpo_boundy_list,Environment_Left,Environment_Right,perl_label_up, Environment_Uni,Env_Uni_inner, Bond_IN,d,L,L_lay,L_position,Method ,Max_SVD_iteratoin, Max_Steepest_iteratoin,Max_CG_iteratoin, E_list, Count_list,Gamma)
    if i is not L/2 -1:
     Environment_Left[i]=env.Env_left (mpo_U_list_up, mpo_U_list_down, mpo_list2, mpo_boundy_list, L_position, d, Environment_Left)
-########################################################################################
+#################################################################
 def Initialize_function(L, L_lay):
  Env_Uni_inner=[]
  Gamma=[]
@@ -66,7 +67,7 @@ def Initialize_function(L, L_lay):
  return Env_Uni_inner, Gamma
 
 #####################################################################################
-mpo.intialize_coupling(L, hz_list, W,Randomness, Model)
+mpo.intialize_coupling(L, hz_list, W, Randomness, Model)
 
 print hz_list
 
@@ -88,7 +89,7 @@ copy_U_list1=optimize.copy_U_list_function(U_list, L, L_lay)
 copy_U_list2=optimize.copy_U_list_function(U_list, L, L_lay)
 copy_U_list3=optimize.copy_U_list_function(U_list, L, L_lay)
 
-######### make a mpo representation of unitary U, up stand for U, down for U^{T} ######### 
+# make a mpo representation of unitary U, up stand for U, down for U^{T} # 
 mpo_U_list_up= mpo.make_mpo_U_list(U_list, L_lay, L, 'up')
 mpo_U_list_down= mpo.make_mpo_U_list(U_list, L_lay, L, 'down')
 
@@ -153,14 +154,12 @@ for i in xrange(len(L_lay)):
 
 
 
-
 for i in xrange(0,len(L_lay),2):
  L_position=(L/2)-1
  L_lay_selected=i
  env.Env_Uni_inner_function(U_list, Environment_Uni, perl_label_up, Bond_IN, L_lay,L_lay_selected, L_position, Env_Uni_inner )
 
  print (Env_Uni_inner[L_position][L_lay_selected]*U_list[L_position][L_lay_selected])[0], 'Right'
-
 
 
 if L > 4: 
@@ -170,86 +169,84 @@ if L > 4:
   env.Env_Uni_inner_function(U_list, Environment_Uni, perl_label_up, Bond_IN, L_lay,L_lay_selected, L_position, Env_Uni_inner )
 
   print (Env_Uni_inner[L_position][L_lay_selected]*U_list[L_position][L_lay_selected])[0],'middle'
- 
 
 
-##################################### Stepest Method ###################################
-Method='SteepestDescent'
-print 'hi',Method
-E_list=[]
-Count_list=[]
-Optimi_full_process(U_list,mpo_U_list_up, mpo_U_list_down, mpo_list2, mpo_boundy_list,Environment_Left,Environment_Right,perl_label_up, Environment_Uni,Env_Uni_inner, Bond_IN,d,L,L_lay,L_position,Method ,Max_SVD_iteratoin, Max_Steepest_iteratoin,Max_CG_iteratoin, E_list, Count_list,Gamma )
+######## Stepest Method ###################################
+#Method='SteepestDescent'
+#print 'hi',Method
+#E_list=[]
+#Count_list=[]
+#Optimi_full_process(U_list,mpo_U_list_up, mpo_U_list_down, mpo_list2, mpo_boundy_list,Environment_Left,Environment_Right,perl_label_up, Environment_Uni,Env_Uni_inner, Bond_IN,d,L,L_lay,L_position,Method ,Max_SVD_iteratoin, Max_Steepest_iteratoin,Max_CG_iteratoin, E_list, Count_list,Gamma )
 
 
 #E_f=mpo.Energy_through_env(U_list, L_lay, L, mpo_U_list_up, mpo_U_list_down, mpo_list2, mpo_boundy_list, L_position, d, Environment_Left)
 #print  E_f
 
-print Count_list
+#print Count_list
 ################################################# SVD###################################################
-Method='SVD'
-U_list=copy_U_list
-mpo_U_list_up= mpo.make_mpo_U_list(U_list, L_lay, L, 'up')
-mpo_U_list_up= mpo.make_mpo_U_list(U_list, L_lay, L, 'up')
-mpo_U_list_down= mpo.make_mpo_U_list(U_list, L_lay, L, 'down')
-E_f=mpo.Energy_through_env(U_list, L_lay, L, mpo_U_list_up, mpo_U_list_down, mpo_list2, mpo_boundy_list, L_position, d, Environment_Left)
-print  E_f
-print  E_list[0], 'must be equall'
+# Method='SVD'
+# U_list=copy_U_list
+# mpo_U_list_up= mpo.make_mpo_U_list(U_list, L_lay, L, 'up')
+# mpo_U_list_up= mpo.make_mpo_U_list(U_list, L_lay, L, 'up')
+# mpo_U_list_down= mpo.make_mpo_U_list(U_list, L_lay, L, 'down')
+ #E_f=mpo.Energy_through_env(U_list, L_lay, L, mpo_U_list_up, mpo_U_list_down, mpo_list2, mpo_boundy_list, L_position, d, Environment_Left)
+# print  E_f
+ #print  E_list[0], 'must be equall'
 
-E_list1=[]
-Count_list1=[]
-Optimi_full_process(U_list,mpo_U_list_up, mpo_U_list_down, mpo_list2, mpo_boundy_list,Environment_Left,Environment_Right,perl_label_up, Environment_Uni,Env_Uni_inner, Bond_IN,d,L,L_lay,L_position,Method ,Max_SVD_iteratoin, Max_Steepest_iteratoin,Max_CG_iteratoin, E_list1, Count_list1,Gamma )
+# E_list1=[]
+# Count_list1=[]
+#Optimi_full_process(U_list,mpo_U_list_up, mpo_U_list_down, mpo_list2, mpo_boundy_list,Environment_Left,Environment_Right,perl_label_up, Environment_Uni,Env_Uni_inner, Bond_IN,d,L,L_lay,L_position,Method ,Max_SVD_iteratoin, Max_Steepest_iteratoin,Max_CG_iteratoin, E_list1, Count_list1,Gamma )
 
-print Count_list1
+# print Count_list1
 #E_f=mpo.Energy_through_env(U_list, L_lay, L, mpo_U_list_up, mpo_U_list_down, mpo_list2, mpo_boundy_list, L_position, d, Environment_Left)
 #print  E_f
 
 #variance_Energy=mpo.variance_Energy_function(trH2, E_f, L)
 #print variance_Energy
 ############################################   CG-armjo   ###################################################
-U_list=copy_U_list1
-mpo_U_list_up= mpo.make_mpo_U_list(U_list, L_lay, L, 'up')
-mpo_U_list_up= mpo.make_mpo_U_list(U_list, L_lay, L, 'up')
-mpo_U_list_down= mpo.make_mpo_U_list(U_list, L_lay, L, 'down')
-E_f=mpo.Energy_through_env(U_list, L_lay, L, mpo_U_list_up, mpo_U_list_down, mpo_list2, mpo_boundy_list, L_position, d, Environment_Left)
-print  E_f
-print  E_list[0], 'must be equall'
+# U_list=copy_U_list1
+# mpo_U_list_up= mpo.make_mpo_U_list(U_list, L_lay, L, 'up')
+# mpo_U_list_up= mpo.make_mpo_U_list(U_list, L_lay, L, 'up')
+# mpo_U_list_down= mpo.make_mpo_U_list(U_list, L_lay, L, 'down')
+# E_f=mpo.Energy_through_env(U_list, L_lay, L, mpo_U_list_up, mpo_U_list_down, mpo_list2, mpo_boundy_list, L_position, d, Environment_Left)
+# print  E_f
+# print  E_list[0], 'must be equall'
 
 
-
-Method='CGarmjo'
-E_list2=[]
-Count_list2=[]
-Optimi_full_process(U_list,mpo_U_list_up, mpo_U_list_down, mpo_list2, mpo_boundy_list,Environment_Left,Environment_Right,perl_label_up, Environment_Uni,Env_Uni_inner, Bond_IN,d,L,L_lay,L_position,Method ,Max_SVD_iteratoin, Max_Steepest_iteratoin,Max_CG_iteratoin, E_list2, Count_list2,Gamma )
-print Count_list2
-E_f=mpo.Energy_through_env(U_list, L_lay, L, mpo_U_list_up, mpo_U_list_down, mpo_list2, mpo_boundy_list, L_position, d, Environment_Left)
-print  E_f
-
-variance_Energy=mpo.variance_Energy_function(trH2, E_f, L)
-print variance_Energy
+# Method='CGarmjo'
+# E_list2=[]
+# Count_list2=[]
+# #Optimi_full_process(U_list,mpo_U_list_up, mpo_U_list_down, mpo_list2, mpo_boundy_list,Environment_Left,Environment_Right,perl_label_up, Environment_Uni,Env_Uni_inner, Bond_IN,d,L,L_lay,L_position,Method ,Max_SVD_iteratoin, Max_Steepest_iteratoin,Max_CG_iteratoin, E_list2, Count_list2,Gamma )
+# print Count_list2
+# E_f=mpo.Energy_through_env(U_list, L_lay, L, mpo_U_list_up, mpo_U_list_down, mpo_list2, mpo_boundy_list, L_position, d, Environment_Left)
+# print  E_f
+# 
+# variance_Energy=mpo.variance_Energy_function(trH2, E_f, L)
+# print variance_Energy
 #############################################################################################################33
-
-############################################   CG-armjo   #########################################
-print 'CGpoly','\n','\n','\n'
-U_list=copy_U_list2
-mpo_U_list_up= mpo.make_mpo_U_list(U_list, L_lay, L, 'up')
-mpo_U_list_up= mpo.make_mpo_U_list(U_list, L_lay, L, 'up')
-mpo_U_list_down= mpo.make_mpo_U_list(U_list, L_lay, L, 'down')
-E_f=mpo.Energy_through_env(U_list, L_lay, L, mpo_U_list_up, mpo_U_list_down, mpo_list2, mpo_boundy_list, L_position, d, Environment_Left)
-print  E_f
-print  E_list[0], 'must be equall'
-
-Method='CGpoly'
-E_list3=[]
-Count_list3=[]
-Optimi_full_process(U_list,mpo_U_list_up, mpo_U_list_down, mpo_list2, mpo_boundy_list,Environment_Left,Environment_Right,perl_label_up, Environment_Uni,Env_Uni_inner, Bond_IN,d,L,L_lay,L_position,Method ,Max_SVD_iteratoin, Max_Steepest_iteratoin,Max_CG_iteratoin, E_list3, Count_list3,Gamma )
-
-print Count_list3
-
-E_f=mpo.Energy_through_env(U_list, L_lay, L, mpo_U_list_up, mpo_U_list_down, mpo_list2, mpo_boundy_list, L_position, d, Environment_Left)
-print  E_f
-
-variance_Energy=mpo.variance_Energy_function(trH2, E_f, L)
-print variance_Energy
+# 
+# ############################################   CG-armjo   #########################################
+# print 'CGpoly','\n','\n','\n'
+# U_list=copy_U_list2
+# mpo_U_list_up= mpo.make_mpo_U_list(U_list, L_lay, L, 'up')
+# mpo_U_list_up= mpo.make_mpo_U_list(U_list, L_lay, L, 'up')
+# mpo_U_list_down= mpo.make_mpo_U_list(U_list, L_lay, L, 'down')
+# E_f=mpo.Energy_through_env(U_list, L_lay, L, mpo_U_list_up, mpo_U_list_down, mpo_list2, mpo_boundy_list, L_position, d, Environment_Left)
+# # print  E_f
+# # print  E_list[0], 'must be equall'
+# 
+# Method='CGpoly'
+# E_list3=[]
+# Count_list3=[]
+# Optimi_full_process(U_list,mpo_U_list_up, mpo_U_list_down, mpo_list2, mpo_boundy_list,Environment_Left,Environment_Right,perl_label_up, Environment_Uni,Env_Uni_inner, Bond_IN,d,L,L_lay,L_position,Method ,Max_SVD_iteratoin, Max_Steepest_iteratoin,Max_CG_iteratoin, E_list3, Count_list3,Gamma )
+# 
+# # print Count_list3
+# 
+# E_f=mpo.Energy_through_env(U_list, L_lay, L, mpo_U_list_up, mpo_U_list_down, mpo_list2, mpo_boundy_list, L_position, d, Environment_Left)
+# print  E_f
+# 
+# variance_Energy=mpo.variance_Energy_function(trH2, E_f, L)
+# print variance_Energy
 
 ###########################################################
 print 'SteepestDescentploy','\n','\n','\n'
@@ -258,8 +255,9 @@ mpo_U_list_up= mpo.make_mpo_U_list(U_list, L_lay, L, 'up')
 mpo_U_list_up= mpo.make_mpo_U_list(U_list, L_lay, L, 'up')
 mpo_U_list_down= mpo.make_mpo_U_list(U_list, L_lay, L, 'down')
 E_f=mpo.Energy_through_env(U_list, L_lay, L, mpo_U_list_up, mpo_U_list_down, mpo_list2, mpo_boundy_list, L_position, d, Environment_Left)
-print  E_f
-print  E_list[0], 'must be equall'
+
+# print  E_f
+# print  E_list[0], 'must be equall'
 
 
 Method='SteepestDescentploy'
@@ -267,7 +265,7 @@ E_list4=[]
 Count_list4=[]
 Optimi_full_process(U_list,mpo_U_list_up, mpo_U_list_down, mpo_list2, mpo_boundy_list,Environment_Left,Environment_Right,perl_label_up, Environment_Uni,Env_Uni_inner, Bond_IN,d,L,L_lay,L_position,Method ,Max_SVD_iteratoin, Max_Steepest_iteratoin,Max_CG_iteratoin, E_list4, Count_list4,Gamma )
 
-print Count_list4
+#print Count_list4
 
 E_f=mpo.Energy_through_env(U_list, L_lay, L, mpo_U_list_up, mpo_U_list_down, mpo_list2, mpo_boundy_list, L_position, d, Environment_Left)
 print  E_f
@@ -287,31 +285,33 @@ print variance_Energy
 
 
 variance_list=[]
-variance_list=[ (trH2-E_list[i])*(1.0/(2**L)) for i in xrange(len(E_list)) ]
-variance_list1=[]
-variance_list1=[ (trH2-E_list1[i])*(1.0/(2**L)) for i in xrange(len(E_list1)) ]
-variance_list2=[]
-variance_list2=[ (trH2-E_list2[i])*(1.0/(2**L)) for i in xrange(len(E_list2)) ]
-variance_list3=[]
-variance_list3=[ (trH2-E_list3[i])*(1.0/(2**L)) for i in xrange(len(E_list3)) ]
+#variance_list=[ (trH2-E_list[i])*(1.0/(2**L)) for i in xrange(len(E_list)) ]
+#variance_list1=[]
+# variance_list1=[ (trH2-E_list1[i])*(1.0/(2**L)) for i in xrange(len(E_list1)) ]
+# variance_list2=[]
+# variance_list2=[ (trH2-E_list2[i])*(1.0/(2**L)) for i in xrange(len(E_list2)) ]
+# variance_list3=[]
+#variance_list3=[ (trH2-E_list3[i])*(1.0/(2**L)) for i in xrange(len(E_list3)) ]
 variance_list4=[]
 variance_list4=[ (trH2-E_list4[i])*(1.0/(2**L)) for i in xrange(len(E_list4)) ]
 
-print variance_list[len(variance_list)-1], variance_list1[len(variance_list1)-1], variance_list2[len(variance_list2)-1],variance_list3[len(variance_list3)-1], variance_list4[len(variance_list4)-1]
+#print variance_list[len(variance_list)-1], variance_list1[len(variance_list1)-1], variance_list2[len(variance_list2)-1],variance_list3[len(variance_list3)-1], variance_list4[len(variance_list4)-1]
 
+#print variance_list[len(variance_list)-1], variance_list4[len(variance_list4)-1]
 
-plt.plot(Count_list,variance_list, 'ro',label='SteepestDescent-armjo')
-plt.plot( Count_list1,variance_list1,'bs',label='SVD' )
-plt.plot( Count_list2, variance_list2,'g.',label='CG-armjo' )
-plt.plot( Count_list3, variance_list3,'yh',label='CG-poly' )
+#export DISPLAY=:0.0
+#plt.plot(Count_list,variance_list, 'ro',label='SteepestDescent-armjo')
+# plt.plot( Count_list1,variance_list1,'bs',label='SVD' )
+# plt.plot( Count_list2, variance_list2,'g.',label='CG-armjo' )
+#plt.plot( Count_list3, variance_list3,'yh',label='CG-poly' )
 plt.plot( Count_list4, variance_list4,'c+',label='SteepestDescent-poly' )
 
 plt.xlabel('Iterations', fontsize=20)
 plt.ylabel('$\sigma$', fontsize=20)
 plt.legend(loc='upper right')
-plt.savefig('Figs/Convergance.pdf')
-plt.show()
-print Gamma
+plt.savefig('Convergance.pdf')
+# plt.show()
+# print Gamma
 
 
 #a=[0, 1,2]
