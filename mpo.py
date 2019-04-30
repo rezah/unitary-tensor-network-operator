@@ -86,7 +86,7 @@ def make_mpo_H(L, J, hz_list, Fieldz, J2,Model ):
  sz=matSz()
  if Model is 'Ising': 
   chi=3
-  d=4
+  d=2
   sx=2.00*sx;sz=2.00*sz;
  elif Model is 'Heisenberg':
   d=2
@@ -199,35 +199,50 @@ def make_mpo_H(L, J, hz_list, Fieldz, J2,Model ):
   return mpo_uni10_1_list, mpo_uni10_4_list, mpo_uni10_list_boundry
  elif Model is 'Ising':
   mpo_matrix=uni10.Matrix(chi*d,chi*d)
+
+
   bdi_spin = uni10.Bond(uni10.BD_IN, d);
   bdo_spin = uni10.Bond(uni10.BD_OUT, d);
 
   mpo_uni10_1_list=[]
   mpo_uni10_4_list=[]
-  #print (-float(hz_list[0])*uni10.otimes(sz,sz)+float(Fieldz)*uni10.otimes(sx,s0)+float(Fieldz)*uni10.otimes(s0,sx))
-  #print (float(J2)*uni10.otimes(sz,s0)+float(hz_list[1])*uni10.otimes(s0,sz))
-  for num in xrange(0,L,2):
+  #print J, Fieldz
+  for num in xrange(L):
    mpo_matrix.set_zero()
    for mu in xrange(chi):
     for mup in xrange(chi):
      for s in xrange(d):
       for sp in xrange(d):
-       if mu==0 and mup==0:
-          mpo_matrix[mu*d*d*chi+s*d*chi+mup*d+sp]=(uni10.otimes(s0,s0))[s*d+sp]
-       if mu==1 and mup==0:
-          mpo_matrix[mu*d*d*chi+s*d*chi+mup*d+sp]=(uni10.otimes(sz,s0))[s*d+sp]
-       if mu==2 and mup==0:
-          mpo_matrix[mu*d*d*chi+s*d*chi+mup*d+sp]=(-float(hz_list[num])*uni10.otimes(sz,sz)+float(Fieldz)*uni10.otimes(sx,s0)+float(Fieldz)*uni10.otimes(s0,sx))[s*d+sp]
-       if mu==2 and mup==1:
-        mpo_matrix[mu*d*d*chi+s*d*chi+mup*d+sp]=(float(J2)*uni10.otimes(sz,s0)+float(hz_list[num+1])*uni10.otimes(s0,sz))[s*d+sp]
-       if mu==2 and mup==2:
-          mpo_matrix[mu*d*d*chi+s*d*chi+mup*d+sp]=(uni10.otimes(s0,s0))[s*d+sp]
-
-   mpo_uni10=uni10.UniTensor([bdi_mpo, bdi_spin, bdo_mpo,bdo_spin])
+         if mu==0 and mup==0  :
+            mpo_matrix[mu*d*d*chi+s*d*chi+mup*d+sp]=s0[s*d+sp]
+         if mu==1 and mup==0  :
+            mpo_matrix[mu*d*d*chi+s*d*chi+mup*d+sp]=sx[s*d+sp]
+         if mu==2 and mup==0  :
+            mpo_matrix[mu*d*d*chi+s*d*chi+mup*d+sp]=Fieldz*-1.0*sz[s*d+sp]
+         if(mu==2 and mup==1  ):
+            mpo_matrix[mu*d*d*chi+s*d*chi+mup*d+sp]=-1.0*J*sx[s*d+sp]
+         if(mu==2 and mup==2  ):
+            mpo_matrix[mu*d*d*chi+s*d*chi+mup*d+sp]=s0[s*d+sp]
+  
+   mpo_uni10=uni10.UniTensor([bdi_mpo, bdi_spin, bdo_mpo,bdo_spin], "mpo_uni10_1")
+   
    mpo_uni10.putBlock(mpo_matrix)
-   mpo_uni10_4_list.append(mpo_uni10)
-  #print mpo_uni10_4_list[0]
-  return None, mpo_uni10_4_list, mpo_uni10_list_boundry
+   mpo_uni10_1_list.append(mpo_uni10)
+   
+  mpo_uni10_1_list_prime=[copy.copy(mpo_uni10_1_list[i]) for i in xrange(len(mpo_uni10_1_list)) ]
+
+  
+  for i in xrange(0,L,2):
+     mpo_uni10_1_list_prime[i+1].setLabel([2,4,5,6])
+     mpo_uni10_cotraction=uni10.contract(mpo_uni10_1_list_prime[i],mpo_uni10_1_list_prime[i+1] )
+     mpo_uni10_cotraction.permute([0,1,4,5,3,6],3)
+     mpo_uni10_cotraction.combineBond([1,4])
+     mpo_uni10_cotraction.combineBond([3,6])
+     mpo_uni10_cotraction.setLabel([0,1,2,3])
+     mpo_uni10_cotraction.setName('mpo_uni10_4')
+     mpo_uni10_4_list.append(mpo_uni10_cotraction)
+  ##printmpo_uni10_1_list[1].printDiagram()
+  return mpo_uni10_1_list, mpo_uni10_4_list, mpo_uni10_list_boundry
   
 
 

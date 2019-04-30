@@ -12,15 +12,18 @@ import mpo
 import env
 import optimize
 ################################## Set parameter #######################################
-Model='Heisenberg'               #could be: 'Ising' and or 'Heisenberg'
-L=8                             #Numbers of particles should be even!
+Model='Ising'               #could be: 'Ising' and or 'Heisenberg'
+L=20                             #Numbers of particles should be even!
 L_lay=[0,1]                  #Numbers of layers <= 5
 d=2                              #pysical bond-dimension  
-chi=5                            #bond-dimension of MPO
+chi=3                            #bond-dimension of MPO
+
+J=0.1                            #coupling, 1.0
+Fieldz=1.0                            #Field in z direction, 0.6
+
+
 W=8                              #random interval, [-W,W]
-J=1.0                            #coupling, 1.0
-J2=0.30                           #coupling, 0.3
-Fieldz=0.60                            #Field in z direction, 0.6
+J2=0.0                           #coupling, 0.3
 hz_list=[]                        # list of randomness 
 U_delta=0.0                     #if it's zero, U_list is intialize by Identity
 Method='CGploy'          #methods: CGarmjo,CGploy, SVD, SteepestDescent, SteepestDescentploy 
@@ -69,13 +72,13 @@ def Initialize_function(L, L_lay):
 #####################################################################################
 mpo.intialize_coupling(L, hz_list, W, Randomness, Model)
 
-print hz_list
+#print hz_list
 
 ##########    only works for Heisenberg    ##########################
 #trH2=mpo.print_trH2(L, hz_list,J)
 #print trH2 
 #mpo.avarage_Energy_power_2(L, hz_list,J)
-
+print "couplings", J, Fieldz, "L", L, "N_lay", len(L_lay)
 ######### retrun MPO list, 1: one-site MPO, 2: two-site MPO; mpo_uni10_bl, mpo_uni10_br, mpo_uni10_bl2, mpo_uni10_br2###
 mpo_list1, mpo_list2, mpo_boundy_list=mpo.make_mpo_H( L, J, hz_list, Fieldz, J2,Model )
 trH2=mpo.contraction_MPO_trH2( mpo_list2, mpo_boundy_list, L )
