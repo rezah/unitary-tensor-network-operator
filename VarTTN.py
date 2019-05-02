@@ -13,12 +13,12 @@ import env
 import optimize
 ################################## Set parameter #######################################
 Model='Ising'               #could be: 'Ising' and or 'Heisenberg'
-L=20                             #Numbers of particles should be even!
-L_lay=[0,1]                  #Numbers of layers <= 5
+L=8                             #Numbers of particles should be even!
+L_lay=[0,1,2,4]                  #Numbers of layers <= 5
 d=2                              #pysical bond-dimension  
 chi=3                            #bond-dimension of MPO
 
-J=0.1                            #coupling, 1.0
+J=1.0                            #coupling, 1.0
 Fieldz=1.0                            #Field in z direction, 0.6
 
 
@@ -28,13 +28,41 @@ hz_list=[]                        # list of randomness
 U_delta=0.0                     #if it's zero, U_list is intialize by Identity
 Method='CGploy'          #methods: CGarmjo,CGploy, SVD, SteepestDescent, SteepestDescentploy 
 Randomness='Fixed'
-Max_number_iteratoin_SVD=40        # maximum number of sweeps for SVD method 
-Max_number_iteratoin_Steepest=20   # maximum number of sweeps for SteepestDescent method
-Max_number_iteratoin_CG=20   # maximum number of sweeps for SteepestDescent method
-Max_SVD_iteratoin=16               #maximum number of SVD iteration
-Max_Steepest_iteratoin=16          #maximum number of SteepestDescent iteration
-Max_CG_iteratoin=16          #maximum number of SteepestDescent iteration
+Max_number_iteratoin_SVD=60        # maximum number of sweeps for SVD method 
+Max_number_iteratoin_Steepest=60   # maximum number of sweeps for SteepestDescent method
+Max_number_iteratoin_CG=60   # maximum number of sweeps for SteepestDescent method
+Max_SVD_iteratoin=30               #maximum number of SVD iteration
+Max_Steepest_iteratoin=30          #maximum number of SteepestDescent iteration
+Max_CG_iteratoin=30          #maximum number of SteepestDescent iteration
 ######################################################
+def matSx():
+  spin = 0.5
+  dim = int(spin * 2 + 1)
+  Mat=(1.0)*uni10.Matrix(dim, dim, [0.0, 1.0, 1.00, 0.0])
+  return Mat 
+
+
+
+def matSz():
+  spin = 0.5
+  dim = int(spin * 2 + 1)
+  Mat=(1.0)*uni10.Matrix(dim, dim, [1.0, 0, 0, -1.0]);
+  return Mat 
+
+def matSy():
+  spin = 0.5
+  dim = int(spin * 2 + 1)
+  Mat=(1.0)*uni10.Matrix(dim, dim, [0.0, -1.00, 1.00, 0.00]);
+  return Mat 
+
+
+def matIden():
+    spin_t=0.5
+    dimT = int(2*spin_t + 1)
+    Mat=uni10.Matrix(dimT, dimT,[1,0,0,1])
+    return Mat
+
+
 def Optimi_full_process(U_list,mpo_U_list_up, mpo_U_list_down, mpo_list2, mpo_boundy_list,Environment_Left,Environment_Right,perl_label_up, Environment_Uni,Env_Uni_inner, Bond_IN,d,L,L_lay,L_position,Method ,Max_SVD_iteratoin, Max_Steepest_iteratoin,Max_CG_iteratoin, E_list, Count_list, Gamma):
  if Method is 'SVD':
   Length=Max_number_iteratoin_SVD
@@ -278,12 +306,171 @@ print variance_Energy
 
 
 
+mpo_U_list_up= mpo.make_mpo_U_list(U_list, L_lay, L, 'up')
+mpo_U_list_down= mpo.make_mpo_U_list(U_list, L_lay, L, 'down')
 
 
 
 
+
+
+################L=4##########################
+
+#mpo_list2[0].setLabel([-1,6,7,1])
+#mpo_list2[1].setLabel([7,8,-2,4])
+#mpo_boundy_list[0].setLabel([-1])
+#mpo_boundy_list[1].setLabel([-2])
+
+#mpo_U_list_up[0].setLabel([1,2,3])
+#mpo_U_list_up[1].setLabel([4,2,5])
+
+#mpo_U_list_down[0].setLabel([10,12,6])
+#mpo_U_list_down[1].setLabel([11,12,8])
+
+##mpo_U_list_down[0].setLabel([10,12,1])
+##mpo_U_list_down[1].setLabel([11,12,4])
+
+
+##result=(mpo_U_list_down[0]*mpo_U_list_up[0])*(mpo_U_list_down[1]*mpo_U_list_up[1])
+##result.permute([10,11,3,5],2)
+##print result
+
+#result=((mpo_U_list_down[0]*mpo_U_list_up[0])*mpo_boundy_list[0]*mpo_list2[0])*((mpo_U_list_down[1]*mpo_U_list_up[1])*mpo_boundy_list[1]*mpo_list2[1])
+##print result.printDiagram()
+#result.permute([10,11,3,5],2)
+##print result
+
+#result_m=result.getBlock()
+#N_col=result_m.col()
+#list_energy=[]
+#for i in xrange(N_col):
+# list_energy.append(result_m[i*N_col+i]*(1.0/L))
+#list_energy=sorted(list_energy, key=float)
+#print list_energy
+
+
+
+
+#sx = matSx()
+#sy = matSy()
+#sz = matSz()
+#iden = matIden()
+
+#H=(-1.0*J)*uni10.otimes(uni10.otimes(sx,sx),uni10.otimes(iden,iden))
+#H=H+(-1.0*J)*uni10.otimes(uni10.otimes(iden,sx),uni10.otimes(sx,iden))
+#H=H+(-1.0*J)*uni10.otimes(uni10.otimes(iden,iden),uni10.otimes(sx,sx))
+#H=H+(-1.0*Fieldz)*uni10.otimes(uni10.otimes(sz,iden),uni10.otimes(iden,iden))
+#H=H+(-1.0*Fieldz)*uni10.otimes(uni10.otimes(iden,sz),uni10.otimes(iden,iden))
+#H=H+(-1.0*Fieldz)*uni10.otimes(uni10.otimes(iden,iden),uni10.otimes(sz,iden))
+#H=H+(-1.0*Fieldz)*uni10.otimes(uni10.otimes(iden,iden),uni10.otimes(iden,sz))
+
+##H=(mpo_boundy_list[0]*mpo_list2[0])*(mpo_boundy_list[1]*mpo_list2[1])
+##H.permute([6,8,1,4],2)
+##H=H.getBlock()
+
+##h_m=H.getBlock()
+
+##E_iter_list=[]
+
+
+#e=H.eigh()
+##print e[0]
+#N_col=e[0].col()
+#list_energy1=[]
+#for i in xrange(N_col):
+#  list_energy1.append(e[0][i]*(1.0/L))
+#list_energy1=sorted(list_energy1, key=float)
+#print list_energy1
+
+
+#file = open("EnergyIter4.txt", "w")
+#for index in range(len(list_energy)):
+#  file.write(str(index) + " " + str(list_energy[index])+" "+str(list_energy1[index])+" "+ "\n")
+#file.close()
+
+##############################################################################################################33
+
+
+
+
+
+
+
+
+
+
+
+
+
+###############L=8##########################
+
+mpo_list2[0].setLabel([-1,12,13,1])
+mpo_list2[1].setLabel([13,14,15,4])
+mpo_list2[2].setLabel([15,16,17,7])
+mpo_list2[3].setLabel([17,18,-2,10])
+
+mpo_boundy_list[0].setLabel([-1])
+mpo_boundy_list[1].setLabel([-2])
+
+mpo_U_list_up[0].setLabel([1,2,3])
+mpo_U_list_up[1].setLabel([2,4,5,6])
+mpo_U_list_up[2].setLabel([5,7,8,9])
+mpo_U_list_up[3].setLabel([10,8,11])
+
+mpo_U_list_down[0].setLabel([19,20,12])
+mpo_U_list_down[1].setLabel([20,21,22,14])
+mpo_U_list_down[2].setLabel([22,23,24,16])
+mpo_U_list_down[3].setLabel([25,24,18])
+
+
+
+result=((mpo_U_list_down[0]*mpo_U_list_up[0])*mpo_boundy_list[0]*mpo_list2[0])*((mpo_U_list_down[1]*mpo_U_list_up[1])*mpo_list2[1])
+result=result*((mpo_U_list_down[2]*mpo_U_list_up[2])*mpo_list2[2])*((mpo_U_list_down[3]*mpo_U_list_up[3])*mpo_boundy_list[1]*mpo_list2[3])
+#print result.printDiagram()
+result.permute([19,21,23,25, 3,6,9,11],4)
+
+result_m=result.getBlock()
+N_col=result_m.col()
+list_energy=[]
+for i in xrange(N_col):
+ list_energy.append(result_m[i*N_col+i]*(1.0/L))
+list_energy=sorted(list_energy, key=float)
+print list_energy
+
+
+
+
+
+H=(mpo_boundy_list[0]*mpo_list2[0])*(mpo_list2[1])*(mpo_list2[2])*(mpo_boundy_list[1]*mpo_list2[3])
+H.permute([12,14,16,18, 1,4,7,10],4)
+H=H.getBlock()
+
+
+e=H.eigh()
+#print e[0]
+N_col=e[0].col()
+list_energy1=[]
+for i in xrange(N_col):
+  list_energy1.append(e[0][i]*(1.0/L))
+list_energy1=sorted(list_energy1, key=float)
+print list_energy1
+
+
+file = open("EnergyIter8.txt", "w")
+for index in range(len(list_energy)):
+  file.write(str(index) + " " + str(list_energy[index])+" "+str(list_energy1[index])+" "+ "\n")
+file.close()
 
 #############################################################################################################33
+
+
+
+
+
+
+
+
+
 
 
 
@@ -325,5 +512,6 @@ plt.savefig('Convergance.pdf')
 #    file.write(str(a[index]) + " " + str(b[index]) + "\n")
 #file.close()
 #R=loadtxt('list.txt')
+
 
 
