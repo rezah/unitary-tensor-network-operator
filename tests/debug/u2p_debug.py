@@ -43,8 +43,11 @@ U22.putBlock(uni10.otimes(Sz,Si))
 U23 = uni10.UniTensor([bdi,bdi,bdo,bdo])
 U23.putBlock(uni10.otimes(Sx,Sx))
 
+Ulist = [[U11,U21],[U12,U22],[U13,U23]]
+
 def test_u2p():
-    umat = uni10.Matrix(4,4,[0. ,  0. ,  0.9,  0.,0. ,  0. ,  0. ,  0.1,0.9,  0. ,  0. ,  0.,0. ,  0.1,  0. ,  0.])
+    umat = uni10.Matrix(4,4,[0.,0.,0.9,0.,0.,0.,0.,0.1,0.9,0.,0.,0.,0.,0.1,0.,0.])
+    umat = uni10.Matrix(4,4,[-1., -0., -0., -1.,-0., -0., -1., -0., -0., -1., -0., -0.,-1.,-0.,-0.,1.])
     U = uni10.UniTensor([bdi,bdi,bdo,bdo],'U')
     U.putBlock(umat)
     pstr, _ = pauli2body()
@@ -55,6 +58,13 @@ def test_u2p():
 
     print coef
 
-test_u2p()
+def test_ulist2p():
+    Ucoef = ulist2pauli(Ulist,2)
+    for i in range(len(Ucoef)):
+        print Ucoef[i]
+
+test_ulist2p()
+#test_u2p()
+    
     
  

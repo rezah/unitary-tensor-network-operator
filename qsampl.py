@@ -1,5 +1,6 @@
 import pyUni10 as uni10
 import copy
+import numpy as np
 
 def matSx():
   spin = 0.5
@@ -69,7 +70,6 @@ def get_Hbond_tensor(J=1.0,Fieldz=1.0, bond_dim=2, edge=False,edgeside='L'):
 def get_unitary4bond_up(Ulist,L,bond_idx,bond_dim=2):
 
 
-    # TODO Use bond_idx to detect edge bonds, how to detect right edge?
     # Ulist is a L/2 x 2 list, 2 is the number of layers 
     # bond_idx ranges from 0 to L-2
     NU1 = L/2
@@ -198,6 +198,9 @@ def contract_UHU(L, Ulist):
 ######PAULI######PAULI######PAULI######PAULI######PAULI######PAULI
 def pauli2body():
     # TODO figure out an easier way to print the labels
+    '''
+    Tensors for 2-body Pauli strings. 
+    '''
     bond_dim = 2
     iden = matIden()
     sx   = matSx()
@@ -220,6 +223,27 @@ def pauli2body():
             pauli2b.append(P) 
 
     return pauli2b, pauli2b_labels
+
+def pauli_table():
+    '''
+    Construct the Pauli multiplication table.
+    Return a 4x4 signed Matrix. 
+    +/- index.
+    '''
+    table = np.zeros((4,4),dtype=np.int32)
+    for i in range(4):
+        table[i,i] = 0
+        table[0,i] = i
+    table[1,2] = 3
+    table[1,3] = 2
+    table[2,3] = 1
+    table = table + table.T
+
+    table[2,1] *= -1
+    table[3,1] *= -1
+    table[3,2] *= -1
+    
+    return table
             
     
 def unitary2pauli(U,P,lp):
@@ -230,8 +254,44 @@ def unitary2pauli(U,P,lp):
     '''
     U_ = copy.copy(U)
     U_.setLabel([0,1,2,3])
-    trUP = (U_*P).norm() / (2.*lp)
+    trUP = (U_*P).getBlock().sum()/(2.*lp)
     return trUP
+
+def ulist2pauli(Ulist,lp):
+    '''
+    Turn the Ulist into a list of vectors.
+    '''
+    #TODO Call pauli2body() in a higher fuction to reduce the number of calls
+    ptensor, plabel = pauli2body() 
+    l0 = len(Ulist)
+    l1 = len(Ulist[0])
+    np2 = len(ptensor)
+    print np2
+    
+    Ucoef = []
+    
+    if l1 != 2:
+        raise ValueError("Only 2-layer U_list is accepted!") 
+    for i in range(l0):
+        ucoef_ = []
+        for j in range(l1):
+            coef = np.zeros(np2)
+            U = Ulist[i][j]
+            for k in range(np2):
+                coef[k] = unitary2pauli(U,ptensor[k],lp)
+                if (abs(coef[k])<1e-10):
+                    coef[k] = 0.   # setting small coefficients to zero
+            ucoef_.append(coef)
+        Ucoef.append(ucoef_)     
+
+    return Ucoef
+
+
+
+            
+            
+            
+   
 
 
     
