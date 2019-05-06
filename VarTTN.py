@@ -14,7 +14,7 @@ import optimize
 ################################## Set parameter #######################################
 Model='Ising'               #could be: 'Ising' and or 'Heisenberg'
 L=8                             #Numbers of particles should be even!
-L_lay=[0,1,2,4]                  #Numbers of layers <= 5
+L_lay=[0,1]                  #Numbers of layers <= 5
 d=2                              #pysical bond-dimension  
 chi=3                            #bond-dimension of MPO
 
@@ -515,3 +515,22 @@ plt.savefig('Convergance.pdf')
 
 
 
+def Mat_np_to_Uni(Mat_np):
+ d0=np.size(Mat_np,0)
+ d1=np.size(Mat_np,1)
+ Mat_uni=uni10.Matrix(d0,d1)
+ for i in xrange(d0):
+  for j in xrange(d1):
+   Mat_uni[i*d1+j]=Mat_np[i,j]
+ return  Mat_uni
+
+
+
+def Mat_uni_to_np(Mat_uni):
+ dim0=int(Mat_uni.row())
+ dim1=int(Mat_uni.col())
+ Mat_np=np.zeros((dim0,dim1))
+ for i in xrange(dim0):
+  for j in xrange(dim1):
+   Mat_np[i,j]=Mat_uni[i*dim1+j]
+ return  Mat_np
