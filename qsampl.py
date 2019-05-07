@@ -28,12 +28,11 @@ def matIden():
     Mat=uni10.Matrix(dimT, dimT,[1,0,0,1])
     return Mat
 
-
 ####################UHU####################UHU####################UHU
 def get_Hbond_tensor(J=1.0,Fieldz=1.0, bond_dim=2, edge=False,edgeside='L'):
 
     '''
-    XX + h Z
+    -J XX - h Z    (h = Fieldz)
     Result in a tensor:
             _____
        0 __|     |__ 2
@@ -70,6 +69,7 @@ def get_Hbond_tensor(J=1.0,Fieldz=1.0, bond_dim=2, edge=False,edgeside='L'):
 def get_unitary4bond_up(Ulist,L,bond_idx,bond_dim=2):
 
 
+    #TODO Combine some tensors in advance and save them to speed up
     # Ulist is a L/2 x 2 list, 2 is the number of layers 
     # bond_idx ranges from 0 to L-2
     NU1 = L/2
@@ -174,7 +174,7 @@ def contract_UHU(L, Ulist):
     Hbond_n.setLabel([0,1,2,3,4,5])
     UHU.append(Hbond_n)
 
-    for bidx in range(1,L-2):
+    for bidx in xrange(1,L-2):
         Hbond = get_Hbond_tensor(edge=False)
         U_up  = get_unitary4bond_up(Ulist,L,bidx)
         U_dn  = copy.copy(U_up)
@@ -197,18 +197,155 @@ def contract_UHU(L, Ulist):
 
        
 ######PAULI######PAULI######PAULI######PAULI######PAULI######PAULI
-def unitary2pauli(U,P,lp):
+def trUP(U,P,lp):
     '''
     U  - unitary
     P  - Pauli string
     lp - length of Pauli string 
     '''
-    U_ = copy.copy(U)
-    U_.setLabel([0,1,2,3])
-    trUP = (U_*P).getBlock().sum()/(2.*lp)
-    return trUP
+    #U_ = copy.copy(U)
+    #U_.setLabel([0,1,2,3])
+    tr = (U*P).getBlock().sum()/(2.**lp)
+    return tr
+
+def pauli3body():
+    '''
+    Tensors for 3-body Pauli strings. 
+    '''
+    bond_dim = 2
+    iden = matIden()
+    sx   = matSx()
+    sy   = matSy()
+    sz   = matSz()
+    bdi = uni10.Bond(uni10.BD_IN,  bond_dim)
+    bdo = uni10.Bond(uni10.BD_OUT, bond_dim)
+
+    pauli1b = [iden,sx,sy,sz]
+    pauli3b = []
+    for i in xrange(4):
+      for j in xrange(4):
+        for k in xrange(4):
+          mat = uni10.otimes(uni10.otimes(pauli1b[i],pauli1b[j]),pauli1b[k])
+          P   = uni10.UniTensor([bdi,bdi,bdi,bdo,bdo,bdo])
+          P.putBlock(mat)
+          pauli3b.append(P)
+
+    return pauli3b
+
+def pauli4body():
+    '''
+    Tensors for 4-body Pauli strings. 
+    '''
+    bond_dim = 2
+    iden = matIden()
+    sx   = matSx()
+    sy   = matSy()
+    sz   = matSz()
+    bdi = uni10.Bond(uni10.BD_IN,  bond_dim)
+    bdo = uni10.Bond(uni10.BD_OUT, bond_dim)
+
+    pauli1b = [iden,sx,sy,sz]
+    pauli4b = []
+    for i in xrange(4):
+      for j in xrange(4):
+        for k in xrange(4):
+          for l in xrange(4):
+            mat = uni10.otimes(uni10.otimes(uni10.otimes(pauli1b[i],pauli1b[j]),pauli1b[k]),pauli1b[l])
+            P   = uni10.UniTensor([bdi,bdi,bdi,bdi,bdo,bdo,bdo,bdo])
+            P.putBlock(mat)
+            pauli4b.append(P)
+
+    return pauli4b
+
+
+def UHU2pauli(L,Ulist):
+    # TODO make very small terms zero so that no measurement is needed
+    #      can be done when measuring too
+    UHU = contract_UHU(L, Ulist) 
+    pauli3b = pauli3body()
+    pauli4b = pauli4body()
+    l3b = 64
+    l4b = 256
+    pcoefs = []
+
+    coef3 = np.zeros(l3b)
+    for i in xrange(l3b):
+        coef3[i] = trUP(UHU[0],pauli3b[i],3)
+    pcoefs.append(coef3)
+    for l in xrange(1,L-2):
+        coef4 = np.zeros(l4b)
+        for i in xrange(l4b):
+            coef4[i] = trUP(UHU[l],pauli4b[i],4)
+        pcoefs.append(coef4)
+
+    coef3 = np.zeros(l3b)
+    for i in xrange(l3b):
+        coef3[i] = trUP(UHU[L-2],pauli3b[i],3) 
+    pcoefs.append(coef3)
+
+    return pcoefs
+
+
+##########GROUND#STATE##########GROUND#STATE##########GROUND#STATE
+def vector2uni10(v,L):
+    bond_dim = 2
+    vl = list(v)
+    vl10 = uni10.Matrix(2**L,1,vl)
+    bdi = uni10.Bond(uni10.BD_IN,  bond_dim)
+    bdo = uni10.Bond(uni10.BD_OUT, bond_dim)
+    vtensor = uni10.UniTensor([bdi]*L,'GS')
+    vtensor.putBlock(vl10)
+    return vtensor
+
+ 
+def ising_ED(L,J=1.0,Fieldz=1.0):
+    '''
+    -J XX - h Z    (h = Fieldz)
+    '''
+
+    if (L > 12):
+        raise ValueError("Exact diagonalization can only handle up to 12 sites!")
+    if (L%2 != 0):
+        raise ValueError("Only even number of sites is accepted!")
+
+    npId = np.eye(2)
+    npSx = np.array([0.,1.,1.,0.]).reshape(2,2)
+    npSy = np.array([0.,-1.,1.,0.]).reshape(2,2)
+    npSz = np.array([1.,0.,0.,-1.]).reshape(2,2)
+    SxSx = np.kron(npSx,npSx)
+
+    H = np.zeros((2**L,)*2)
+    for i in xrange(0,L-1):
+        H += (-1.*J)*np.kron(np.kron(np.eye(2**i),SxSx),np.eye(2**(L-i-2)))
+        H += (-1.*Fieldz)*np.kron(np.kron(np.eye(2**i),npSz),np.eye(2**(L-i-1)))
+    H += (-1.*Fieldz)*np.kron(np.eye(2**(L-1)),npSz) # Last Z-term
+
+    ew,ev = np.linalg.eigh(H) # non-degenerate
+    gs = vector2uni10(ev[:,0],L)
+    return ew[0], gs
+
+##############Upsi##############Upsi##############Upsi##############Upsi
+#def UdagPsi(Ulist, psi, L):
+#    lu = L/2
+
+    
+     
+
+
+
 
    
+
+
+
+
+    
+     
+    
+
+    
+    
+
 
 
 
