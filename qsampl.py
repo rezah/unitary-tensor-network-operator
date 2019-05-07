@@ -195,57 +195,8 @@ def contract_UHU(L, Ulist):
 
     return UHU
 
+       
 ######PAULI######PAULI######PAULI######PAULI######PAULI######PAULI
-def pauli2body():
-    # TODO figure out an easier way to print the labels
-    '''
-    Tensors for 2-body Pauli strings. 
-    '''
-    bond_dim = 2
-    iden = matIden()
-    sx   = matSx()
-    sy   = matSy()
-    sz   = matSz()
-    bdi = uni10.Bond(uni10.BD_IN,  bond_dim)
-    bdo = uni10.Bond(uni10.BD_OUT, bond_dim)
-
-    pauli1b = [iden,sx,sy,sz]
-    pauli2b = []
-    pauli2b_labels = [['II','IX','IY','IZ'],\
-                      ['XI','XX','XY','XZ'],\
-                      ['YI','YX','YY','YZ'],\
-                      ['ZI','ZX','ZY','ZZ']]            
-    for i in range (4):
-        for j in range(4):
-            mat = uni10.otimes(pauli1b[i],pauli1b[j])
-            P   = uni10.UniTensor([bdi,bdi,bdo,bdo],pauli2b_labels[i][j])
-            P.putBlock(mat)
-            pauli2b.append(P) 
-
-    return pauli2b, pauli2b_labels
-
-def pauli_table():
-    '''
-    Construct the Pauli multiplication table.
-    Return a 4x4 signed Matrix. 
-    +/- index.
-    '''
-    table = np.zeros((4,4),dtype=np.int32)
-    for i in range(4):
-        table[i,i] = 0
-        table[0,i] = i
-    table[1,2] = 3
-    table[1,3] = 2
-    table[2,3] = 1
-    table = table + table.T
-
-    table[2,1] *= -1
-    table[3,1] *= -1
-    table[3,2] *= -1
-    
-    return table
-            
-    
 def unitary2pauli(U,P,lp):
     '''
     U  - unitary
@@ -257,51 +208,7 @@ def unitary2pauli(U,P,lp):
     trUP = (U_*P).getBlock().sum()/(2.*lp)
     return trUP
 
-def ulist2pauli(Ulist,lp):
-    '''
-    Turn the Ulist into a list of vectors.
-    '''
-    #TODO Call pauli2body() in a higher fuction to reduce the number of calls
-    ptensor, plabel = pauli2body() 
-    l0 = len(Ulist)
-    l1 = len(Ulist[0])
-    np2 = len(ptensor)
-    print np2
-    
-    Ucoef = []
-    
-    if l1 != 2:
-        raise ValueError("Only 2-layer U_list is accepted!") 
-    for i in range(l0):
-        ucoef_ = []
-        for j in range(l1):
-            coef = np.zeros(np2)
-            U = Ulist[i][j]
-            for k in range(np2):
-                coef[k] = unitary2pauli(U,ptensor[k],lp)
-                if (abs(coef[k])<1e-10):
-                    coef[k] = 0.   # setting small coefficients to zero
-            ucoef_.append(coef)
-        Ucoef.append(ucoef_)     
-
-    return Ucoef
-
-
-
-            
-            
-            
    
 
 
-    
-    
-    
-    
 
-            
-        
-
-            
-            
- 
