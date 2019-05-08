@@ -1,5 +1,6 @@
 import pyUni10 as uni10
 import copy
+import itertools
 import numpy as np
 
 def matSx():
@@ -322,11 +323,50 @@ def ising_ED(L,J=1.0,Fieldz=1.0):
 
     ew,ev = np.linalg.eigh(H) # non-degenerate
     gs = vector2uni10(ev[:,0],L)
-    return ew[0], gs
+    return ew[0], ev[:,0] #TODO change ev[:,0] to gs after test
 
 ##############Upsi##############Upsi##############Upsi##############Upsi
-#def UdagPsi(Ulist, psi, L):
-#    lu = L/2
+def UdagPsi(Ulist, psi, L):
+    lu = L/2
+    if len(Ulist[0]) != 2:
+        raise ValueError("Only 2-layer unitray towers are accepted!")
+    v = copy.copy(psi)
+    # Applying the first layer
+    label = []
+    for i in range(lu):
+        s = i*2
+        U0 = copy.copy(Ulist[i][0])
+        U0.permute([2,3,0,1],2)
+        U0.setLabel([s+L,s+L+1,s,s+1])
+        v = U0*v
+        label.append([s,s+1])
+    label = label[::-1]
+    label = list(itertools.chain(*label))
+    v.setLabel(label)
+    v.permute(xrange(L),L)
+
+    # Applying the second layer
+    label = []
+    for i in range(lu-1):
+        s=i*2+1
+        U1 = copy.copy(Ulist[i][1])
+        U1.permute([2,3,0,1],2)
+        U1.setLabel([s+L,s+L+1,s,s+1])
+        v = U1*v
+        label.append([s,s+1])
+    label = label[::-1]
+    label = list(itertools.chain(*label))
+    label = label + [0,L-1]
+    v.setLabel(label)
+    v.permute(xrange(L),L)
+    
+    return v
+        
+    
+
+
+        
+    
 
     
      
