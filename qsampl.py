@@ -2,6 +2,7 @@ import pyUni10 as uni10
 import copy
 import itertools
 import numpy as np
+import pickle
 
 def matSx():
   spin = 0.5
@@ -259,12 +260,15 @@ def pauli4body():
     return pauli4b
 
 
-def UHU2pauli(L,Ulist):
+def UHU2pauli(L,Ulist,pauli3b=None,pauli4b=None):
     # TODO make very small terms zero so that no measurement is needed
     #      can be done when measuring too
     UHU = contract_UHU(L, Ulist) 
-    pauli3b = pauli3body()
-    pauli4b = pauli4body()
+    if pauli3b is None:
+        pauli3b = pauli3body()
+    if pauli4b is None:
+        pauli4b = pauli4body()
+
     l3b = 64
     l4b = 256
     pcoefs = []
@@ -288,7 +292,7 @@ def UHU2pauli(L,Ulist):
 
 
 ##########GROUND#STATE##########GROUND#STATE##########GROUND#STATE
-def vector2uni10(v,L):
+def vec2uni10(v,L):
     bond_dim = 2
     vl = list(v)
     vl10 = uni10.Matrix(2**L,1,vl)
@@ -322,8 +326,8 @@ def ising_ED(L,J=1.0,Fieldz=1.0):
     H += (-1.*Fieldz)*np.kron(np.eye(2**(L-1)),npSz) # Last Z-term
 
     ew,ev = np.linalg.eigh(H) # non-degenerate
-    gs = vector2uni10(ev[:,0],L)
-    return ew[0], ev[:,0] #TODO change ev[:,0] to gs after test
+    gs = vec2uni10(ev[:,0],L)
+    return ew[0], ev[:,0]
 
 ##############Upsi##############Upsi##############Upsi##############Upsi
 def UdagPsi(Ulist, psi, L):
@@ -361,31 +365,136 @@ def UdagPsi(Ulist, psi, L):
     v.permute(xrange(L),L)
     
     return v
+
+############MEASURE############MEASURE############MEASURE############MEASURE
+def measure_pstr(Ulist,L,psi,tol=1e-10,analys_coefs=False,outdir='./'):
+    '''
+    Return:
+    (1) the expectation value of the Hamiltonian 
+    and measurement variance under rotation:
+    <psi U | U+HU| U+ psi>
+    '''
+    #XXX Note that I set the expectation value to be zero if
+    #    the corresponding coefficient is zero.
+    #UHU = contract_UHU(L, Ulist)    
+    
+    psiT = copy.copy(psi)
+    psiT.permute(range(L),0)
+    pauli3b = pauli3body()
+    pauli4b = pauli4body()
+    pcoefs  = UHU2pauli(L,Ulist,pauli3b,pauli4b)
+    
+    ave_value = [] # measurement of each Pauli string
+    var_value = [] # variance of the Pauli String
+    l3b = 64
+    l4b = 256    
+
+    # analysis pcoefs
+    if analys_coefs:
+        coef_analys(pcoefs, w2file=True, datadir=outdir)
+    
+    # Left Edge
+    e3 = np.zeros(l3b)
+    coef3 = pcoefs[0]
+    labelpsiT = range(3)   + range(6,L+3)
+    labelpsi  = range(3,6) + range(6,L+3)
+    for i in xrange(l3b):
+        if (abs(coef3[i]) < tol):
+            continue
+        else:
+            #p3 = copy.copy(pauli3b[i])
+            psi.setLabel(labelpsi)
+            psiT.setLabel(labelpsiT)
+            e3[i] = ((psiT*pauli3b[i])*psi).getBlock().sum()
+    ave_value.append(e3)
+
+    # Interior Bonds
+    for n in xrange(1, L-2):
+        coef4 = pcoefs[n]
+        e4 = np.zeros(l4b)
+        labelpsiT = range(8,8+n-1) + range(4)   + range(8+n-1,L+4)
+        labelpsi  = range(8,8+n-1) + range(4,8) + range(8+n-1,L+4)
+        for i in xrange(l4b):
+            if (abs(coef4[i]) < tol):
+                continue
+            else:
+                psi.setLabel(labelpsi)
+                psiT.setLabel(labelpsiT)
+                e4[i] = ((psiT*pauli4b[i])*psi).getBlock().sum()
+        ave_value.append(e4)
+
+    # Right Edge
+    e3 = np.zeros(l3b)
+    coef3 = pcoefs[-1]
+    labelpsiT = range(6,L+3) + range(3)
+    labelpsi  = range(6,L+3) + range(3,6)
+    for i in xrange(l3b):
+        if (abs(coef3[i]) < tol):
+            continue
+        else:
+            psi.setLabel(labelpsi)
+            psiT.setLabel(labelpsiT)
+            e3[i] = ((psiT*pauli3b[i])*psi).getBlock().sum()
+    ave_value.append(e3)
+
+    # Calculating the expectation values and variances
+    err_value = []
+    for p in ave_value:
+        varp = 1.-p**2.
+        err_value.append(varp)
+    aveH = 0.
+    errH = 0.
+    for i in xrange(L-1):
+        aveH += np.sum(ave_value[i]*pcoefs[i])
+        errH += np.sum(err_value[i]*(pcoefs[i]**2))
+        print err_value[i]*(pcoefs[i]**2)
+    return aveH, errH
         
+#########UTIL#########UTIL#########UTIL#########UTIL#########UTIL#########UTIL
+def str2int(mystr, base):
+    l = len(mystr)
+    str_n = mystr[::-1]
+    myint = 0
+    for i in xrange(l):
+        myint += str_n[i]*(base**i)
+    return int(myint)
+
+def coef_analys(pcoefs, w2file=False, datadir='./'):
+    #TODO
+    l = len(pcoefs)
+    l3b = 64
+    l4b = 256    
+    zlabel3 = []
+    zlabel4 = []
+    for i in [0,3]:
+      for j in [0,3]:
+        for k in [0,3]:
+          zlabel3.append(str2int([i,j,k],4))
+          for l in [0,3]:
+            zlabel4.append(str2int([i,j,k,l],4))
+    nzlabel3 = range(l3b)
+    nzlabel4 = range(l4b)
+    for i in zlabel3:
+        nzlabel3.remove(i)
+    for i in zlabel4:
+        nzlabel4.remove(i)
+    zcoef  = []
+    nzcoef = []
+
+    zcoef.append(pcoefs[0][zlabel3])
+    nzcoef.append(pcoefs[0][nzlabel3])
+
+    for p in xrange(1,l-1):
+        zcoef.append(pcoefs[p][zlabel4])
+        nzcoef.append(pcoefs[p][nzlabel4])
+    zcoef.append(pcoefs[-1][zlabel3])
+    nzcoef.append(pcoefs[-1][nzlabel3])
     
-
-
-        
-    
-
-    
-     
-
-
-
-
-   
-
-
-
-
-    
-     
-    
-
-    
-    
-
-
-
+    if w2file:
+        with open (datadir+'/zcoef.txt', 'wb') as zfp:
+            pickle.dump(zcoef,zfp)
+        with open (datadir+'/nzcoef.txt', 'wb') as nzfp:
+            pickle.dump(nzcoef,nzfp)
+    else:
+        return zcoef, nzcoef 
 
