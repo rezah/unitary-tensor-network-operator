@@ -10,8 +10,6 @@ import copy
 
 L=6
 
-
-
 # ### bond construction
 sx = np.array([0.,1.,1.,0.]).reshape(2,2)
 sy = np.array([0.,-1,1,0.]).reshape(2,2)
