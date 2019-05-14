@@ -3,6 +3,7 @@ import copy
 import itertools
 import numpy as np
 import pickle
+#np.set_printoptions(linewidth=1000)
 
 def matSx():
   spin = 0.5
@@ -31,39 +32,49 @@ def matIden():
     return Mat
 
 ####################UHU####################UHU####################UHU
-def get_Hbond_tensor(J=1.0,Fieldz=1.0, bond_dim=2, edge=False,edgeside='L'):
+def get_Hbond_tensor(model,bond_idx,L,J=1.0,Fieldz=1.0,hzlist=[],bond_dim=2):
+
+    #TODO put Z terms only into the even bonds
 
     '''
-    -J XX - h Z    (h = Fieldz)
-    Result in a tensor:
-            _____
-       0 __|     |__ 2
-       1 __|  H  |__ 3
-           |_____| 
+    _________________________________________________________________
+    Ising Model:                |    Heisenberg Model 
+    -J XX - h Z    (h=Fieldz)   |    J(XX + ZZ - YY) - h Z (h=hzlist)
+    ____________________________|____________________________________
+                        Result in a tensor:
+                              _____
+                         0 __|     |__ 2
+                         1 __|  H  |__ 3
+                             |_____| 
+    _________________________________________________________________
 
     '''
     # make matrix
     sx   = matSx()
-    #sy   = matSy()
+    sy   = matSy()
     sz   = matSz()
-    iden = matIden()
-    Hbond_mat  = (-1.*J)*uni10.otimes(sx,sx)
-    if edge:
-        if edgeside is 'L':
-            Hbond_mat += (-1.0*Fieldz)*uni10.otimes(sz,iden) 
-            Hbond_mat += (-0.5*Fieldz)*uni10.otimes(iden,sz)
-        elif edgeside is 'R':
-            Hbond_mat += (-0.5*Fieldz)*uni10.otimes(sz,iden) 
-            Hbond_mat += (-1.0*Fieldz)*uni10.otimes(iden,sz)
-    else:
-        Hbond_mat += (-0.5*Fieldz)*uni10.otimes(sz,iden) 
-        Hbond_mat += (-0.5*Fieldz)*uni10.otimes(iden,sz)
-    # construct tensor
-    bdi = uni10.Bond(uni10.BD_IN,  bond_dim)
-    bdo = uni10.Bond(uni10.BD_OUT, bond_dim)
+    s0   = matIden()
+    if (model == 'ising' or 'Ising'):
+        Hbond_mat  = (-1.*J)*uni10.otimes(sx,sx)
+        if bond_idx == 0:
+            Hbond_mat += (-1.0*Fieldz)*uni10.otimes(sz,s0) 
+            Hbond_mat += (-0.5*Fieldz)*uni10.otimes(s0,sz)
+        elif bond_idx == L-2:
+            Hbond_mat += (-0.5*Fieldz)*uni10.otimes(sz,s0) 
+            Hbond_mat += (-1.0*Fieldz)*uni10.otimes(s0,sz)
+        else:
+            Hbond_mat += (-0.5*Fieldz)*uni10.otimes(sz,s0) 
+            Hbond_mat += (-0.5*Fieldz)*uni10.otimes(s0,sz)
+        # construct tensor
+        bdi = uni10.Bond(uni10.BD_IN,  bond_dim)
+        bdo = uni10.Bond(uni10.BD_OUT, bond_dim)
 
-    Hbond = uni10.UniTensor([bdi,bdi,bdo,bdo],'Hbond')
-    Hbond.putBlock(Hbond_mat)
+        Hbond = uni10.UniTensor([bdi,bdi,bdo,bdo],'Hbond')
+        Hbond.putBlock(Hbond_mat)
+        Hbond.setLabel([0,1,2,3])
+
+    elif (Model == 'heisenberg' or 'Heisenberg'):
+        pass
     
     return Hbond
 
@@ -125,11 +136,11 @@ def get_unitary4bond_up(Ulist,L,bond_idx,bond_dim=2):
        4 __|     |__ 5
        2 __|     |__ 6
        3 __|  U  |__ 7 
-      -4 __|     |__ 8        
+      20 __|     |__ 8        
            |_____| 
      
         Where 2,3 will combine with the Hamiltonian,
-        4,-4 will combine with U_down
+        4,20 will combine with U_down
         '''
 
         if(bond_idx%2 == 0):   # Even Bond
@@ -140,9 +151,9 @@ def get_unitary4bond_up(Ulist,L,bond_idx,bond_dim=2):
             U0.setLabel([0,1,2,3])
             U1L.setLabel([4,2,5,6])
             U1R.setLabel([3,7,8,9])
-            U = (U0*U1L)*U1R
+            U = (U1L*U0)*U1R
             U.permute([4,0,1,7,5,6,8,9],4)
-            U.setLabel([4,2,3,-4,5,6,7,8]) 
+            U.setLabel([4,2,3,20,5,6,7,8]) 
 
         else:                # Odd Bond
             l = bond_idx//2
@@ -152,46 +163,51 @@ def get_unitary4bond_up(Ulist,L,bond_idx,bond_dim=2):
             U0L.setLabel([0,1,2,3])
             U0R.setLabel([4,5,6,7])
             U1.setLabel([3,6,8,9])
-            U = U0L*(U0R*U1)
+            U = U0L*(U1*U0R)
             U.permute([0,1,4,5,2,8,9,7],4)
-            U.setLabel([4,2,3,-4,5,6,7,8]) 
+            U.setLabel([4,2,3,20,5,6,7,8]) 
 
     return U
 
-def contract_UHU(L, Ulist):
+def contract_UHU(L, Ulist, model='ising', J=1.0, Fieldz=1.0, hzlist=[]):
     '''
     Return a list of U^+HU.
     L is the lattice length.
     '''
     #TODO Consider when U has imaginary parts
+    #TODO take construction of Hbond out of the loop for ising model
 
     UHU = []
     # left edge
-    Hbond = get_Hbond_tensor(edge=True,edgeside='L') 
+    Hbond = get_Hbond_tensor(model,0,L,J,Fieldz,hzlist) 
     U_up  = get_unitary4bond_up(Ulist,L,0)
     U_dn  = copy.copy(U_up)
     U_dn.permute([5,6,7,2,3,4],3)
     U_dn.setLabel([8,9,10,0,1,4])
     Hbond_n = (U_dn*Hbond)*U_up
+    Hbond_n.permute([8,9,10,5,6,7],3)
     Hbond_n.setLabel([0,1,2,3,4,5])
     UHU.append(Hbond_n)
 
+    
     for bidx in xrange(1,L-2):
-        Hbond = get_Hbond_tensor(edge=False)
-        U_up  = get_unitary4bond_up(Ulist,L,bidx)
+        Hbond = get_Hbond_tensor(model,bidx,L,J,Fieldz,hzlist)
+        U_up  = copy.copy(get_unitary4bond_up(Ulist,L,bidx))
         U_dn  = copy.copy(U_up)
-        U_dn.permute([5,6,7,8,4,2,3,-4],4)
-        U_dn.setLabel([9,10,11,12,4,0,1,-4])
+        U_dn.permute([5,6,7,8,4,2,3,20],4)
+        U_dn.setLabel([9,10,11,12,4,0,1,20])
         Hbond_n = (U_dn*Hbond)*U_up
+        Hbond_n.permute([9,10,11,12,5,6,7,8],4)
         Hbond_n.setLabel([0,1,2,3,4,5,6,7])
         UHU.append(Hbond_n)
 
-    Hbond = get_Hbond_tensor(edge=True,edgeside='R')
+    Hbond = get_Hbond_tensor(model,L-2,L,J,Fieldz,hzlist)
     U_up  = get_unitary4bond_up(Ulist,L,L-2)
     U_dn  = copy.copy(U_up)
     U_dn.permute([5,6,7,4,2,3],3)
     U_dn.setLabel([8,9,10,4,0,1])
     Hbond_n = (U_dn*Hbond)*U_up
+    Hbond_n.permute([8,9,10,5,6,7],3)
     Hbond_n.setLabel([0,1,2,3,4,5])
     UHU.append(Hbond_n)
 
@@ -260,7 +276,7 @@ def pauli4body():
     return pauli4b
 
 
-def UHU2pauli(L,Ulist,pauli3b=None,pauli4b=None):
+def UHU2pauli(L,Ulist,pauli3b=None,pauli4b=None,tol=1e-3):
     # TODO make very small terms zero so that no measurement is needed
     #      can be done when measuring too
     UHU = contract_UHU(L, Ulist) 
@@ -275,17 +291,26 @@ def UHU2pauli(L,Ulist,pauli3b=None,pauli4b=None):
 
     coef3 = np.zeros(l3b)
     for i in xrange(l3b):
-        coef3[i] = trUP(UHU[0],pauli3b[i],3)
+        ans = trUP(UHU[0],pauli3b[i],3)
+        if (abs(ans)<tol):
+            ans = 0.
+        coef3[i] = ans
     pcoefs.append(coef3)
     for l in xrange(1,L-2):
         coef4 = np.zeros(l4b)
         for i in xrange(l4b):
-            coef4[i] = trUP(UHU[l],pauli4b[i],4)
+            ans = trUP(UHU[l],pauli4b[i],4)
+            if abs(ans) < tol:
+                ans = 0.
+            coef4[i] = ans
         pcoefs.append(coef4)
 
     coef3 = np.zeros(l3b)
     for i in xrange(l3b):
-        coef3[i] = trUP(UHU[L-2],pauli3b[i],3) 
+        ans = trUP(UHU[L-2],pauli3b[i],3)
+        if abs(ans) < tol:
+            ans = 0.
+        coef3[i] = ans
     pcoefs.append(coef3)
 
     return pcoefs
@@ -326,7 +351,7 @@ def ising_ED(L,J=1.0,Fieldz=1.0):
     H += (-1.*Fieldz)*np.kron(np.eye(2**(L-1)),npSz) # Last Z-term
 
     ew,ev = np.linalg.eigh(H) # non-degenerate
-    gs = vec2uni10(ev[:,0],L)
+    #gs = vec2uni10(ev[:,0],L)
     return ew[0], ev[:,0]
 
 ##############Upsi##############Upsi##############Upsi##############Upsi
@@ -367,7 +392,7 @@ def UdagPsi(Ulist, psi, L):
     return v
 
 ############MEASURE############MEASURE############MEASURE############MEASURE
-def measure_pstr(Ulist,L,psi,tol=1e-10,analys_coefs=False,outdir='./'):
+def measure_pstr(Ulist,L,psi,tol=1e-3,analys_coefs=False,outdir='./'):
     '''
     Return:
     (1) the expectation value of the Hamiltonian 
@@ -382,7 +407,7 @@ def measure_pstr(Ulist,L,psi,tol=1e-10,analys_coefs=False,outdir='./'):
     psiT.permute(range(L),0)
     pauli3b = pauli3body()
     pauli4b = pauli4body()
-    pcoefs  = UHU2pauli(L,Ulist,pauli3b,pauli4b)
+    pcoefs  = UHU2pauli(L,Ulist,pauli3b,pauli4b,tol)
     
     ave_value = [] # measurement of each Pauli string
     var_value = [] # variance of the Pauli String
@@ -391,7 +416,7 @@ def measure_pstr(Ulist,L,psi,tol=1e-10,analys_coefs=False,outdir='./'):
 
     # analysis pcoefs
     if analys_coefs:
-        coef_analys(pcoefs, w2file=True, datadir=outdir)
+        coef_analys(pcoefs, w2file=True, datadir=outdir,label='L%d_pstr_'%L)
     
     # Left Edge
     e3 = np.zeros(l3b)
@@ -442,13 +467,36 @@ def measure_pstr(Ulist,L,psi,tol=1e-10,analys_coefs=False,outdir='./'):
     for p in ave_value:
         varp = 1.-p**2.
         err_value.append(varp)
+
+    coef_analys(pcoefs, w2file=True, datadir=outdir,label='L%d_err_'%L)
+
+    
     aveH = 0.
     errH = 0.
     for i in xrange(L-1):
         aveH += np.sum(ave_value[i]*pcoefs[i])
         errH += np.sum(err_value[i]*(pcoefs[i]**2))
-        print err_value[i]*(pcoefs[i]**2)
     return aveH, errH
+
+def ising_variance(L):
+    # TODO make it in the MPO form
+    # Im in rush sorry
+    sx = np.array([0.,1.,1.,0.]).reshape(2,2)
+    sz = np.array([1.,0.,0.,-1.]).reshape(2,2)
+    sxsx = np.kron(sx,sx)
+    Egs, v = ising_ED(L)
+    var = []
+    for i in range(L-1):
+        H_ = np.kron(np.kron(np.eye(2**i),sxsx), np.eye(2**(L-2-i)))
+        var.append(1.-(np.dot(v.T,H_.dot(v)))**2)
+    for i in range(L):
+        H_ = np.kron(np.kron(np.eye(2**i),sz),np.eye(2**(L-1-i)))
+        var.append(1.-(np.dot(v.T,H_.dot(v)))**2)
+
+    var = np.asarray(var)
+    return np.sum(var)
+        
+
         
 #########UTIL#########UTIL#########UTIL#########UTIL#########UTIL#########UTIL
 def str2int(mystr, base):
@@ -459,9 +507,9 @@ def str2int(mystr, base):
         myint += str_n[i]*(base**i)
     return int(myint)
 
-def coef_analys(pcoefs, w2file=False, datadir='./'):
+def coef_analys(pcoefs, w2file=False, datadir='./', label=''):
     #TODO
-    l = len(pcoefs)
+    lc = len(pcoefs)
     l3b = 64
     l4b = 256    
     zlabel3 = []
@@ -484,17 +532,67 @@ def coef_analys(pcoefs, w2file=False, datadir='./'):
     zcoef.append(pcoefs[0][zlabel3])
     nzcoef.append(pcoefs[0][nzlabel3])
 
-    for p in xrange(1,l-1):
+    for p in range(1,lc-1):
         zcoef.append(pcoefs[p][zlabel4])
         nzcoef.append(pcoefs[p][nzlabel4])
     zcoef.append(pcoefs[-1][zlabel3])
     nzcoef.append(pcoefs[-1][nzlabel3])
     
     if w2file:
-        with open (datadir+'/zcoef.txt', 'wb') as zfp:
+        with open (datadir+'/'+label+'zcoef.txt', 'wb') as zfp:
             pickle.dump(zcoef,zfp)
-        with open (datadir+'/nzcoef.txt', 'wb') as nzfp:
+        with open (datadir+'/'+label+'nzcoef.txt', 'wb') as nzfp:
             pickle.dump(nzcoef,nzfp)
     else:
         return zcoef, nzcoef 
+
+def uni2np(uni,lmat):
+    # uni10 matrix to numpy array
+    M = uni.getBlock()
+    npmat = np.zeros((lmat,lmat))
+    for i in xrange(lmat):
+        for j in xrange(lmat):
+            npmat[i,j] = M[i*lmat+j]
+
+    return npmat
+
+
+
+#############SANITY#############SANITY#############SANITY#############SANITY
+#def mpo_H(L,J=1.0,Fieldz=1.0, bond_dim=2):
+#    #TODO not done yet
+#    sx   = matSx()
+#    sz   = matSz()
+#    iden = matIden()
+#    sxsx = uni10.otimes(sx,sx)
+#    Hmat = -(1.0*J)*uni10.otimes(sx,sx)
+#    for i in range(L-2):
+#        Hmat = uni10.otimes(Hmat,iden)
+#
+#    for l in range(1,L-1):
+#        print '---------'
+#        Hmat_ = -(1.0*J)*copy.copy(iden)
+#        print l
+#        for i in range(0,l-1):
+#            Hmat_ = uni10.otimes(Hmat_,iden)
+#            
+#        Hmat_ = uni10.otimes(Hmat_,sxsx)
+#        for i in range(l+2,L):
+#            Hmat_ = uni10.otimes(Hmat_,iden)
+#        Hmat += Hmat_
+#
+#    Hmat_ = copy.copy(sz)
+#    for i in range(L-1):
+#        Hmat_ = uni10.otimes(Hmat_,iden)
+#
+#    Hmat += Hmat_
+#    
+#    for l in range(L):
+#        pass
+        
+
+    
+
+    
+
 
