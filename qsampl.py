@@ -80,11 +80,23 @@ def get_Hbond_tensor(model,bond_idx,L,J=1.0,Fieldz=1.0,hzlist=[],bond_dim=2,\
         Hbond_mat  =  (1.*J)*uni10.otimes(sx,sx)
         Hbond_mat += (-1.*J)*uni10.otimes(sy,sy)
         Hbond_mat +=  (1.*J)*uni10.otimes(sz,sz)
-        if (bond_idx%2 == 0):
-            Hbond_mat += hzlist[bond_idx]  *uni10.otimes(sz,s0)
-            Hbond_mat += hzlist[bond_idx+1]*uni10.otimes(s0,sz)
+        if avebond:
+            if bond_idx == 0:
+                Hbond_mat += (-1. *hzlist[0])*uni10.otimes(sz,s0)
+                Hbond_mat += (-0.5*hzlist[1])*uni10.otimes(s0,sz)
+            elif bond_idx == L-2:
+                Hbond_mat += (-0.5*hzlist[L-2])*uni10.otimes(sz,s0)
+                Hbond_mat += (-1. *hzlist[L-1])*uni10.otimes(s0,sz)
+            else:
+                Hbond_mat += (-0.5*hzlist[bond_idx])*uni10.otimes(sz,s0)
+                Hbond_mat += (-0.5*hzlist[bond_idx+1])*uni10.otimes(s0,sz)
+        else:
+            if (bond_idx%2 == 0):
+                Hbond_mat += (-1.*hzlist[bond_idx])*uni10.otimes(sz,s0)
+                Hbond_mat += (-1.*hzlist[bond_idx+1])*uni10.otimes(s0,sz)
     else:
         raise Exception("The model can only be Ising or Heisenberg!")
+
 
     # construct tensor
     bdi = uni10.Bond(uni10.BD_IN,  bond_dim)
@@ -188,7 +200,7 @@ def get_unitary4bond_up(Ulist,L,bond_idx,bond_dim=2):
 
     return U
 
-def contract_UHU(L, Ulist, model='ising', J=1.0, Fieldz=1.0, hzlist=[]):
+def contract_UHU(L, Ulist, model='Ising', J=1.0, Fieldz=1.0, hzlist=[]):
     '''
     Return a list of U^+HU.
     L is the lattice length.
@@ -397,7 +409,7 @@ def measure_pstr(Ulist,L,psi,model='Ising',J=1.0,Fieldz=1.0,hzlist=[],tol=1e-10,
 
     # analysis pcoefs
     if analys_coefs:
-        coef_analys(pcoefs, w2file=True, datadir=outdir,label='L%d_pstr_'%L)
+        coef_analys(pcoefs, w2file=True, datadir=outdir,label=model+'_L%d_pstr_'%L)
     
     # Left Edge
     e3 = np.zeros(l3b)
@@ -513,7 +525,7 @@ def heisenberg_ED(L,J=1.0,hzlist=[]):
     H += (-1.*hzlist[-1])*np.kron(np.eye(2**(L-1)),npSz)
 
     ew, ev = np.linalg.eigh(H)
-    return ew, ev[0]
+    return ew, ev[:,0]
 
 
 
@@ -610,9 +622,12 @@ def coef_analys(pcoefs, w2file=False, datadir='./', label=''):
     else:
         return zcoef, nzcoef 
 
-def uni2np(uni,lmat):
+def uni2mat(uni,lmat):
     # uni10 matrix to numpy array
-    M = uni.getBlock()
+    try:
+        M = uni.getBlock()
+    except:
+        M = uni
     npmat = np.zeros((lmat,lmat))
     for i in xrange(lmat):
         for j in xrange(lmat):
@@ -630,6 +645,34 @@ def vec2uni10(v,L):
     vtensor.putBlock(vl10)
     return vtensor
 
+def get_uni10diag(uni,lmat):
+    try:
+        M = uni.getBlock()
+    except:
+        M = uni
+    npdiag = np.zeros(lmat)
+    for i in xrange(lmat):
+        npdiag[i] = M[i*(lmat+1)]
+    return npdiag
+        
+
+#########SPECTRUM#########SPECTRUM#########SPECTRUM#########SPECTRUM
+def get_spectrum(Ulist,model,L,J=1.,Fieldz=1.,hzlist=[],sort_spec=True):
+    # Get the diagonal of rotated Hamiltonian U+HU
+    UHU = contract_UHU(L, Ulist, model, J, Fieldz, hzlist)
+    diag = np.zeros(2**L) 
+    d0 = get_uni10diag(UHU[0],8)
+    diag += np.kron(d0,np.ones(2**(L-3)))
+    for b in xrange(1,L-2):
+        d0 = get_uni10diag(UHU[b],16)
+        diag += np.kron(np.ones(2**(b-1)), np.kron(d0, np.ones(2**(L-b-3))))
+    d0 = get_uni10diag(UHU[-1],8)
+    diag += np.kron(np.ones(2**(L-3)),d0)
+    if sort_spec:
+        diag = np.sort(diag)
+    
+    return diag
+    
 
 #############SANITY#############SANITY#############SANITY#############SANITY
 #def mpo_H(L,J=1.0,Fieldz=1.0, bond_dim=2):
