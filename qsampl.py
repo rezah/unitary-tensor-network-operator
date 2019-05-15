@@ -32,7 +32,8 @@ def matIden():
     return Mat
 
 ####################UHU####################UHU####################UHU
-def get_Hbond_tensor(model,bond_idx,L,J=1.0,Fieldz=1.0,hzlist=[],bond_dim=2):
+def get_Hbond_tensor(model,bond_idx,L,J=1.0,Fieldz=1.0,hzlist=[],bond_dim=2,\
+                     avebond=True):
 
     #TODO put Z terms only into the even bonds
 
@@ -49,32 +50,50 @@ def get_Hbond_tensor(model,bond_idx,L,J=1.0,Fieldz=1.0,hzlist=[],bond_dim=2):
     _________________________________________________________________
 
     '''
+
     # make matrix
     sx   = matSx()
     sy   = matSy()
     sz   = matSz()
     s0   = matIden()
-    if (model == 'ising' or 'Ising'):
+    if (model == 'Ising'):
         Hbond_mat  = (-1.*J)*uni10.otimes(sx,sx)
-        if bond_idx == 0:
-            Hbond_mat += (-1.0*Fieldz)*uni10.otimes(sz,s0) 
-            Hbond_mat += (-0.5*Fieldz)*uni10.otimes(s0,sz)
-        elif bond_idx == L-2:
-            Hbond_mat += (-0.5*Fieldz)*uni10.otimes(sz,s0) 
-            Hbond_mat += (-1.0*Fieldz)*uni10.otimes(s0,sz)
+        if avebond:
+            if bond_idx == 0:
+                Hbond_mat += (-1.0*Fieldz)*uni10.otimes(sz,s0) 
+                Hbond_mat += (-0.5*Fieldz)*uni10.otimes(s0,sz)
+            elif bond_idx == L-2:
+                Hbond_mat += (-0.5*Fieldz)*uni10.otimes(sz,s0) 
+                Hbond_mat += (-1.0*Fieldz)*uni10.otimes(s0,sz)
+            else:
+                Hbond_mat += (-0.5*Fieldz)*uni10.otimes(sz,s0) 
+                Hbond_mat += (-0.5*Fieldz)*uni10.otimes(s0,sz)
+
         else:
-            Hbond_mat += (-0.5*Fieldz)*uni10.otimes(sz,s0) 
-            Hbond_mat += (-0.5*Fieldz)*uni10.otimes(s0,sz)
-        # construct tensor
-        bdi = uni10.Bond(uni10.BD_IN,  bond_dim)
-        bdo = uni10.Bond(uni10.BD_OUT, bond_dim)
+            if (bond_idx%2 == 0):
+                Hbond_mat += (-1.0*Fieldz)*uni10.otimes(sz,s0) 
+                Hbond_mat += (-1.0*Fieldz)*uni10.otimes(s0,sz)
 
-        Hbond = uni10.UniTensor([bdi,bdi,bdo,bdo],'Hbond')
-        Hbond.putBlock(Hbond_mat)
-        Hbond.setLabel([0,1,2,3])
+        
+    elif (model == 'Heisenberg'):
+        #TODO try evenly distributed bond
+        Hbond_mat  =  (1.*J)*uni10.otimes(sx,sx)
+        Hbond_mat += (-1.*J)*uni10.otimes(sy,sy)
+        Hbond_mat +=  (1.*J)*uni10.otimes(sz,sz)
+        if (bond_idx%2 == 0):
+            Hbond_mat += hzlist[bond_idx]  *uni10.otimes(sz,s0)
+            Hbond_mat += hzlist[bond_idx+1]*uni10.otimes(s0,sz)
+    else:
+        raise Exception("The model can only be Ising or Heisenberg!")
 
-    elif (Model == 'heisenberg' or 'Heisenberg'):
-        pass
+    # construct tensor
+    bdi = uni10.Bond(uni10.BD_IN,  bond_dim)
+    bdo = uni10.Bond(uni10.BD_OUT, bond_dim)
+
+    Hbond = uni10.UniTensor([bdi,bdi,bdo,bdo],'Hbond')
+    Hbond.putBlock(Hbond_mat)
+    Hbond.setLabel([0,1,2,3])
+
     
     return Hbond
 
@@ -276,10 +295,10 @@ def pauli4body():
     return pauli4b
 
 
-def UHU2pauli(L,Ulist,pauli3b=None,pauli4b=None,tol=1e-3):
+def UHU2pauli(L,Ulist,model='Ising',J=1.0,Fieldz=1.0,hzlist=[],pauli3b=None,pauli4b=None,tol=1e-3):
     # TODO make very small terms zero so that no measurement is needed
     #      can be done when measuring too
-    UHU = contract_UHU(L, Ulist) 
+    UHU = contract_UHU(L,Ulist,model,J,Fieldz,hzlist) 
     if pauli3b is None:
         pauli3b = pauli3body()
     if pauli4b is None:
@@ -315,44 +334,6 @@ def UHU2pauli(L,Ulist,pauli3b=None,pauli4b=None,tol=1e-3):
 
     return pcoefs
 
-
-##########GROUND#STATE##########GROUND#STATE##########GROUND#STATE
-def vec2uni10(v,L):
-    bond_dim = 2
-    vl = list(v)
-    vl10 = uni10.Matrix(2**L,1,vl)
-    bdi = uni10.Bond(uni10.BD_IN,  bond_dim)
-    bdo = uni10.Bond(uni10.BD_OUT, bond_dim)
-    vtensor = uni10.UniTensor([bdi]*L,'GS')
-    vtensor.putBlock(vl10)
-    return vtensor
-
- 
-def ising_ED(L,J=1.0,Fieldz=1.0):
-    '''
-    -J XX - h Z    (h = Fieldz)
-    '''
-
-    if (L > 12):
-        raise ValueError("Exact diagonalization can only handle up to 12 sites!")
-    if (L%2 != 0):
-        raise ValueError("Only even number of sites is accepted!")
-
-    npId = np.eye(2)
-    npSx = np.array([0.,1.,1.,0.]).reshape(2,2)
-    npSy = np.array([0.,-1.,1.,0.]).reshape(2,2)
-    npSz = np.array([1.,0.,0.,-1.]).reshape(2,2)
-    SxSx = np.kron(npSx,npSx)
-
-    H = np.zeros((2**L,)*2)
-    for i in xrange(0,L-1):
-        H += (-1.*J)*np.kron(np.kron(np.eye(2**i),SxSx),np.eye(2**(L-i-2)))
-        H += (-1.*Fieldz)*np.kron(np.kron(np.eye(2**i),npSz),np.eye(2**(L-i-1)))
-    H += (-1.*Fieldz)*np.kron(np.eye(2**(L-1)),npSz) # Last Z-term
-
-    ew,ev = np.linalg.eigh(H) # non-degenerate
-    #gs = vec2uni10(ev[:,0],L)
-    return ew[0], ev[:,0]
 
 ##############Upsi##############Upsi##############Upsi##############Upsi
 def UdagPsi(Ulist, psi, L):
@@ -392,7 +373,7 @@ def UdagPsi(Ulist, psi, L):
     return v
 
 ############MEASURE############MEASURE############MEASURE############MEASURE
-def measure_pstr(Ulist,L,psi,tol=1e-3,analys_coefs=False,outdir='./'):
+def measure_pstr(Ulist,L,psi,model='Ising',J=1.0,Fieldz=1.0,hzlist=[],tol=1e-10,analys_coefs=False,outdir='./'):
     '''
     Return:
     (1) the expectation value of the Hamiltonian 
@@ -407,7 +388,7 @@ def measure_pstr(Ulist,L,psi,tol=1e-3,analys_coefs=False,outdir='./'):
     psiT.permute(range(L),0)
     pauli3b = pauli3body()
     pauli4b = pauli4body()
-    pcoefs  = UHU2pauli(L,Ulist,pauli3b,pauli4b,tol)
+    pcoefs  = UHU2pauli(L,Ulist,model,J,Fieldz,hzlist,pauli3b,pauli4b,tol)
     
     ave_value = [] # measurement of each Pauli string
     var_value = [] # variance of the Pauli String
@@ -478,13 +459,71 @@ def measure_pstr(Ulist,L,psi,tol=1e-3,analys_coefs=False,outdir='./'):
         errH += np.sum(err_value[i]*(pcoefs[i]**2))
     return aveH, errH
 
-def ising_variance(L):
+##########GROUND#STATE##########GROUND#STATE##########GROUND#STATE
+
+def ising_ED(L,J=1.0,Fieldz=1.0):
+    '''
+    -J XX - h Z    (h = Fieldz)
+    '''
+
+    if (L > 12):
+        raise ValueError("Exact diagonalization can only handle up to 12 sites!")
+    if (L%2 != 0):
+        raise ValueError("Only even number of sites is accepted!")
+
+    npId = np.eye(2)
+    npSx = np.array([0.,1.,1.,0.]).reshape(2,2)
+    npSy = np.array([0.,-1.,1.,0.]).reshape(2,2)
+    npSz = np.array([1.,0.,0.,-1.]).reshape(2,2)
+    SxSx = np.kron(npSx,npSx)
+
+    H = np.zeros((2**L,)*2)
+    for i in xrange(0,L-1):
+        H += (-1.*J)*np.kron(np.kron(np.eye(2**i),SxSx),np.eye(2**(L-i-2)))
+        H += (-1.*Fieldz)*np.kron(np.kron(np.eye(2**i),npSz),np.eye(2**(L-i-1)))
+    H += (-1.*Fieldz)*np.kron(np.eye(2**(L-1)),npSz) # Last Z-term
+
+    ew,ev = np.linalg.eigh(H) # non-degenerate
+    #gs = vec2uni10(ev[:,0],L)
+    return ew, ev[:,0]
+
+def heisenberg_ED(L,J=1.0,hzlist=[]):
+    '''
+    J(XX-YY+ZZ) - hZ (h=hzlist)
+    '''
+
+    if (L > 12):
+        raise ValueError("Exact diagonalization can only handle up to 12 sites!")
+    if (L%2 != 0):
+        raise ValueError("Only even number of sites is accepted!")
+
+    npId = np.eye(2)
+    npSx = np.array([0.,1.,1.,0.]).reshape(2,2)
+    npSy = np.array([0.,-1.,1.,0.]).reshape(2,2)
+    npSz = np.array([1.,0.,0.,-1.]).reshape(2,2)
+    SxSx = np.kron(npSx,npSx)
+    SySy = np.kron(npSy,npSy)
+    SzSz = np.kron(npSz,npSz)
+    SS   = SxSx - SySy + SzSz
+
+    H = np.zeros((2**L,)*2)
+    for i in xrange(0,L-1):
+        H += (1.*J)*np.kron(np.kron(np.eye(2**i),SS),np.eye(2**(L-i-2)))
+        H += (-1.*hzlist[i])*np.kron(np.kron(np.eye(2**i),npSz),np.eye(2**(L-i-1)))
+    H += (-1.*hzlist[-1])*np.kron(np.eye(2**(L-1)),npSz)
+
+    ew, ev = np.linalg.eigh(H)
+    return ew, ev[0]
+
+
+
+def ising_variance(L,J=1.0,Fieldz=1.0):
     # TODO make it in the MPO form
     # Im in rush sorry
     sx = np.array([0.,1.,1.,0.]).reshape(2,2)
     sz = np.array([1.,0.,0.,-1.]).reshape(2,2)
     sxsx = np.kron(sx,sx)
-    Egs, v = ising_ED(L)
+    Egs, v = ising_ED(L,J,Fieldz)
     var = []
     for i in range(L-1):
         H_ = np.kron(np.kron(np.eye(2**i),sxsx), np.eye(2**(L-2-i)))
@@ -495,8 +534,33 @@ def ising_variance(L):
 
     var = np.asarray(var)
     return np.sum(var)
-        
 
+def heisenberg_variance(L,J=1.0,hzlist=[]):
+    npId = np.eye(2)
+    npSx = np.array([0.,1.,1.,0.]).reshape(2,2)
+    npSy = np.array([0.,-1.,1.,0.]).reshape(2,2)
+    npSz = np.array([1.,0.,0.,-1.]).reshape(2,2)
+    SxSx = np.kron(npSx,npSx)
+    SySy = np.kron(npSy,npSy)
+    SzSz = np.kron(npSz,npSz)
+
+    _, v = heisenberg_ED(L,J,hzlist)
+    var = []
+    for i in xrange(L-1):
+        H_ = np.kron(np.kron(np.eye(2**i),SxSx), np.eye(2**(L-2-i)))
+        var.append(1.-(np.dot(v.T,H_.dot(v)))**2)
+        H_ = np.kron(np.kron(np.eye(2**i),SySy), np.eye(2**(L-2-i)))
+        var.append(1.-(np.dot(v.T,H_.dot(v)))**2)
+        H_ = np.kron(np.kron(np.eye(2**i),SzSz), np.eye(2**(L-2-i)))
+        var.append(1.-(np.dot(v.T,H_.dot(v)))**2)
+
+    for i in xrange(L):
+        H_ = np.kron(np.kron(np.eye(2**i),npSz),np.eye(2**(L-1-i)))
+        var.append( (hzlist[i]**2)*(1.-(np.dot(v.T,H_.dot(v)))**2) )
+
+    var = np.asarray(var)
+    return np.sum(var)
+         
         
 #########UTIL#########UTIL#########UTIL#########UTIL#########UTIL#########UTIL
 def str2int(mystr, base):
@@ -556,6 +620,15 @@ def uni2np(uni,lmat):
 
     return npmat
 
+def vec2uni10(v,L):
+    bond_dim = 2
+    vl = list(v)
+    vl10 = uni10.Matrix(2**L,1,vl)
+    bdi = uni10.Bond(uni10.BD_IN,  bond_dim)
+    bdo = uni10.Bond(uni10.BD_OUT, bond_dim)
+    vtensor = uni10.UniTensor([bdi]*L,'GS')
+    vtensor.putBlock(vl10)
+    return vtensor
 
 
 #############SANITY#############SANITY#############SANITY#############SANITY
