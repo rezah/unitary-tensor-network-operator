@@ -74,7 +74,6 @@ def get_Hbond_tensor(model,bond_idx,L,J=1.0,Fieldz=1.0,hzlist=[],bond_dim=2,\
                 Hbond_mat += (-1.0*Fieldz)*uni10.otimes(sz,s0) 
                 Hbond_mat += (-1.0*Fieldz)*uni10.otimes(s0,sz)
 
-        
     elif (model == 'Heisenberg'):
         #TODO try evenly distributed bond
         Hbond_mat  =  (1.*J)*uni10.otimes(sx,sx)
@@ -97,7 +96,6 @@ def get_Hbond_tensor(model,bond_idx,L,J=1.0,Fieldz=1.0,hzlist=[],bond_dim=2,\
     else:
         raise Exception("The model can only be Ising or Heisenberg!")
 
-
     # construct tensor
     bdi = uni10.Bond(uni10.BD_IN,  bond_dim)
     bdo = uni10.Bond(uni10.BD_OUT, bond_dim)
@@ -105,16 +103,14 @@ def get_Hbond_tensor(model,bond_idx,L,J=1.0,Fieldz=1.0,hzlist=[],bond_dim=2,\
     Hbond = uni10.UniTensor([bdi,bdi,bdo,bdo],'Hbond')
     Hbond.putBlock(Hbond_mat)
     Hbond.setLabel([0,1,2,3])
-
     
     return Hbond
-
 
 def get_umpo_up(Ulist,L,bond_idx,bond_dim=2):
 
     l_layer = len(Ulist[0])
     if (l_layer == 1): #will not be called
-        U = get_umpo_up_2layers(Ulist,L,bond_idx,bond_dim)
+        U = get_umpo_up_1layer(Ulist,L,bond_idx,bond_dim)
     
     elif (l_layer == 2):
         U = get_umpo_up_2layers(Ulist,L,bond_idx,bond_dim)
@@ -133,7 +129,6 @@ def get_umpo_up_1layer(Ulist,L,bond_idx,bond_dim=2):
         U.putBlock(I)
     return U
     
-
 def get_umpo_up_2layers(Ulist,L,bond_idx,bond_dim=2):
 
     #TODO Combine some tensors in advance and save them to speed up
@@ -142,19 +137,26 @@ def get_umpo_up_2layers(Ulist,L,bond_idx,bond_dim=2):
     l_layer = len(Ulist[0])
     if l_layer != 2:
         raise ValueError("Please make sure your unitary list has TWO layers!")
-    NU0 = L/2
+    NU0 = len(Ulist)
+
+    '''
+    EDGE BONDS and NEXT-TO_EDGE BONDS:
+                                              _____              _____     
+         _____             _____         4 __|     |__ 7    4 __|     |__ 7 
+    2 __|     |__ 5   4 __|     |__ 5    2 __|     |__ 8    5 __|     |__ 8
+    3 __|  U  |__ 6   2 __|  U  |__ 6    3 __|  U  |__ 9    2 __|  U  |__ 9
+    4 __|     |__ 7   3 __|     |__ 7    5 __|     |__ 10   3 __|     |__ 10
+        |_____|           |_____|        6 __|     |__ 11   6 __|     |__ 11
+                                             |_____|            |_____|
+         
+     bond_idx=0        bond_idx=L-2        bond_idx=1         bond_idx=L-3
+
+        Where 2,3 will contracted with the Hamiltonian bond,
+        The rest legs on the left will be contracted with U^+.
+
+    '''
 
     if (bond_idx == 0):   # Left Edge
-        '''
-              _____
-         2 __|     |__ 5
-         3 __|  U  |__ 6
-         4 __|     |__ 7 
-             |_____| 
-    
-        Where 2,3 will combine with the Hamiltonian,
-        4 will combine with U_down
-        '''
         U0 = copy.copy(Ulist[0][0])
         U1 = copy.copy(Ulist[0][1])
         U0.setLabel([0,1,2,3])
@@ -164,16 +166,6 @@ def get_umpo_up_2layers(Ulist,L,bond_idx,bond_dim=2):
         U.setLabel([2,3,4,5,6,7])
 
     elif (bond_idx == L-2):   # Right Edge
-        '''
-              _____
-         4 __|     |__ 5
-         2 __|  U  |__ 6
-         3 __|     |__ 7 
-             |_____| 
-       
-        Where 2,3 will combine with the Hamiltonian,
-        4 will combine with U_down
-        '''
         U0 = copy.copy(Ulist[NU0-1][0])
         U1 = copy.copy(Ulist[NU0-2][1])
         U0.setLabel([0,1,2,3])
@@ -181,32 +173,72 @@ def get_umpo_up_2layers(Ulist,L,bond_idx,bond_dim=2):
         U = U0*U1
         U.permute([4,0,1,5,6,3],3)
         U.setLabel([4,2,3,5,6,7])
+
     else:
+        if (L > 4):
+            if (bond_idx == 1):
+                U0L = copy.copy(Ulist[0][0])
+                U0R = copy.copy(Ulist[1][0])
+                U1L = copy.copy(Ulist[0][1])
+                U1R = copy.copy(Ulist[1][1])
+                U0L.setLabel([0,1,2,3])
+                U0R.setLabel([4,5,6,7])
+                U1L.setLabel([3,6,8,9])
+                U1R.setLabel([7,10,11,12])
+                U = (U0L*U1L)*(U0R*U1R)
+                U.permute([0,1,4,5,10,2,8,9,11,12],5)
+                U.setLabel([4,2,3,5,6,7,8,9,10,11])
 
-        '''
-            _____
-       4 __|     |__ 5
-       2 __|     |__ 6
-       3 __|  U  |__ 7 
-      20 __|     |__ 8        
-           |_____| 
-     
-        Where 2,3 will combine with the Hamiltonian,
-        4,20 will combine with U_down
-        '''
-        if(bond_idx%2 == 0):   # Even Bond
-            l = bond_idx/2
-            U0  = copy.copy(Ulist[l][0])
-            U1L = copy.copy(Ulist[l-1][1])
-            U1R = copy.copy(Ulist[l][1])
-            U0.setLabel([0,1,2,3])
-            U1L.setLabel([4,2,5,6])
-            U1R.setLabel([3,7,8,9])
-            U = (U1L*U0)*U1R
-            U.permute([4,0,1,7,5,6,8,9],4)
-            U.setLabel([4,2,3,20,5,6,7,8]) 
+            elif (bond_idx == L-3):
+                U0L = Ulist[NU0-2][0]
+                U0R = Ulist[NU0-1][0]
+                U1L = Ulist[NU0-3][1]
+                U1R = Ulist[NU0-2][1]
+                U0L.setLabel([0,1,2,3])
+                U0R.setLabel([4,5,6,7])
+                U1L.setLabel([8,2,9,10])
+                U1R.setLabel([3,6,11,12])
+                U = (U0L*U1L)*(U0R*U1R)
+                U.permute([8,0,1,4,5,9,10,11,12,7],5)
+                U.setLabel([4,5,2,3,6,7,8,9,10,11])
+            else:
+                U = inner_bond_2layer(Ulist,L,bond_idx)
+        else:
+            U = inner_bond_2layer(Ulist,L,bond_idx)
+    
+    return U
 
-        else:                # Odd Bond
+def inner_bond_2layer(Ulist,L,bond_idx,bond_dim=2):
+
+    '''
+                                     _____       
+          _____                 4 __|     |__ 8
+     4 __|     |__ 5            5 __|     |__ 9         
+     2 __|     |__ 6            2 __|     |__ 10         
+     3 __|  U  |__ 7            3 __|  U  |__ 11        
+    20 __|     |__ 8            6 __|     |__ 12        
+         |_____|                7 __|     |__ 13
+                                    |_____|
+
+        EVEN BOND                   ODD BOND
+                                  
+    Where 2,3 will contracted with the Hamiltonian bond,
+    the rest legs on the left will be contracted with U_down
+    '''
+    if(bond_idx%2 == 0):   # Even Bond
+        l = bond_idx/2
+        U0  = copy.copy(Ulist[l][0])
+        U1L = copy.copy(Ulist[l-1][1])
+        U1R = copy.copy(Ulist[l][1])
+        U0.setLabel([0,1,2,3])
+        U1L.setLabel([4,2,5,6])
+        U1R.setLabel([3,7,8,9])
+        U = (U1L*U0)*U1R
+        U.permute([4,0,1,7,5,6,8,9],4)
+        U.setLabel([4,2,3,20,5,6,7,8])
+
+    else:                # Odd Bond
+        if (L < 8):
             l = bond_idx//2
             U0L = copy.copy(Ulist[l][0])
             U0R = copy.copy(Ulist[l+1][0])
@@ -216,8 +248,23 @@ def get_umpo_up_2layers(Ulist,L,bond_idx,bond_dim=2):
             U1.setLabel([3,6,8,9])
             U = U0L*(U1*U0R)
             U.permute([0,1,4,5,2,8,9,7],4)
-            U.setLabel([4,2,3,20,5,6,7,8]) 
-    
+            U.setLabel([4,2,3,20,5,6,7,8])
+        else:
+            l = bond_idx//2
+            U0L = copy.copy(Ulist[l][0])
+            U0R = copy.copy(Ulist[l+1][0])
+            U1L = copy.copy(Ulist[l-1][1])
+            U1M = copy.copy(Ulist[l][1])
+            U1R = copy.copy(Ulist[l+1][1])
+            U0L.setLabel([0,1,2,3])
+            U0R.setLabel([4,5,6,7])
+            U1L.setLabel([8,2,9,10])
+            U1M.setLabel([3,6,11,12])
+            U1R.setLabel([7,13,14,15])
+            U = ((U1L*U0L)*U1M)*(U0R*U1R)
+            U.permute([8,0,1,4,5,13,9,10,11,12,14,15],6)
+            U.setLabel([4,5,2,3,6,7,8,9,10,11,12,13])
+
     return U
 
 def contract_UHU(L, Ulist, model='Ising', J=1.0, Fieldz=1.0, hzlist=[]):
@@ -227,6 +274,8 @@ def contract_UHU(L, Ulist, model='Ising', J=1.0, Fieldz=1.0, hzlist=[]):
     '''
     #TODO Consider when U has imaginary parts
     #TODO take construction of Hbond out of the loop for ising model
+    #TODO REALLY IMPORTANT! Reduced the length of Pauli strings by replacing
+    #     the edge Pauli's with Identity.
 
     l_layer = len(Ulist[0])
 
@@ -263,7 +312,7 @@ def contract_UHU(L, Ulist, model='Ising', J=1.0, Fieldz=1.0, hzlist=[]):
           UHU.append(Hbond_n)
                 
     elif (l_layer == 2):
-      # left edge
+      # Left Edge
       Hbond = get_Hbond_tensor(model,0,L,J,Fieldz,hzlist) 
       U_up  = get_umpo_up(Ulist,L,0)
       U_dn  = copy.copy(U_up)
@@ -274,17 +323,58 @@ def contract_UHU(L, Ulist, model='Ising', J=1.0, Fieldz=1.0, hzlist=[]):
       Hbond_n.setLabel([0,1,2,3,4,5])
       UHU.append(Hbond_n)
 
-      
-      for bidx in xrange(1,L-2):
-        Hbond = get_Hbond_tensor(model,bidx,L,J,Fieldz,hzlist)
-        U_up  = copy.copy(get_umpo_up(Ulist,L,bidx))
+      if (L > 4):
+        # Left Next-to-Edge Bond
+        Hbond = get_Hbond_tensor(model,1,L,J,Fieldz,hzlist)
+        U_up  = copy.copy(get_umpo_up(Ulist,L,1))
         U_dn  = copy.copy(U_up)
-        U_dn.permute([5,6,7,8,4,2,3,20],4)
-        U_dn.setLabel([9,10,11,12,4,0,1,20])
+        U_dn.permute([7,8,9,10,11,4,2,3,5,6],5)
+        U_dn.setLabel([12,13,14,15,16,4,0,1,5,6])
         Hbond_n = (U_dn*Hbond)*U_up
-        Hbond_n.permute([9,10,11,12,5,6,7,8],4)
-        Hbond_n.setLabel([0,1,2,3,4,5,6,7])
+        Hbond_n.permute([12,13,14,15,16,7,8,9,10,11],5)
+        Hbond_n.setLabel([0,1,2,3,4,5,6,7,8,9])
         UHU.append(Hbond_n)
+        # Inner bonds
+        for bidx in xrange(2,L-3):
+          Hbond = get_Hbond_tensor(model,bidx,L,J,Fieldz,hzlist)  
+          U_up  = copy.copy(get_umpo_up(Ulist,L,bidx))
+          U_dn  = copy.copy(U_up)
+          if (bidx%2 == 0):
+            U_dn.permute([5,6,7,8,4,2,3,20],4)
+            U_dn.setLabel([9,10,11,12,4,0,1,20])
+            Hbond_n = (U_dn*Hbond)*U_up
+            Hbond_n.permute([9,10,11,12,5,6,7,8],4)
+            Hbond_n.setLabel([0,1,2,3,4,5,6,7])
+            UHU.append(Hbond_n)
+          else:
+            U_dn.permute([8,9,10,11,12,13,4,5,2,3,6,7],6)
+            U_dn.setLabel([14,15,16,17,18,19,4,5,0,1,6,7])
+            Hbond_n = (U_dn*H_bond)*U_up
+            Hbond_n.permute([14,15,16,17,18,19,8,9,10,11,12,13],6)
+            Hbond_n.setLabel([0,1,2,3,4,5,6,7,8,9,10,11])
+            UHU.append(Hbond_n)
+        # Right Next-to-Edge Bond
+        Hbond = get_Hbond_tensor(model,L-3,L,J,Fieldz,hzlist)
+        U_up  = copy.copy(get_umpo_up(Ulist,L,L-3))
+        U_dn  = copy.copy(U_up)
+        U_dn.permute([7,8,9,10,11,4,5,2,3,6],5)
+        U_dn.setLabel([12,13,14,15,16,4,5,0,1,6])
+        Hbond_n = (U_dn*Hbond)*U_up
+        Hbond_n.permute([12,13,14,15,16,7,8,9,10,11],5)
+        Hbond_n.setLabel([0,1,2,3,4,5,6,7,8,9])
+        UHU.append(Hbond_n)
+        
+      else:
+        for bidx in xrange(1,L-2):
+          Hbond = get_Hbond_tensor(model,bidx,L,J,Fieldz,hzlist)
+          U_up  = copy.copy(get_umpo_up(Ulist,L,bidx))
+          U_dn  = copy.copy(U_up)
+          U_dn.permute([5,6,7,8,4,2,3,20],4)
+          U_dn.setLabel([9,10,11,12,4,0,1,20])
+          Hbond_n = (U_dn*Hbond)*U_up
+          Hbond_n.permute([9,10,11,12,5,6,7,8],4)
+          Hbond_n.setLabel([0,1,2,3,4,5,6,7])
+          UHU.append(Hbond_n)
 
       Hbond = get_Hbond_tensor(model,L-2,L,J,Fieldz,hzlist)
       U_up  = get_umpo_up(Ulist,L,L-2)
@@ -313,80 +403,8 @@ def trUP(U,P,lp):
     tr = (U*P).getBlock().sum()/(2.**lp)
     return tr
 
-def pauli2body():
-    '''
-    Tensors for 1-body Pauli strings. 
-    '''
-    bond_dim = 2
-    iden = matIden()
-    sx   = matSx()
-    sy   = matSy()
-    sz   = matSz()
-    bdi = uni10.Bond(uni10.BD_IN,  bond_dim)
-    bdo = uni10.Bond(uni10.BD_OUT, bond_dim)
-    pauli1b = [iden,sx,sy,sz]
-    pauli2b = []
-    for i in xrange(4):
-      for j in xrange(4):
-        mat = uni10.otimes(pauli1b[i],pauli1b[j])
-        P = uni10.UniTensor([bdi,bdi,bdo,bdo])
-        P.putBlock(mat)
-        P.setLabel([0,1,2,3])
-        pauli2b.append(P)
-    return pauli2b
 
-
-def pauli3body():
-    '''
-    Tensors for 3-body Pauli strings. 
-    '''
-    bond_dim = 2
-    iden = matIden()
-    sx   = matSx()
-    sy   = matSy()
-    sz   = matSz()
-    bdi = uni10.Bond(uni10.BD_IN,  bond_dim)
-    bdo = uni10.Bond(uni10.BD_OUT, bond_dim)
-
-    pauli1b = [iden,sx,sy,sz]
-    pauli3b = []
-    for i in xrange(4):
-      for j in xrange(4):
-        for k in xrange(4):
-          mat = uni10.otimes(uni10.otimes(pauli1b[i],pauli1b[j]),pauli1b[k])
-          P   = uni10.UniTensor([bdi,bdi,bdi,bdo,bdo,bdo])
-          P.putBlock(mat)
-          pauli3b.append(P)
-
-    return pauli3b
-
-def pauli4body():
-    '''
-    Tensors for 4-body Pauli strings. 
-    '''
-    bond_dim = 2
-    iden = matIden()
-    sx   = matSx()
-    sy   = matSy()
-    sz   = matSz()
-    bdi = uni10.Bond(uni10.BD_IN,  bond_dim)
-    bdo = uni10.Bond(uni10.BD_OUT, bond_dim)
-
-    pauli1b = [iden,sx,sy,sz]
-    pauli4b = []
-    for i in xrange(4):
-      for j in xrange(4):
-        for k in xrange(4):
-          for l in xrange(4):
-            mat = uni10.otimes(uni10.otimes(uni10.otimes(pauli1b[i],pauli1b[j]),pauli1b[k]),pauli1b[l])
-            P   = uni10.UniTensor([bdi,bdi,bdi,bdi,bdo,bdo,bdo,bdo])
-            P.putBlock(mat)
-            pauli4b.append(P)
-
-    return pauli4b
-
-
-def UHU2pauli(L,Ulist,model='Ising',J=1.0,Fieldz=1.0,hzlist=[],pauli2b=None,pauli3b=None,pauli4b=None,tol=1e-3):
+def UHU2pauli(L,Ulist,model='Ising',J=1.0,Fieldz=1.0,hzlist=[],pauli2b=None,pauli3b=None,pauli4b=None,pauli5b=None,pauli6b=None,tol=1e-3):
     # TODO make very small terms zero so that no measurement is needed
     #      can be done when measuring too
     l_layer = len(Ulist[0])
@@ -425,10 +443,19 @@ def UHU2pauli(L,Ulist,model='Ising',J=1.0,Fieldz=1.0,hzlist=[],pauli2b=None,paul
         pauli3b = pauli3body()
       if (pauli4b is None):
         pauli4b = pauli4body()
+      if (L > 4):
+        if (pauli5b is None):
+          pauli5b = pauli5body()
+      if (L > 6):
+        if (pauli6b is None):
+          pauli6b = pauli6body()
       l3b = 64
       l4b = 256
+      l5b = 1024
+      l6b = 4096
       pcoefs = []
 
+      #### LEFT EDGE ####
       coef3 = np.zeros(l3b)
       for i in xrange(l3b):
         ans = trUP(UHU[0],pauli3b[i],3)
@@ -436,15 +463,57 @@ def UHU2pauli(L,Ulist,model='Ising',J=1.0,Fieldz=1.0,hzlist=[],pauli2b=None,paul
           ans = 0.
         coef3[i] = ans
       pcoefs.append(coef3)
-      for l in xrange(1,L-2):
-        coef4 = np.zeros(l4b)
-        for i in xrange(l4b):
-          ans = trUP(UHU[l],pauli4b[i],4)
+      
+      #####INNER BONDS#####
+      if (L < 6):  
+        for l in xrange(1,L-2):
+          coef4 = np.zeros(l4b)
+          for i in xrange(l4b):
+            ans = trUP(UHU[l],pauli4b[i],4)
+            if abs(ans) < tol:
+              ans = 0.
+            coef4[i] = ans
+          pcoefs.append(coef4)
+
+      else:
+        # Left Next-to-Edge Bond
+        coef5 = np.zeros(l5b)
+        for i in xrange(l5b):
+          ans = trUP(UHU[1],pauli5b[i],5)
           if abs(ans) < tol:
             ans = 0.
-          coef4[i] = ans
-        pcoefs.append(coef4)
+          coef5[i] = ans
+        pcoefs.append(coef5)
 
+        # Inner Bonds
+        for l in xrange(2,L-3):
+          if (L%2 == 0):
+            coef4 = np.zeros(l4b)
+            for i in xrange(l4b):
+              ans = trUP(UHU[l],pauli4b[i],4)
+              if abs(ans) < tol:
+                ans = 0.
+              coef4[i] = ans
+            pcoefs.append(coef4)          
+          else:
+            coef6 = np.zeros(l6b)
+            for i in xrange(l6b):
+              ans = trUP(UHU[l],pauli6b[i],6)
+              if abs(ans) < tol:
+                ans = 0.
+              coef6[i] = ans
+            pcoefs.append(coef6)
+
+        # Right Next-to-Edge Bond
+        coef5 = np.zeros(l5b)
+        for i in xrange(l5b):
+          ans = trUP(UHU[L-3],pauli5b[i],5)
+          if abs(ans) < tol:
+            ans = 0.
+          coef5[i] = ans
+        pcoefs.append(coef5) 
+
+      ####RIGHT EDGE####
       coef3 = np.zeros(l3b)
       for i in xrange(l3b):
         ans = trUP(UHU[L-2],pauli3b[i],3)
@@ -506,6 +575,8 @@ def measure_pstr(Ulist,L,psi,model='Ising',J=1.0,Fieldz=1.0,hzlist=[],tol=1e-10,
     '''
     #XXX Note that I set the expectation value to be zero if
     #    the corresponding coefficient is zero.
+    #TODO For 5- and 6- Pauli Strings, test if making the edge equal to 
+    #     identity works 
     #UHU = contract_UHU(L, Ulist)    
 
 
@@ -521,67 +592,101 @@ def measure_pstr(Ulist,L,psi,model='Ising',J=1.0,Fieldz=1.0,hzlist=[],tol=1e-10,
     
     #*************************1 Layer**************************#
     if (l_layer == 1):
-        pauli2b = pauli2body()
-        pauli4b = pauli4body()
-        l2b = 16
-        l4b = 256
-        pcoefs  = UHU2pauli(L,Ulist,model,J,Fieldz,hzlist,pauli2b=pauli2b,pauli4b=pauli4b,tol=tol)
-        for n in xrange(L-1):
-            if (n%2==0):
-                labelpsiT = range(4,5+n-1) + range(2)   + range(5+n-1,L+2)
-                labelpsi  = range(4,5+n-1) + range(2,4) + range(5+n-1,L+2)
-                psi.setLabel(labelpsi)
-                psiT.setLabel(labelpsiT)
-                coef2 = pcoefs[n]
-                e2 = np.zeros(l2b)
-                for i in xrange(l2b):
-                    if (abs(coef2[i])<tol):
-                        continue
-                    else:
-                        e2[i] = ((psiT*pauli2b[i])*psi).getBlock().sum()
-                ave_value.append(e2)
+      pauli2b = pauli2body()
+      pauli4b = pauli4body()
+      l2b = 16
+      l4b = 256
+      pcoefs  = UHU2pauli(L,Ulist,model,J,Fieldz,hzlist,pauli2b=pauli2b,pauli4b=pauli4b,tol=tol)
+      for n in xrange(L-1):
+        if (n%2==0):
+          labelpsiT = range(4,5+n-1) + range(2)   + range(5+n-1,L+2)
+          labelpsi  = range(4,5+n-1) + range(2,4) + range(5+n-1,L+2)
+          psi.setLabel(labelpsi)
+          psiT.setLabel(labelpsiT)
+          coef2 = pcoefs[n]
+          e2 = np.zeros(l2b)
+          for i in xrange(l2b):
+            if (abs(coef2[i])<tol):
+              continue
             else:
-                labelpsiT = range(8,8+n-1) + range(4)   + range(8+n-1,L+4)
-                labelpsi  = range(8,8+n-1) + range(4,8) + range(8+n-1,L+4)
-                psi.setLabel(labelpsi)
-                psiT.setLabel(labelpsiT)
-                coef4 = pcoefs[n]
-                e4 = np.zeros(l4b)
-                for i in xrange(l4b):
-                    if (abs(coef4[i])<tol):
-                        continue
-                    else:
-                        e4[i] = ((psiT*pauli4b[i])*psi).getBlock().sum()
-                ave_value.append(e4)
+              e2[i] = ((psiT*pauli2b[i])*psi).getBlock().sum()
+          ave_value.append(e2)
+        else:
+          labelpsiT = range(8,8+n-1) + range(4)   + range(8+n-1,L+4)
+          labelpsi  = range(8,8+n-1) + range(4,8) + range(8+n-1,L+4)
+          psi.setLabel(labelpsi)
+          psiT.setLabel(labelpsiT)
+          coef4 = pcoefs[n]
+          e4 = np.zeros(l4b)
+          for i in xrange(l4b):
+            if (abs(coef4[i])<tol):
+              continue
+            else:
+              e4[i] = ((psiT*pauli4b[i])*psi).getBlock().sum()
+          ave_value.append(e4)
 
     #*********************END 1 Layer**************************#
     
-
     #*************************2 Layers*************************#
     elif (l_layer == 2):
-
-        pauli3b = pauli3body()
-        pauli4b = pauli4body()
-        pcoefs  = UHU2pauli(L,Ulist,model,J,Fieldz,hzlist,pauli3b=pauli3b,pauli4b=pauli4b,tol=tol)
-        l3b = 64
-        l4b = 256    
-        # Left Edge
-        e3 = np.zeros(l3b)
-        coef3 = pcoefs[0]
-        labelpsiT = range(3)   + range(6,L+3)
-        labelpsi  = range(3,6) + range(6,L+3)
+      pauli3b = pauli3body()
+      pauli4b = pauli4body()
+      pauli5b = None
+      pauli6b = None
+      if (L > 4):
+        pauli5b = pauli5body()
+      if (L > 6):
+        pauli6b = pauli6body()
+      pcoefs  = UHU2pauli(L,Ulist,model,J,Fieldz,hzlist,pauli3b=pauli3b,pauli4b=pauli4b,pauli5b=pauli5b,pauli6b=pauli6b,tol=tol)
+      l3b = 64
+      l4b = 256    
+      l5b = 1024
+      l6b = 4096
+      # Left Edge
+      e3 = np.zeros(l3b)
+      coef3 = pcoefs[0]
+      labelpsiT = range(3)   + range(6,L+3)
+      labelpsi  = range(3,6) + range(6,L+3)
+      psi.setLabel(labelpsi)
+      psiT.setLabel(labelpsiT)
+      for i in xrange(l3b):
+        if (abs(coef3[i]) < tol):
+          continue
+        else:
+          #p3 = copy.copy(pauli3b[i])
+          e3[i] = ((psiT*pauli3b[i])*psi).getBlock().sum()
+      ave_value.append(e3)
+    
+      # Interior Bonds
+      if (L < 6):
+        for n in xrange(1, L-2):
+          coef4 = pcoefs[n]
+          e4 = np.zeros(l4b)
+          labelpsiT = range(8,8+n-1) + range(4)   + range(8+n-1,L+4)
+          labelpsi  = range(8,8+n-1) + range(4,8) + range(8+n-1,L+4)
+          psi.setLabel(labelpsi)
+          psiT.setLabel(labelpsiT)
+          for i in xrange(l4b):
+            if (abs(coef4[i]) < tol):
+              continue
+            else:
+              e4[i] = ((psiT*pauli4b[i])*psi).getBlock().sum()
+          ave_value.append(e4)
+      else:
+        coef5 = pcoefs[1]
+        e5 = np.zeros(l5b)
+        labelpsiT = range(5)    + range(10,L+5)
+        labelpsi  = range(5,10) + range(10,L+5)
         psi.setLabel(labelpsi)
         psiT.setLabel(labelpsiT)
-        for i in xrange(l3b):
-            if (abs(coef3[i]) < tol):
-                continue
-            else:
-                #p3 = copy.copy(pauli3b[i])
-                e3[i] = ((psiT*pauli3b[i])*psi).getBlock().sum()
-        ave_value.append(e3)
-
-        # Interior Bonds
-        for n in xrange(1, L-2):
+        for i in xrange(l5b):
+          if (abs(coef5[i]) < tol):
+            continue
+          else:
+            e5[i] = ((psiT*pauli5b[i])*psi).getBlock().sum()      
+        ave_value.append(e5)
+        for n in xrange(2, L-3):
+          if (n%2 == 0):
             coef4 = pcoefs[n]
             e4 = np.zeros(l4b)
             labelpsiT = range(8,8+n-1) + range(4)   + range(8+n-1,L+4)
@@ -589,47 +694,72 @@ def measure_pstr(Ulist,L,psi,model='Ising',J=1.0,Fieldz=1.0,hzlist=[],tol=1e-10,
             psi.setLabel(labelpsi)
             psiT.setLabel(labelpsiT)
             for i in xrange(l4b):
-                if (abs(coef4[i]) < tol):
-                    continue
-                else:
-                    e4[i] = ((psiT*pauli4b[i])*psi).getBlock().sum()
+              if (abs(coef4[i]) < tol):
+                continue
+              else:
+                e4[i] = ((psiT*pauli4b[i])*psi).getBlock().sum()
             ave_value.append(e4)
-
-        # Right Edge
-        e3 = np.zeros(l3b)
-        coef3 = pcoefs[-1]
-        labelpsiT = range(6,L+3) + range(3)
-        labelpsi  = range(6,L+3) + range(3,6)
+          else:
+            coef6 = pcoefs[n]
+            e6 = np.zeros(l6b)
+            labelpsiT = range(12,12+n-2) + range(6)    + range(12+n-2,L+6)
+            labelpsi  = range(12,12+n-2) + range(6,12) + range(12+n-2,L+6)
+            psi.setLabel(labelpsi)
+            psiT.setLabel(labelpsiT)
+            for i in xrange(l6b):
+              if (abs(coef6[i] < tol)):
+                continue
+              else:
+                e6[i] = ((psiT*pauli6b[i])*psi).getBlock().sum() 
+            ave_value.append(e6)
+        # Right Next-to-Edge Bond
+        coef5 = pcoefs[L-3]
+        e5 = np.zeros(l5b)
+        labelpsiT = range(10,L+5) + range(5)
+        labelpsi  = range(10,L+5) + range(5,10)
         psi.setLabel(labelpsi)
         psiT.setLabel(labelpsiT)
-        for i in xrange(l3b):
-            if (abs(coef3[i]) < tol):
-                continue
-            else:
-                e3[i] = ((psiT*pauli3b[i])*psi).getBlock().sum()
-        ave_value.append(e3)
+        for i in xrange(l5b):
+          if (abs(coef5[i]) < tol):
+            continue
+          else:
+            e5[i] = ((psiT*pauli5b[i])*psi).getBlock().sum()      
+        ave_value.append(e5)
+
+      # Right Edge
+      e3 = np.zeros(l3b)
+      coef3 = pcoefs[-1]
+      labelpsiT = range(6,L+3) + range(3)
+      labelpsi  = range(6,L+3) + range(3,6)
+      psi.setLabel(labelpsi)
+      psiT.setLabel(labelpsiT)
+      for i in xrange(l3b):
+        if (abs(coef3[i]) < tol):
+          continue
+        else:
+          e3[i] = ((psiT*pauli3b[i])*psi).getBlock().sum()
+      ave_value.append(e3)
 
         # Calculating the expectation values and variances
    
     #*********************END 2 Layers*************************#
     err_value = []
     for p in ave_value:
-        varp = 1.-p**2.
-        err_value.append(varp)
+      varp = 1.-p**2.
+      err_value.append(varp)
  
-    
     # Save Files
     if analys_coefs:
-        coef_analys(pcoefs,l_layer, w2file=True, datadir=outdir,label=model+'_L%d_lyr%d_pstr_'%(L,l_layer))
+      coef_analys(pcoefs,l_layer, w2file=True, datadir=outdir,label=model+'_L%d_lyr%d_pstr_'%(L,l_layer))
 
     coef_analys(err_value, l_layer, w2file=True, datadir=outdir,label='L%d_lyr%d_err_'%(L,l_layer))
 
-    
     aveH = 0.
     errH = 0.
     for l in xrange(L-1):
-        aveH += np.sum(ave_value[l]*pcoefs[l])
-        errH += np.sum(err_value[l]*(pcoefs[l]**2))
+      aveH += np.sum(ave_value[l]*pcoefs[l])
+      errH += np.sum(err_value[l]*(pcoefs[l]**2))
+
     return aveH, errH
 
 ##########GROUND#STATE##########GROUND#STATE##########GROUND#STATE
@@ -734,6 +864,25 @@ def heisenberg_variance(L,J=1.0,hzlist=[]):
     var = np.asarray(var)
     return np.sum(var)
          
+
+#########SPECTRUM#########SPECTRUM#########SPECTRUM#########SPECTRUM
+def get_spectrum(Ulist,model,L,UHU=None,J=1.,Fieldz=1.,hzlist=[],sort_spec=True):
+    # Get the diagonal of rotated Hamiltonian U+HU
+    if UHU is None:
+        UHU = contract_UHU(L, Ulist, model, J, Fieldz, hzlist)
+    diag = np.zeros(2**L) 
+    d0 = get_uni10diag(UHU[0],8)
+    diag += np.kron(d0,np.ones(2**(L-3)))
+    for b in xrange(1,L-2):
+        d0 = get_uni10diag(UHU[b],16)
+        diag += np.kron(np.ones(2**(b-1)), np.kron(d0, np.ones(2**(L-b-3))))
+    d0 = get_uni10diag(UHU[-1],8)
+    diag += np.kron(np.ones(2**(L-3)),d0)
+    if sort_spec:
+        diag = np.sort(diag)
+    
+    return diag
+    
         
 #########UTIL#########UTIL#########UTIL#########UTIL#########UTIL#########UTIL
 def str2int(mystr, base):
@@ -827,22 +976,134 @@ def get_uni10diag(uni,lmat):
         npdiag[i] = M[i*(lmat+1)]
     return npdiag
         
+def pauli2body():
+    '''
+    Tensors for 1-body Pauli strings. 
+    '''
+    bond_dim = 2
+    iden = matIden()
+    sx   = matSx()
+    sy   = matSy()
+    sz   = matSz()
+    bdi = uni10.Bond(uni10.BD_IN,  bond_dim)
+    bdo = uni10.Bond(uni10.BD_OUT, bond_dim)
+    pauli1b = [iden,sx,sy,sz]
+    pauli2b = []
+    for i in xrange(4):
+      for j in xrange(4):
+        mat = uni10.otimes(pauli1b[i],pauli1b[j])
+        P = uni10.UniTensor([bdi,bdi,bdo,bdo])
+        P.putBlock(mat)
+        P.setLabel([0,1,2,3])
+        pauli2b.append(P)
+    return pauli2b
 
-#########SPECTRUM#########SPECTRUM#########SPECTRUM#########SPECTRUM
-def get_spectrum(Ulist,model,L,UHU=None,J=1.,Fieldz=1.,hzlist=[],sort_spec=True):
-    # Get the diagonal of rotated Hamiltonian U+HU
-    if UHU is None:
-        UHU = contract_UHU(L, Ulist, model, J, Fieldz, hzlist)
-    diag = np.zeros(2**L) 
-    d0 = get_uni10diag(UHU[0],8)
-    diag += np.kron(d0,np.ones(2**(L-3)))
-    for b in xrange(1,L-2):
-        d0 = get_uni10diag(UHU[b],16)
-        diag += np.kron(np.ones(2**(b-1)), np.kron(d0, np.ones(2**(L-b-3))))
-    d0 = get_uni10diag(UHU[-1],8)
-    diag += np.kron(np.ones(2**(L-3)),d0)
-    if sort_spec:
-        diag = np.sort(diag)
-    
-    return diag
-    
+
+def pauli3body():
+    '''
+    Tensors for 3-body Pauli strings. 
+    '''
+    bond_dim = 2
+    iden = matIden()
+    sx   = matSx()
+    sy   = matSy()
+    sz   = matSz()
+    bdi = uni10.Bond(uni10.BD_IN,  bond_dim)
+    bdo = uni10.Bond(uni10.BD_OUT, bond_dim)
+
+    pauli1b = [iden,sx,sy,sz]
+    pauli3b = []
+    for i in xrange(4):
+      for j in xrange(4):
+        for k in xrange(4):
+          mat = uni10.otimes(uni10.otimes(pauli1b[i],pauli1b[j]),pauli1b[k])
+          P   = uni10.UniTensor([bdi,bdi,bdi,bdo,bdo,bdo])
+          P.putBlock(mat)
+          pauli3b.append(P)
+
+    return pauli3b
+
+def pauli4body():
+    '''
+    Tensors for 4-body Pauli strings. 
+    '''
+    bond_dim = 2
+    iden = matIden()
+    sx   = matSx()
+    sy   = matSy()
+    sz   = matSz()
+    bdi = uni10.Bond(uni10.BD_IN,  bond_dim)
+    bdo = uni10.Bond(uni10.BD_OUT, bond_dim)
+
+    pauli1b = [iden,sx,sy,sz]
+    pauli4b = []
+    for i in xrange(4):
+      for j in xrange(4):
+        for k in xrange(4):
+          for l in xrange(4):
+            mat = uni10.otimes(uni10.otimes(uni10.otimes(pauli1b[i],pauli1b[j]),pauli1b[k]),pauli1b[l])
+            P   = uni10.UniTensor([bdi,bdi,bdi,bdi,bdo,bdo,bdo,bdo])
+            P.putBlock(mat)
+            pauli4b.append(P)
+
+    return pauli4b
+
+def pauli5body():
+    '''
+    Tensors for 5-body Pauli strings. 
+    '''
+    bond_dim = 2
+    iden = matIden()
+    sx   = matSx()
+    sy   = matSy()
+    sz   = matSz()
+    bdi = uni10.Bond(uni10.BD_IN,  bond_dim)
+    bdo = uni10.Bond(uni10.BD_OUT, bond_dim)
+
+    pauli1b = [iden,sx,sy,sz]
+    pauli5b = []
+    bonds = [bdi]*5 + [bdo]*5
+    for i in xrange(4):
+      for j in xrange(4):
+        for k in xrange(4):
+          for l in xrange(4):
+            for m in xrange(4):
+              mat = uni10.otimes(uni10.otimes(uni10.otimes(uni10.otimes(pauli1b[i],pauli1b[j]),pauli1b[k]),pauli1b[l]),pauli1b[m])
+              P   = uni10.UniTensor(bonds)
+              P.putBlock(mat)
+              pauli5b.append(P)
+
+    return pauli5b
+
+def pauli6body():
+    '''
+    Tensors for 6-body Pauli strings. 
+    '''
+    bond_dim = 2
+    iden = matIden()
+    sx   = matSx()
+    sy   = matSy()
+    sz   = matSz()
+    bdi = uni10.Bond(uni10.BD_IN,  bond_dim)
+    bdo = uni10.Bond(uni10.BD_OUT, bond_dim)
+
+    pauli1b = [iden,sx,sy,sz]
+    pauli6b = []
+    bonds = [bdi]*6 + [bdo]*6
+    for i in xrange(4):
+      for j in xrange(4):
+        for k in xrange(4):
+          for l in xrange(4):
+            for m in xrange(4):
+              for n in xrange(4):
+                mat = uni10.otimes(uni10.otimes(uni10.otimes(uni10.otimes(uni10.otimes(pauli1b[i],pauli1b[j]),pauli1b[k]),pauli1b[l]),pauli1b[m]))
+                P   = uni10.UniTensor(bonds)
+                P.putBlock(mat)
+                pauli6b.append(P)
+
+    return pauli6b
+
+
+
+
+
