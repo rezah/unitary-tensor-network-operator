@@ -349,7 +349,7 @@ def contract_UHU(L, Ulist, model='Ising', J=1.0, Fieldz=1.0, hzlist=[]):
           else:
             U_dn.permute([8,9,10,11,12,13,4,5,2,3,6,7],6)
             U_dn.setLabel([14,15,16,17,18,19,4,5,0,1,6,7])
-            Hbond_n = (U_dn*H_bond)*U_up
+            Hbond_n = (U_dn*Hbond)*U_up
             Hbond_n.permute([14,15,16,17,18,19,8,9,10,11,12,13],6)
             Hbond_n.setLabel([0,1,2,3,4,5,6,7,8,9,10,11])
             UHU.append(Hbond_n)
@@ -487,7 +487,7 @@ def UHU2pauli(L,Ulist,model='Ising',J=1.0,Fieldz=1.0,hzlist=[],pauli2b=None,paul
 
         # Inner Bonds
         for l in xrange(2,L-3):
-          if (L%2 == 0):
+          if (l%2 == 0):
             coef4 = np.zeros(l4b)
             for i in xrange(l4b):
               ans = trUP(UHU[l],pauli4b[i],4)
@@ -707,7 +707,7 @@ def measure_pstr(Ulist,L,psi,model='Ising',J=1.0,Fieldz=1.0,hzlist=[],tol=1e-10,
             psi.setLabel(labelpsi)
             psiT.setLabel(labelpsiT)
             for i in xrange(l6b):
-              if (abs(coef6[i] < tol)):
+              if (abs(coef6[i]) < tol):
                 continue
               else:
                 e6[i] = ((psiT*pauli6b[i])*psi).getBlock().sum() 
@@ -1037,14 +1037,18 @@ def pauli4body():
 
     pauli1b = [iden,sx,sy,sz]
     pauli4b = []
+    pauli2b = []
+    l2b = 16
     for i in xrange(4):
-      for j in xrange(4):
-        for k in xrange(4):
-          for l in xrange(4):
-            mat = uni10.otimes(uni10.otimes(uni10.otimes(pauli1b[i],pauli1b[j]),pauli1b[k]),pauli1b[l])
+        for j in xrange(4):
+            mat = uni10.otimes(pauli1b[i], pauli1b[j])
+            pauli2b.append(mat)
+    for i in xrange(l2b):
+        for j in xrange(l2b):
+            mat = uni10.otimes(pauli2b[i], pauli2b[j])
             P   = uni10.UniTensor([bdi,bdi,bdi,bdi,bdo,bdo,bdo,bdo])
             P.putBlock(mat)
-            pauli4b.append(P)
+            pauli4b.append(P)            
 
     return pauli4b
 
@@ -1090,16 +1094,20 @@ def pauli6body():
     pauli1b = [iden,sx,sy,sz]
     pauli6b = []
     bonds = [bdi]*6 + [bdo]*6
+    pauli3b = []
+    
     for i in xrange(4):
       for j in xrange(4):
         for k in xrange(4):
-          for l in xrange(4):
-            for m in xrange(4):
-              for n in xrange(4):
-                mat = uni10.otimes(uni10.otimes(uni10.otimes(uni10.otimes(uni10.otimes(pauli1b[i],pauli1b[j]),pauli1b[k]),pauli1b[l]),pauli1b[m]))
-                P   = uni10.UniTensor(bonds)
-                P.putBlock(mat)
-                pauli6b.append(P)
+            mat = uni10.otimes(uni10.otimes(pauli1b[i],pauli1b[j]),pauli1b[k])
+            pauli3b.append(mat)
+    l3b = 64
+    for i in xrange(l3b):
+        for j in xrange(l3b):
+            mat = uni10.otimes(pauli3b[i],pauli3b[j])
+            P   = uni10.UniTensor(bonds)
+            P.putBlock(mat)
+            pauli6b.append(P)
 
     return pauli6b
 
