@@ -11,7 +11,6 @@ def matSx():
   Mat=(1.0)*uni10.Matrix(dim, dim, [0.0, 1.0, 1.00, 0.0])
   return Mat 
 
-
 def matSz():
   spin = 0.5
   dim = int(spin * 2 + 1)
@@ -23,7 +22,6 @@ def matSy():
   dim = int(spin * 2 + 1)
   Mat=(1.0)*uni10.Matrix(dim, dim, [0.0, -1.00, 1.00, 0.00]);
   return Mat 
-
 
 def matIden():
     spin_t=0.5
@@ -871,11 +869,31 @@ def get_spectrum(Ulist,model,L,UHU=None,J=1.,Fieldz=1.,hzlist=[],sort_spec=True)
     if UHU is None:
         UHU = contract_UHU(L, Ulist, model, J, Fieldz, hzlist)
     diag = np.zeros(2**L) 
+    ### Left Edge
     d0 = get_uni10diag(UHU[0],8)
     diag += np.kron(d0,np.ones(2**(L-3)))
-    for b in xrange(1,L-2):
-        d0 = get_uni10diag(UHU[b],16)
-        diag += np.kron(np.ones(2**(b-1)), np.kron(d0, np.ones(2**(L-b-3))))
+    ### Inner Bonds
+    if (L < 6):
+        for b in xrange(1,L-2):
+            d0 = get_uni10diag(UHU[b],16)
+            diag += np.kron(np.ones(2**(b-1)), np.kron(d0, np.ones(2**(L-b-3))))
+    else:
+        ## Left Next-to-Edge Bond
+        d0 = get_uni10diag(UHU[1],32)
+        diag += np.kron(d0,np.ones(2**(L-5)))
+        for b in xrange(2,L-3):
+            if (b%2 == 0):
+                d0 = get_uni10diag(UHU[b],16)
+                diag += np.kron(np.ones(2**(b-1)), np.kron(d0, np.ones(2**(L-b-3))))
+            else:
+                d0 = get_uni10diag(UHU[b],2**6)
+                diag += np.kron(np.ones(2**(b-2)), np.kron(d0,np.ones(2**(L-b-4))))
+        
+        ## Right Next-to-Edge Bond
+        d0 = get_uni10diag(UHU[L-3],32)
+        diag += np.kron(np.ones(2**(L-5)),d0)
+
+    ### Right Edge
     d0 = get_uni10diag(UHU[-1],8)
     diag += np.kron(np.ones(2**(L-3)),d0)
     if sort_spec:
@@ -955,6 +973,12 @@ def uni2mat(uni,lmat):
             npmat[i,j] = M[i*lmat+j]
 
     return npmat
+
+def mat2uni(mat,lmat):
+    mat = mat.reshape(lmat**2)
+    mat = list(mat)
+    unimat = uni10.Matrix(lmat,lmat,mat)
+    return unimat
 
 def vec2uni10(v,L):
     bond_dim = 2
@@ -1067,15 +1091,19 @@ def pauli5body():
     pauli1b = [iden,sx,sy,sz]
     pauli5b = []
     bonds = [bdi]*5 + [bdo]*5
+    pauli2b = []
+    l2b = 16
     for i in xrange(4):
       for j in xrange(4):
+        mat = uni10.otimes(pauli1b[i],pauli1b[j])
+        pauli2b.append(mat)
+    for i in xrange(l2b):
+      for j in xrange(l2b):
         for k in xrange(4):
-          for l in xrange(4):
-            for m in xrange(4):
-              mat = uni10.otimes(uni10.otimes(uni10.otimes(uni10.otimes(pauli1b[i],pauli1b[j]),pauli1b[k]),pauli1b[l]),pauli1b[m])
-              P   = uni10.UniTensor(bonds)
-              P.putBlock(mat)
-              pauli5b.append(P)
+          mat = uni10.otimes(uni10.otimes(pauli2b[i],pauli2b[j]), pauli1b[k])
+          P   = uni10.UniTensor(bonds)
+          P.putBlock(mat)
+          pauli5b.append(P)
 
     return pauli5b
 
