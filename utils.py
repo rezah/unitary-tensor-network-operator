@@ -2,6 +2,19 @@ import numpy as np
 import pyUni10 as uni10
 
 
+
+def print_banner(Model,L,L_lay,J,Fieldz,Method):
+
+    print "#####################################################"
+    print "#        Variational Unitary Tensor Network         #"
+    print "#####################################################"
+    print "#  Parameters                                       #"
+    print "#  Model: %2d site "%L+Model+" "*(34-len(Model))+"#"
+    print "#  Number of Layers: %1d"%(len(L_lay))+" "*30+"#"
+    print "#  Couplings: J = %0.1f, Fieldz = %0.1f"%(J,Fieldz) + " "*17+"#"
+    print "#  Optimization algorithm: %s"%Method+" "*(25-len(Method))+"#"
+    print "#####################################################" 
+
 ######PAULI STRINGS######
 def matSx():
   spin = 0.5
@@ -178,7 +191,6 @@ def uni2mat(uni,lmat):
     for i in xrange(lmat):
         for j in xrange(lmat):
             npmat[i,j] = M[i*lmat+j]
-
     return npmat
 
 def mat2uni(mat,lmat):
@@ -187,7 +199,7 @@ def mat2uni(mat,lmat):
     unimat = uni10.Matrix(lmat,lmat,mat)
     return unimat
 
-def vec2uni10(v,L):
+def vec2uni(v,L):
     bond_dim = 2
     vl = list(v)
     vl10 = uni10.Matrix(2**L,1,vl)
@@ -216,19 +228,21 @@ def str2int(mystr, base):
         myint += str_n[i]*(base**i)
     return int(myint)
 
-def print_banner(Model,L,L_lay,J,Fieldz,Method):
+###### ARITHMETIC ######
+def diff_unitary(Ulist1, Ulist2):
+    lsite = len(Ulist1)
+    llayer = len(Ulist1[0])
+    if (len(Ulist2) != lsite or len(Ulist2[0]) != llayer):
+        raise Exception("The dimensions of the two unitaries do not match!")
+    diff = 0.
+    for i in xrange(lsite):
+        for j in xrange(llayer):
+            u1 = Ulist1[i][j].getBlock()
+            u2 = Ulist2[i][j].getBlock()
+            diff += (-1.*u1 + u2).norm()
 
-    print "#####################################################"
-    print "#        Variational Unitary Tensor Network         #"
-    print "#####################################################"
-    print "#  Parameters                                       #"
-    print "#  Model: %2d site "%L+Model+" "*(34-len(Model))+"#"
-    print "#  Number of Layers: %1d"%(len(L_lay))+" "*30+"#"
-    print "#  Couplings: J = %0.1f, Fieldz = %0.1f"%(J,Fieldz) + " "*17+"#"
-    print "#  Optimization algorithm: %s"%Method+" "*(25-len(Method))+"#"
-    print "#####################################################" 
-
-
-def norm_unitary(U_list1, Ulist2):
-    pass
+    diff /= lsite*llayer
+    return diff
+            
+    
     
