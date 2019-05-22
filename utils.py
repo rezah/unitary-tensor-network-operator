@@ -1,8 +1,10 @@
 import numpy as np
+import math
 import pyUni10 as uni10
 
 
 
+#####################BEAUTIFUL PRINTING########################
 def print_banner(Model,L,L_lay,J,Fieldz,Method):
 
     print "#####################################################"
@@ -14,6 +16,26 @@ def print_banner(Model,L,L_lay,J,Fieldz,Method):
     print "#  Couplings: J = %0.1f, Fieldz = %0.1f"%(J,Fieldz) + " "*17+"#"
     print "#  Optimization algorithm: %s"%Method+" "*(25-len(Method))+"#"
     print "#####################################################" 
+
+def str2pauli(mystr):
+    pdict = {'0':'I', '1':'X', '2':'Y', '3':'Z'}     
+    newstr = ''
+    for x in mystr:
+        newstr = newstr + pdict[x]
+    return newstr
+
+def print_paulistr_expansion(coef,tol=1e-5):
+    lpstr = int(math.log(len(coef),4))
+    expan = []
+    for i in xrange(len(coef)):
+        if abs(coef[i]) < tol:
+            continue
+        else:
+            pstr = '%0.3f'%coef[i]
+            intstr = int2str(i,4,lpstr)
+            pstr += str2pauli(intstr)
+        expan.append(pstr)
+    return expan
 
 ######PAULI STRINGS######
 def matSx():
@@ -227,6 +249,15 @@ def str2int(mystr, base):
     for i in xrange(l):
         myint += str_n[i]*(base**i)
     return int(myint)
+
+def int2str(myint, base, lstr):
+    mystr = ''
+    while (myint > 0):
+        x = myint%base
+        mystr = str(x) + mystr
+        myint = myint//base
+    mystr = '0'*(lstr-len(mystr)) + mystr
+    return mystr
 
 ###### ARITHMETIC ######
 def diff_unitary(Ulist1, Ulist2):
