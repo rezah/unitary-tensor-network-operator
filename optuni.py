@@ -6,6 +6,7 @@ import random
 import copy
 import time
 import mpo
+import qsampl
 import env
 import utils
 import optimize
@@ -53,10 +54,11 @@ def variantional_unitary_process(L,L_lay,Model,J,Fieldz,hz_list,Ulist=None,W=8,U
     Max_Steepest_iteratoin = maxiter
     Max_CG_iteratoin =  maxiter
 
-    mpo.intialize_coupling(L, hz_list, W, Randomness, Model)
+    #mpo.intialize_coupling(L, hz_list, W, Randomness, Model) # For Heisenberg
+    qsampl.initialize_hzlist(L, hz_list, Fieldz)
     mpo_list1, mpo_list2, mpo_boundy_list=mpo.make_mpo_H( L, J, hz_list, Fieldz, J2,Model )
     trH2=mpo.contraction_MPO_trH2( mpo_list2, mpo_boundy_list, L )
-    print "Initial energy variance: ", trH2
+    #print "Initial energy variance: ", trH2
 
     if Ulist is None:
         U_list=mpo.intialize_unitary_list( L, L_lay, d, U_delta)

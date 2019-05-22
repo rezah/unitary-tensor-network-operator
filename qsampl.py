@@ -14,7 +14,7 @@ def get_Hbond_tensor(model,bond_idx,L,J=1.0,Fieldz=1.0,hzlist=[],bond_dim=2,\
     '''
     _________________________________________________________________
     Ising Model:                |    Heisenberg Model 
-    -J XX - h Z    (h=Fieldz)   |    J(XX + ZZ - YY) - h Z (h=hzlist)
+    -J XX - h Z    (h=Fieldz)   |    J(XX + ZZ - YY) + h Z (h=hzlist)
     ____________________________|____________________________________
                         Result in a tensor:
                               _____
@@ -55,18 +55,18 @@ def get_Hbond_tensor(model,bond_idx,L,J=1.0,Fieldz=1.0,hzlist=[],bond_dim=2,\
         Hbond_mat +=  (1.*J)*uni10.otimes(sz,sz)
         if avebond:
             if (bond_idx == 0):
-                Hbond_mat += (-1. *hzlist[0])*uni10.otimes(sz,s0)
-                Hbond_mat += (-0.5*hzlist[1])*uni10.otimes(s0,sz)
+                Hbond_mat += (1. *hzlist[0])*uni10.otimes(sz,s0)
+                Hbond_mat += (0.5*hzlist[1])*uni10.otimes(s0,sz)
             elif (bond_idx == L-2):
-                Hbond_mat += (-0.5*hzlist[L-2])*uni10.otimes(sz,s0)
-                Hbond_mat += (-1. *hzlist[L-1])*uni10.otimes(s0,sz)
+                Hbond_mat += (0.5*hzlist[L-2])*uni10.otimes(sz,s0)
+                Hbond_mat += (1. *hzlist[L-1])*uni10.otimes(s0,sz)
             else:
-                Hbond_mat += (-0.5*hzlist[bond_idx])*uni10.otimes(sz,s0)
-                Hbond_mat += (-0.5*hzlist[bond_idx+1])*uni10.otimes(s0,sz)
+                Hbond_mat += (0.5*hzlist[bond_idx])*uni10.otimes(sz,s0)
+                Hbond_mat += (0.5*hzlist[bond_idx+1])*uni10.otimes(s0,sz)
         else:
             if (bond_idx%2 == 0):
-                Hbond_mat += (-1.*hzlist[bond_idx])*uni10.otimes(sz,s0)
-                Hbond_mat += (-1.*hzlist[bond_idx+1])*uni10.otimes(s0,sz)
+                Hbond_mat += (1.*hzlist[bond_idx])*uni10.otimes(sz,s0)
+                Hbond_mat += (1.*hzlist[bond_idx+1])*uni10.otimes(s0,sz)
     else:
         raise Exception("The model can only be Ising or Heisenberg!")
 
@@ -738,6 +738,7 @@ def measure_pstr(Ulist,L,psi,model='Ising',J=1.0,Fieldz=1.0,hzlist=[],tol=1e-10,
 
 ##########GROUND#STATE##########GROUND#STATE##########GROUND#STATE
 
+#===================ISING MODEL======================#
 def ising_ED(L,J=1.0,Fieldz=1.0):
     '''
     -J XX - h Z    (h = Fieldz)
@@ -764,36 +765,6 @@ def ising_ED(L,J=1.0,Fieldz=1.0):
     #gs = vec2uni10(ev[:,0],L)
     return ew, ev[:,0]
 
-def heisenberg_ED(L,J=1.0,hzlist=[]):
-    '''
-    J(XX-YY+ZZ) - hZ (h=hzlist)
-    '''
-
-    if (L > 12):
-        raise ValueError("Exact diagonalization can only handle up to 12 sites!")
-    if (L%2 != 0):
-        raise ValueError("Only even number of sites is accepted!")
-
-    npId = np.eye(2)
-    npSx = np.array([0.,1.,1.,0.]).reshape(2,2)
-    npSy = np.array([0.,-1.,1.,0.]).reshape(2,2)
-    npSz = np.array([1.,0.,0.,-1.]).reshape(2,2)
-    SxSx = np.kron(npSx,npSx)
-    SySy = np.kron(npSy,npSy)
-    SzSz = np.kron(npSz,npSz)
-    SS   = SxSx - SySy + SzSz
-
-    H = np.zeros((2**L,)*2)
-    for i in xrange(0,L-1):
-        H += (1.*J)*np.kron(np.kron(np.eye(2**i),SS),np.eye(2**(L-i-2)))
-        H += (-1.*hzlist[i])*np.kron(np.kron(np.eye(2**i),npSz),np.eye(2**(L-i-1)))
-    H += (-1.*hzlist[-1])*np.kron(np.eye(2**(L-1)),npSz)
-
-    ew, ev = np.linalg.eigh(H)
-    return ew, ev[:,0]
-
-
-
 def ising_variance(L,J=1.0,Fieldz=1.0):
     # TODO make it in the MPO form
     # Im in rush sorry
@@ -811,6 +782,40 @@ def ising_variance(L,J=1.0,Fieldz=1.0):
 
     var = np.asarray(var)
     return np.sum(var)
+
+#====================================================#
+
+
+#===================ISING MODEL======================#
+def heisenberg_ED(L,J=1.0,hzlist=[]):
+    '''
+    J(XX-YY+ZZ) + hZ (h=hzlist)
+    '''
+    print hzlist
+
+    if (L > 12):
+        raise ValueError("Exact diagonalization can only handle up to 12 sites!")
+    if (L%2 != 0):
+        raise ValueError("Only even number of sites is accepted!")
+
+    hzlist = [0.]*L
+    npId = np.eye(2)
+    npSx = np.array([0.,1.,1.,0.]).reshape(2,2)
+    npSy = np.array([0.,-1.,1.,0.]).reshape(2,2)
+    npSz = np.array([1.,0.,0.,-1.]).reshape(2,2)
+    SxSx = np.kron(npSx,npSx)
+    SySy = np.kron(npSy,npSy)
+    SzSz = np.kron(npSz,npSz)
+    SS   = SxSx - SySy + SzSz
+
+    H = np.zeros((2**L,)*2)
+    for i in xrange(0,L-1):
+        H += (1.*J)*np.kron(np.kron(np.eye(2**i),SS),np.eye(2**(L-i-2)))
+        H += (1.*hzlist[i])*np.kron(np.kron(np.eye(2**i),npSz),np.eye(2**(L-i-1)))
+    H += (1.*hzlist[-1])*np.kron(np.eye(2**(L-1)),npSz)
+
+    ew, ev = np.linalg.eigh(H)
+    return ew, ev[:,0]
 
 def heisenberg_variance(L,J=1.0,hzlist=[]):
     npId = np.eye(2)
@@ -837,6 +842,12 @@ def heisenberg_variance(L,J=1.0,hzlist=[]):
 
     var = np.asarray(var)
     return np.sum(var)
+
+def initialize_hzlist(L, hz_list, Fieldz):
+    for i in xrange(L):
+        hz_list.append(Fieldz)
+        
+#====================================================#
          
 
 #########SPECTRUM#########SPECTRUM#########SPECTRUM#########SPECTRUM
