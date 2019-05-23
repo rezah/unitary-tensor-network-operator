@@ -31,7 +31,7 @@ def print_paulistr_expansion(coef,tol=1e-5):
         if abs(coef[i]) < tol:
             continue
         else:
-            pstr = '%0.3f'%coef[i]
+            pstr = '%0.3g '%coef[i]
             intstr = int2str(i,4,lpstr)
             pstr += str2pauli(intstr)
         expan.append(pstr)
@@ -274,6 +274,42 @@ def diff_unitary(Ulist1, Ulist2):
 
     diff /= lsite*llayer
     return diff
+
+def pauli_multiply_dict():
+    pdict = np.ones((2,4,4))
+    pdict[0][2,1] = -1.
+    pdict[0][3,1] = -1.
+    pdict[0][3,2] = -1.
+    pdict[1] = np.array([0,1,2,3,\
+                         1,0,3,2,\
+                         2,3,0,1,\
+                         3,2,1,0]).reshape(4,4)
+    return pdict
+    
+
+def multiply_pstr(pstr1, pstr2):
+    
+    lstr = len(pstr1)
+    if (len(pstr2) != lstr):
+        raise ValueError("The multiplied two strings must have the same length!")
+
+    sign = 1.
+    nstr = ''
+    pdict = pauli_multiply_dict()
+    for i in xrange(lstr):
+        p1 = int(pstr1[i])
+        p2 = int(pstr2[i])
+        sign *= pdict[0][p1,p2]
+        nstr += str(int(pdict[1][p1,p2]))
+
+    return sign, nstr
+        
+        
+    
+        
+    
+    
+
             
     
     

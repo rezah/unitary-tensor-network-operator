@@ -496,6 +496,8 @@ def UHU2pauli(L,Ulist,model='Ising',J=1.0,Fieldz=1.0,hzlist=[],pauli2b=None,paul
         coef3[i] = ans
       pcoefs.append(coef3)
 
+    print_pauli_expansion(pcoefs)
+
     return pcoefs
 
 
@@ -775,10 +777,11 @@ def ising_variance(L,J=1.0,Fieldz=1.0):
     var = []
     for i in range(L-1):
         H_ = np.kron(np.kron(np.eye(2**i),sxsx), np.eye(2**(L-2-i)))
-        var.append(1.-(np.dot(v.T,H_.dot(v)))**2)
+        var.append( (1.-(np.dot(v.T,H_.dot(v)))**2)*J**2 )
+
     for i in range(L):
         H_ = np.kron(np.kron(np.eye(2**i),sz),np.eye(2**(L-1-i)))
-        var.append(1.-(np.dot(v.T,H_.dot(v)))**2)
+        var.append( (1.-(np.dot(v.T,H_.dot(v)))**2)*Fieldz**2 )
 
     var = np.asarray(var)
     return np.sum(var)
@@ -786,19 +789,17 @@ def ising_variance(L,J=1.0,Fieldz=1.0):
 #====================================================#
 
 
-#===================ISING MODEL======================#
+#=================HEISENBERG MODEL===================#
 def heisenberg_ED(L,J=1.0,hzlist=[]):
     '''
-    J(XX-YY+ZZ) + hZ (h=hzlist)
+    J(XX-YY+ZZ) + hZ (h=hzlist[i])
     '''
-    print hzlist
 
     if (L > 12):
         raise ValueError("Exact diagonalization can only handle up to 12 sites!")
     if (L%2 != 0):
         raise ValueError("Only even number of sites is accepted!")
 
-    hzlist = [0.]*L
     npId = np.eye(2)
     npSx = np.array([0.,1.,1.,0.]).reshape(2,2)
     npSy = np.array([0.,-1.,1.,0.]).reshape(2,2)
@@ -808,16 +809,18 @@ def heisenberg_ED(L,J=1.0,hzlist=[]):
     SzSz = np.kron(npSz,npSz)
     SS   = SxSx - SySy + SzSz
 
-    H = np.zeros((2**L,)*2)
+    H = np.zeros((2**L,2**L))
+
     for i in xrange(0,L-1):
         H += (1.*J)*np.kron(np.kron(np.eye(2**i),SS),np.eye(2**(L-i-2)))
         H += (1.*hzlist[i])*np.kron(np.kron(np.eye(2**i),npSz),np.eye(2**(L-i-1)))
-    H += (1.*hzlist[-1])*np.kron(np.eye(2**(L-1)),npSz)
+    H += (1.*hzlist[L-1])*np.kron(np.eye(2**(L-1)),npSz)
 
     ew, ev = np.linalg.eigh(H)
     return ew, ev[:,0]
 
 def heisenberg_variance(L,J=1.0,hzlist=[]):
+
     npId = np.eye(2)
     npSx = np.array([0.,1.,1.,0.]).reshape(2,2)
     npSy = np.array([0.,-1.,1.,0.]).reshape(2,2)
@@ -830,11 +833,11 @@ def heisenberg_variance(L,J=1.0,hzlist=[]):
     var = []
     for i in xrange(L-1):
         H_ = np.kron(np.kron(np.eye(2**i),SxSx), np.eye(2**(L-2-i)))
-        var.append(1.-(np.dot(v.T,H_.dot(v)))**2)
+        var.append( (1.-(np.dot(v.T,H_.dot(v)))**2)*J**2 )
         H_ = np.kron(np.kron(np.eye(2**i),SySy), np.eye(2**(L-2-i)))
-        var.append(1.-(np.dot(v.T,H_.dot(v)))**2)
+        var.append( (1.-(np.dot(v.T,H_.dot(v)))**2)*J**2 )
         H_ = np.kron(np.kron(np.eye(2**i),SzSz), np.eye(2**(L-2-i)))
-        var.append(1.-(np.dot(v.T,H_.dot(v)))**2)
+        var.append( (1.-(np.dot(v.T,H_.dot(v)))**2)*J**2 )
 
     for i in xrange(L):
         H_ = np.kron(np.kron(np.eye(2**i),npSz),np.eye(2**(L-1-i)))
@@ -844,8 +847,10 @@ def heisenberg_variance(L,J=1.0,hzlist=[]):
     return np.sum(var)
 
 def initialize_hzlist(L, hz_list, Fieldz):
-    for i in xrange(L):
-        hz_list.append(Fieldz)
+    hz_list =[Fieldz]*L
+    #for i in xrange(L):
+    #    hz_list.append(Fieldz)
+    return hz_list
         
 #====================================================#
          
@@ -893,44 +898,60 @@ def get_spectrum(Ulist,model,L,UHU=None,J=1.,Fieldz=1.,hzlist=[],sort_spec=True)
 def coef_analys(pcoefs,l_layer,w2file=False, datadir='./', label=''):
 
     lc = len(pcoefs)
+    zlabel = [0,3]
 
     if (l_layer == 1):
-        zlabel = [0,3]
-        nzlabel = [1,2]
+        l2b = 16
+        l4b = 256
+        zlabel2_ = list(itertools.product(zlabel,zlabel))
+        zlabel4_ = list(itertools.product(zlabel,zlabel,zlabel,zlabel))
+        zlabel2 = [utils.str2int(x,4) for x in zlabel2_]
+        zlabel4 = [utils.str2int(x,4) for x in zlabel4_]
         zcoef = []
         nzcoef = []
-        for p in xrange(lc):
-            zcoef.append(pcoefs[p][zlabel])
-            nzcoef.append(pcoefs[p][nzlabel])
+        for i in xrange(lc):
+            if (len(pcoefs[i]) == l2b): 
+                zcoef.append(pcoefs[i][zlabel2])
+                nzcoef.append(np.delete(pcoefs[i],zlabel2))
+            elif (len(pcoefs[i]) == l4b):
+                zcoef.append(pcoefs[i][zlabel4])
+                nzcoef.append(np.delete(pcoefs[i],zlabel4))
 
     elif (l_layer == 2):
         l3b = 64
         l4b = 256    
-        zlabel3 = []
-        zlabel4 = []
-        for i in [0,3]:
-          for j in [0,3]:
-            for k in [0,3]:
-              zlabel3.append(utils.str2int([i,j,k],4))
-              for l in [0,3]:
-                zlabel4.append(utils.str2int([i,j,k,l],4))
-        nzlabel3 = range(l3b)
-        nzlabel4 = range(l4b)
-        for i in zlabel3:
-            nzlabel3.remove(i)
-        for i in zlabel4:
-            nzlabel4.remove(i)
+        l5b = 1024
+        l6b = 4096
+        zlabel3_ = list(itertools.product(zlabel,zlabel,zlabel))
+        zlabel4_ = list(itertools.product(zlabel,zlabel,zlabel,zlabel))
+        zlabel5_ = list(itertools.product(zlabel,zlabel,zlabel,zlabel,zlabel))
+        zlabel6_ = list(itertools.product(zlabel,zlabel,zlabel,zlabel,zlabel,zlabel))
+        zlabel3 = [utils.str2int(x,4) for x in zlabel3_]
+        zlabel4 = [utils.str2int(x,4) for x in zlabel4_]
+        zlabel5 = [utils.str2int(x,4) for x in zlabel5_]
+        zlabel6 = [utils.str2int(x,4) for x in zlabel6_]
+        
         zcoef  = []
         nzcoef = []
 
         zcoef.append(pcoefs[0][zlabel3])
-        nzcoef.append(pcoefs[0][nzlabel3])
+        nzcoef.append(np.delete(pcoefs[0], zlabel3))
 
-        for p in xrange(1,lc-1):
-            zcoef.append(pcoefs[p][zlabel4])
-            nzcoef.append(pcoefs[p][nzlabel4])
+        for i in xrange(1,lc-1):
+            if (i%2 == 0):
+                zcoef.append(pcoefs[i][zlabel4])
+                nzcoef.append(np.delete(pcoefs[i],zlabel4))
+            else:
+                l = len(pcoefs[i])
+                if (l==l5b):
+                    zcoef.append(pcoefs[i][zlabel5])
+                    nzcoef.append(np.delete(pcoefs[i],zlabel5))
+                elif (l==l6b):
+                    zcoef.append(pcoefs[i][zlabel6])
+                    nzcoef.append(np.delete(pcoefs[i],zlabel6))
+
         zcoef.append(pcoefs[-1][zlabel3])
-        nzcoef.append(pcoefs[-1][nzlabel3])
+        nzcoef.append(np.delete(pcoefs[-1], zlabel3))
     
     if w2file:
         with open (datadir+'/'+label+'_Z.txt', 'wb') as zfp:
@@ -939,4 +960,17 @@ def coef_analys(pcoefs,l_layer,w2file=False, datadir='./', label=''):
             pickle.dump(nzcoef,nzfp)
     else:
         return zcoef, nzcoef 
+
+
+def print_pauli_expansion(pcoefs):
+    l = 0
+    
+    print "*"*25+"Pauli Expansion"+"*"*25
+    for p in pcoefs:
+        expan = utils.print_paulistr_expansion(p)
+        print "Bond %d: "%l, expan
+        l += 1
+    print "*"*65
+        
+        
 
