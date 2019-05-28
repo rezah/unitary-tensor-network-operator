@@ -45,7 +45,7 @@ def Initialize_function(L, L_lay):
 
 #####################################################################################
 
-def variantional_unitary_process(L,L_lay,Model,J,Fieldz,hz_list,Ulist=None,W=8,U_delta=0.,J2=0.,d=2,Randomness='Fixed',Method='SteepestDescentploy',maxiter=30,save_ulist=False):
+def variantional_unitary_process(L,L_lay,Model,J,Fieldz,hz_list,Ulist=None,W=8,U_delta=0.,J2=0.,d=2,Randomness='Fixed',Method='SteepestDescentploy',maxiter=50,save_ulist=False):
 
     utils.print_banner(Model,L,L_lay,J,Fieldz,Method)
 
@@ -55,7 +55,9 @@ def variantional_unitary_process(L,L_lay,Model,J,Fieldz,hz_list,Ulist=None,W=8,U
     Max_CG_iteratoin =  maxiter
 
     #mpo.intialize_coupling(L, hz_list, W, Randomness, Model) # For Heisenberg
-    qsampl.initialize_hzlist(L, hz_list, Fieldz)
+    if len(hz_list) == 0:
+        hz_list = qsampl.initialize_hzlist(L, hz_list, Fieldz)
+    #qsampl.initialize_hzlist(L, hz_list, Fieldz)
     mpo_list1, mpo_list2, mpo_boundy_list=mpo.make_mpo_H( L, J, hz_list, Fieldz, J2,Model )
     trH2=mpo.contraction_MPO_trH2( mpo_list2, mpo_boundy_list, L )
     #print "Initial energy variance: ", trH2

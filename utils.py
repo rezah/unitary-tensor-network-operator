@@ -1,6 +1,7 @@
 import numpy as np
 import math
 import pyUni10 as uni10
+import os
 
 
 
@@ -303,6 +304,30 @@ def multiply_pstr(pstr1, pstr2):
         nstr += str(int(pdict[1][p1,p2]))
 
     return sign, nstr
+
+def save_ulist(Ulist,outdir='./'):
+    if not os.path.exists(outdir):
+        os.mkdir(outdir)
+
+    L = len(Ulist)
+    lla = len(Ulist[0])
+    for l in xrange(L):
+        for i in xrange(lla):
+            Ulist[l][i].save(outdir+'/U%d%d_L%dLU%d'%(l,i,L,lla))
+
+
+def load_ulist(L,lla,outdir):
+    Ulist = []
+    for l in xrange(L):
+        Ulist.append([])
+        for i in xrange(lla):
+            u = uni10.UniTensor(outdir+'/U%d%d_L%dLU%d'%(l,i,L,lla))
+            Ulist[l].append(u)
+
+    return Ulist
+
+    
+    
         
         
     

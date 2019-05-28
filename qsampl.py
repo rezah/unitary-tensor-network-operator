@@ -4,6 +4,7 @@ import itertools
 import numpy as np
 import utils
 import pickle
+import os
 #np.set_printoptions(linewidth=1000)
 ####################UHU####################UHU####################UHU
 def get_Hbond_tensor(model,bond_idx,L,J=1.0,Fieldz=1.0,hzlist=[],bond_dim=2,\
@@ -496,7 +497,6 @@ def UHU2pauli(L,Ulist,model='Ising',J=1.0,Fieldz=1.0,hzlist=[],pauli2b=None,paul
         coef3[i] = ans
       pcoefs.append(coef3)
 
-    print_pauli_expansion(pcoefs)
 
     return pcoefs
 
@@ -542,7 +542,7 @@ def UdagPsi(Ulist, psi, L):
     return v
 
 ############MEASURE############MEASURE############MEASURE############MEASURE
-def measure_pstr(Ulist,L,psi,model='Ising',J=1.0,Fieldz=1.0,hzlist=[],tol=1e-10,analys_coefs=False,outdir='./'):
+def measure_pstr(Ulist,L,psi,model='Ising',J=1.0,Fieldz=1.0,hzlist=[],tol=1e-10,coutdir='./',eoutdir='./',**kwargs):
     '''
     Return:
     (1) the expectation value of the Hamiltonian 
@@ -725,10 +725,15 @@ def measure_pstr(Ulist,L,psi,model='Ising',J=1.0,Fieldz=1.0,hzlist=[],tol=1e-10,
       err_value.append(varp)
  
     # Save Files
-    if analys_coefs:
-      coef_analys(pcoefs,l_layer, w2file=True, datadir=outdir,label=model+'_L%d_lyr%d_pstr_'%(L,l_layer))
+    if not os.path.exists(coutdir):
+      os.mkdir(coutdir)
+    if not os.path.exists(eoutdir):
+      os.mkdir(eoutdir)
 
-    coef_analys(err_value, l_layer, w2file=True, datadir=outdir,label='L%d_lyr%d_err_'%(L,l_layer))
+    coef_analys(pcoefs,l_layer, w2file=True, datadir=coutdir,label=model+'_L%d_lyr%d_pstr'%(L,l_layer))
+    coef_analys(err_value, l_layer, w2file=True, datadir=eoutdir,label='L%d_lyr%d_err'%(L,l_layer))
+
+    print_pauli_expansion(pcoefs)
 
     aveH = 0.
     errH = 0.
@@ -856,44 +861,60 @@ def initialize_hzlist(L, hz_list, Fieldz):
          
 
 #########SPECTRUM#########SPECTRUM#########SPECTRUM#########SPECTRUM
-def get_spectrum(Ulist,model,L,UHU=None,J=1.,Fieldz=1.,hzlist=[],sort_spec=True):
+def get_spectrum(Ulist,model,L,UHU=None,J=1.,Fieldz=1.,hzlist=[],sort_spec=True,savefile=True,outdir='./'):
     # Get the diagonal of rotated Hamiltonian U+HU
     if UHU is None:
-        UHU = contract_UHU(L, Ulist, model, J, Fieldz, hzlist)
+      UHU = contract_UHU(L, Ulist, model, J, Fieldz, hzlist)
     diag = np.zeros(2**L) 
-    ### Left Edge
-    d0 = utils.get_uni10diag(UHU[0],8)
-    diag += np.kron(d0,np.ones(2**(L-3)))
-    ### Inner Bonds
-    if (L < 6):
+    l_layer = len(Ulist[0])
+    if (l_layer == 1):
+      for l in xrange(L-1):
+        if (l%2 == 0):
+          d0 = utils.get_uni10diag(UHU[l],4)
+          diag += np.kron(np.kron(np.ones(2**l), d0), np.ones(2**(L-2-l)))
+        else:
+          d0 = utils.get_uni10diag(UHU[l],16)
+          diag += np.kron(np.kron(np.ones(2**(l-1)), d0), np.ones(2**(L-3-l)))
+
+    elif (l_layer == 2):
+      ### Left Edge
+      d0 = utils.get_uni10diag(UHU[0],8)
+      diag += np.kron(d0,np.ones(2**(L-3)))
+      ### Inner Bonds
+      if (L < 6):
         for b in xrange(1,L-2):
-            d0 = utils.get_uni10diag(UHU[b],16)
-            diag += np.kron(np.ones(2**(b-1)), np.kron(d0, np.ones(2**(L-b-3))))
-    else:
+          d0 = utils.get_uni10diag(UHU[b],16)
+          diag += np.kron(np.ones(2**(b-1)), np.kron(d0, np.ones(2**(L-b-3))))
+      else:
         ## Left Next-to-Edge Bond
         d0 = utils.get_uni10diag(UHU[1],32)
         diag += np.kron(d0,np.ones(2**(L-5)))
         for b in xrange(2,L-3):
-            if (b%2 == 0):
-                d0 = utils.get_uni10diag(UHU[b],16)
-                diag += np.kron(np.ones(2**(b-1)), np.kron(d0, np.ones(2**(L-b-3))))
-            else:
-                d0 = utils.get_uni10diag(UHU[b],2**6)
-                diag += np.kron(np.ones(2**(b-2)), np.kron(d0,np.ones(2**(L-b-4))))
+          if (b%2 == 0):
+            d0 = utils.get_uni10diag(UHU[b],16)
+            diag += np.kron(np.ones(2**(b-1)), np.kron(d0, np.ones(2**(L-b-3))))
+          else:
+            d0 = utils.get_uni10diag(UHU[b],2**6)
+            diag += np.kron(np.ones(2**(b-2)), np.kron(d0,np.ones(2**(L-b-4))))
         
         ## Right Next-to-Edge Bond
         d0 = utils.get_uni10diag(UHU[L-3],32)
         diag += np.kron(np.ones(2**(L-5)),d0)
 
-    ### Right Edge
-    d0 = utils.get_uni10diag(UHU[-1],8)
-    diag += np.kron(np.ones(2**(L-3)),d0)
+      ### Right Edge
+      d0 = utils.get_uni10diag(UHU[-1],8)
+      diag += np.kron(np.ones(2**(L-3)),d0)
+
     if sort_spec:
-        diag = np.sort(diag)
+      diag = np.sort(diag)
+
+    if savefile:
+      if not os.path.exists(outdir):
+        os.mkdir(outdir)
+      np.savetxt(outdir+"/spect_"+model+"L%dLU%d.txt"%(L, len(Ulist[0])), diag)
     
     return diag
     
-        
 #########UTIL#########UTIL#########UTIL#########UTIL#########UTIL#########UTIL
 def coef_analys(pcoefs,l_layer,w2file=False, datadir='./', label=''):
 
@@ -964,7 +985,6 @@ def coef_analys(pcoefs,l_layer,w2file=False, datadir='./', label=''):
 
 def print_pauli_expansion(pcoefs):
     l = 0
-    
     print "*"*25+"Pauli Expansion"+"*"*25
     for p in pcoefs:
         expan = utils.print_paulistr_expansion(p)
