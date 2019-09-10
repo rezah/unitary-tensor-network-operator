@@ -216,10 +216,12 @@ def uni2mat(uni,lmat):
             npmat[i,j] = M[i*lmat+j]
     return npmat
 
-def mat2uni(mat,lmat):
-    mat = mat.reshape(lmat**2)
+def mat2uni(mat,lrow,lcol=None):
+    if lcol is None:
+        lcol = lrow
+    mat = mat.reshape(lrow*lcol)
     mat = list(mat)
-    unimat = uni10.Matrix(lmat,lmat,mat)
+    unimat = uni10.Matrix(lrow,lcol,mat)
     return unimat
 
 def vec2uni(v,L):
@@ -232,6 +234,72 @@ def vec2uni(v,L):
     vtensor.putBlock(vl10)
     return vtensor
 
+def vec2mps(v0,L,maxm):
+    '''
+    Stored in the following manner (p: physical bond, m: inner bond)
+        ___               ___             ___    
+   p __|   |__ m     p __|   |__m    p __|   |   
+       |___|         m __|___|       m __|___|   
+        
+    '''
+    pbond_dim = 2  # physical bond dimension
+    mps = []
+    v = v0.copy()
+    pbdi = uni10.Bond(uni10.BD_IN,  pbond_dim)
+    pbdo = uni10.Bond(uni10.BD_OUT, pbond_dim)
+    # sweep from left to right
+    # LEFT EDGE
+    v = v.reshape(pbond_dim,pbond_dim**(L-1))
+    u,s,w = np.linalg.svd(v,full_matrices=False)  
+    mbonds = []
+    mbond_dim = len(s)
+    if (len(s) > maxm): # truncation
+        u = u[:,:maxm]
+        s = np.diag(s[:maxm])
+        w = w[:maxm,:]
+        mbond_dim = maxm
+    else:
+        s = np.diag(s)
+    mbonds.append(mbond_dim)
+    mbdi = uni10.Bond(uni10.BD_IN,  mbond_dim)
+    mbdo = uni10.Bond(uni10.BD_OUT, mbond_dim)
+    site = uni10.UniTensor([pbdi,mbdo])
+    umat = mat2uni(u,pbond_dim,mbond_dim)
+    site.putBlock(umat)
+    mps.append(site)
+
+    for l in xrange(L-2):
+        v = np.dot(s,w)
+        v = v.reshape(mbonds[l]*pbond_dim, pbond_dim**(L-l-2))
+        u,s,w = np.linalg.svd(v,full_matrices=False)
+        mbond_dim = len(s)
+        if (len(s) > maxm): # truncation
+            u = u[:,:maxm]
+            s = np.diag(s[:maxm])
+            w = w[:maxm,:]
+            mbond_dim = maxm
+        else:
+            s = np.diag(s)
+        mbonds.append(mbond_dim)
+        mbdi = uni10.Bond(uni10.BD_IN,  mbonds[l-1])
+        mbdo = uni10.Bond(uni10.BD_OUT, mbonds[l])
+        site = uni10.UniTensor([pbdi,mbdi,mbdo])
+        umat = mat2uni(u,pbond_dim*mbonds[l-1],mbonds[l])
+        site.putBlock(umat)
+        mps.append(site)
+
+    w = np.dot(s,w)
+    mbdo = uni10.Bond(uni10.BD_OUT, mbonds[-1])
+    site = uni10.UniTensor([pbdi,mbdo])
+    wmat = mat2uni(w, pbond_dim,mbonds[-1])
+    site.putBlock(wmat)
+    mps.append(site)
+
+    return mps
+    
+    
+    
+    
 def get_uni10diag(uni,lmat):
     try:
         M = uni.getBlock()
