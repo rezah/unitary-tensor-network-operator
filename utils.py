@@ -238,8 +238,8 @@ def vec2mps(v0,L,maxm):
     '''
     Stored in the following manner (p: physical bond, m: inner bond)
         ___               ___             ___    
-   p __|   |__ m     p __|   |__m    p __|   |   
-       |___|         m __|___|       m __|___|   
+   p __|   |__ m     m __|   |__m    m __|   |__p   
+       |___|         p __|___|           |___|   
         
     '''
     pbond_dim = 2  # physical bond dimension
@@ -253,7 +253,7 @@ def vec2mps(v0,L,maxm):
     u,s,w = np.linalg.svd(v,full_matrices=False)  
     mbonds = []
     mbond_dim = len(s)
-    if (len(s) > maxm): # truncation
+    if (mbond_dim > maxm): # truncation
         u = u[:,:maxm]
         s = np.diag(s[:maxm])
         w = w[:maxm,:]
@@ -273,7 +273,7 @@ def vec2mps(v0,L,maxm):
         v = v.reshape(mbonds[l]*pbond_dim, pbond_dim**(L-l-2))
         u,s,w = np.linalg.svd(v,full_matrices=False)
         mbond_dim = len(s)
-        if (len(s) > maxm): # truncation
+        if (mbond_dim > maxm): # truncation
             u = u[:,:maxm]
             s = np.diag(s[:maxm])
             w = w[:maxm,:]
@@ -281,17 +281,17 @@ def vec2mps(v0,L,maxm):
         else:
             s = np.diag(s)
         mbonds.append(mbond_dim)
-        mbdi = uni10.Bond(uni10.BD_IN,  mbonds[l-1])
-        mbdo = uni10.Bond(uni10.BD_OUT, mbonds[l])
-        site = uni10.UniTensor([pbdi,mbdi,mbdo])
-        umat = mat2uni(u,pbond_dim*mbonds[l-1],mbonds[l])
+        mbdi = uni10.Bond(uni10.BD_IN,  mbonds[l])
+        mbdo = uni10.Bond(uni10.BD_OUT, mbonds[l+1])
+        site = uni10.UniTensor([mbdi,pbdi,mbdo])
+        umat = mat2uni(u,pbond_dim*mbonds[l],mbonds[l+1])
         site.putBlock(umat)
         mps.append(site)
 
     w = np.dot(s,w)
-    mbdo = uni10.Bond(uni10.BD_OUT, mbonds[-1])
-    site = uni10.UniTensor([pbdi,mbdo])
-    wmat = mat2uni(w, pbond_dim,mbonds[-1])
+    mbdi = uni10.Bond(uni10.BD_IN, mbonds[-1])
+    site = uni10.UniTensor([mbdi,pbdo])
+    wmat = mat2uni(w, mbonds[-1],pbond_dim)
     site.putBlock(wmat)
     mps.append(site)
 
