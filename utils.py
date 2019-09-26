@@ -1,6 +1,7 @@
 import numpy as np
 import math
 import pyUni10 as uni10
+import copy
 import os
 
 
@@ -233,7 +234,21 @@ def vec2uni(v,L):
     vtensor = uni10.UniTensor([bdi]*L,'GS')
     vtensor.putBlock(vl10)
     return vtensor
+def uni2vec(uni,lvec):
+    try:
+        v = uni.getBlock()
+    except:
+        v = uni
+    npvec = np.zeros(lvec)
+    for i in xrange(lvec):
+        npvec[i] = v[i]
+    return npvec
 
+######################################
+
+
+
+############ vector to MPS ##################
 def vec2mps(v0,L,maxm):
     '''
     Stored in the following manner (p: physical bond, m: inner bond)
@@ -296,9 +311,27 @@ def vec2mps(v0,L,maxm):
     mps.append(site)
 
     return mps
+
+def mps2vec(mps, L):
+
+    tnl = copy.copy(mps[0])
+    for k in xrange(L-2):
+        tnl.setLabel([0,1])
+        tnr = copy.copy(mps[k+1])
+        tnr.setLabel([1,2,3])
+        tnl = tnl*tnr
+        tnl.permute([0,2,3],2)
+        tnl.combineBond([0,2])
+    tnl.setLabel([0,1])
+    tnr = copy.copy(mps[-1])
+    tnr.setLabel([1,2])
+    tnl = tnl*tnr
+    tnl.combineBond([0,2])
+    v = uni2vec(tnl.getBlock(), 2**L)
     
-    
-    
+    return v
+##############################################
+
     
 def get_uni10diag(uni,lmat):
     try:
