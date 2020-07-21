@@ -1,0 +1,72 @@
+//BoundryRight=1;
+//BoundryLeft=1;
+//Ascen(Oascend1,Uni1,Isometry1,NumInter,NumIso,NumUni,BoundryRight,BoundryLeft,NumInterLeft,NumInterRight,Xlvec,Oout);
+//cout<<setprecision(16)<<trace(Oout[0]*strans(Oout[0]))<<endl;
+//Rho2[0]=Oout[0];
+// NumRhoup=0;
+// NumRhodown=1;
+// NumRhoLeft=0;
+// NumRhoRight=4;
+//Dscen(Rho2,Rho1, Uni1, Isometry1,NumRhoup,NumRhodown,NumIso,NumUni,BoundryRight,BoundryLeft,NumRhoLeft,NumRhoRight,Xlvec);
+//
+//cout<<setprecision(16)<<trace(Rho1[NumRhodown+1]*Oascend1[NumInter+1])
+//+trace(Rho1[NumRhodown]*Oascend1[NumInter])
+//+trace(Rho1[NumRhodown+2]*Oascend1[NumInter+2])
+//+trace(Rho1[NumRhodown-1]*Oascend1[NumInter-1])
+//+trace(Rho1[NumRhodown+3]*Oascend1[NumInter+3])<<endl;
+//
+//cout<<setprecision(16)<<trace(Rho1[NumRhodown+1]*Oascend1[NumInter+1])
+//+trace(Rho1[NumRhodown]*Oascend1[NumInter])
+//+trace(Rho1[NumRhodown+2]*Oascend1[NumInter+2])
+//+trace(Rho1[NumRhodown-1]*Oascend1[NumInter-1])<<endl;
+//
+//cout<<setprecision(16)<<trace(Rho1[NumRhodown+1]*Oascend1[NumInter+1])
+//+trace(Rho1[NumRhodown]*Oascend1[NumInter])
+//+trace(Rho1[NumRhodown+2]*Oascend1[NumInter+2])
+//
+//+trace(Rho1[NumRhodown+3]*Oascend1[NumInter+3])<<endl;
+//
+//cout<<setprecision(16)<<trace(Rho1[NumRhodown+1]*Oascend1[NumInter+1])
+//+trace(Rho1[NumRhodown]*Oascend1[NumInter])
+//+trace(Rho1[NumRhodown+2]*Oascend1[NumInter+2])<<endl;
+////+trace(Rho1[NumRhodown-1]*Oascend1[NumInter-1])<<endl;
+////+trace(Rho1[NumRhodown+3]*Oascend1[NumInter+3])<<endl;
+//
+
+
+
+
+
+BoundryRight=1;
+BoundryLeft=1;
+Ascen(Oascend1,Uni1,Isometry1,NumInter,NumIso,NumUni,BoundryRight,BoundryLeft,NumInterLeft,NumInterRight,Xlvec,Oout);
+Rho2[0]=Oout[0];
+cout<<setprecision(16)<<trace(Oout[0]*strans(Oout[0]))<<endl;
+
+
+BoundryRight=1;
+BoundryLeft=1;
+EnvUni(Oascend1,Rho2, Uni1, Isometry1,NumInter,NumRhoup,NumIso,NumUni,BoundryRight,BoundryLeft,NumInterLeft,NumInterRight,
+Xlvec,Oout);
+cout<<trace(Oout[0]*Uni1[NumUni])<<endl;
+
+
+
+BoundryLeft=1;
+BoundryRight=1;
+EnvIsoLeft(Oascend1,Rho2, Uni1, Isometry1,NumInter,NumRhoup,NumIso,NumUni,BoundryRight,BoundryLeft,
+NumInterLeft,NumInterRight,Xlvec,Oout);
+cout<<trace(Oout[0]*Isometry1[NumIso])<<endl;
+
+
+BoundryRight=1;
+BoundryLeft=1;
+EnvIsoRight(Oascend1,Rho2, Uni1, Isometry1,NumInter,NumRhoup,NumIso,NumUni,BoundryRight,BoundryLeft,
+NumInterLeft,NumInterRight,Xlvec,Oout);
+cout<<trace(Oout[0]*Isometry1[NumIso+1])<<endl;
+
+
+
+
+
+

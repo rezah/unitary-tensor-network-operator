@@ -1,0 +1,12 @@
+#set terminal postscript eps enhanced color font 'Helvetica,14' lw 3
+set terminal postscript eps size 5.3,5.3 enhanced color font 'Helvetica,20' lw 3
+#test
+set xtics font "Times-Roman, 25"
+set ytics font "Times-Roman, 25"
+set xlabel "N"   font ",30" textcolor rgb "black"
+set ylabel 'log(e)'  font ",30"  textcolor rgb "black"
+set key t r  
+set key font ",17"
+#set key at 0.1,0.7
+set output "AccuracyFile.eps"
+p [1:140] "AccuracyFile.text" u 1:(log10($2)) t "Energy v.s. itertions"   pointtype 7  ps 1.0,log10(1) notitle linetype 1  lc rgb "#FF1493" 

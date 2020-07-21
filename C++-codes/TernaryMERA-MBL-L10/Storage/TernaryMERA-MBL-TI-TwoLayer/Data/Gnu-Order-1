@@ -1,0 +1,12 @@
+#set terminal postscript eps enhanced color font 'Helvetica,14' lw 3
+set terminal postscript eps size 5.3,5.3 enhanced color font 'Helvetica,20' lw 3
+#test
+set xtics font "Times-Roman, 25"
+set ytics font "Times-Roman, 25"
+set xlabel "J"   font ",30" textcolor rgb "black"
+set ylabel '<Z>'  font ",30"  textcolor rgb "black"
+set key t r  
+set key font ",17"
+#set key at 0.1,0.7
+set output "OrderZ1.eps"
+p "SpinOrder.text" u 2:4 t "ED"   pointtype 7  ps 1.0,"SpinOrder1.text" u 2:4 t "MERA"

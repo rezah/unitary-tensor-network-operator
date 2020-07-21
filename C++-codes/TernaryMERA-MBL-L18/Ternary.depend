@@ -1,0 +1,41 @@
+# depslib dependency file v1.0
+1446909295 source:/home/reza/Desktop/TernaryMERA-MBL/Ascend.cpp
+	"Header.h"
+
+1447526874 /home/reza/Desktop/TernaryMERA-MBL/Header.h
+	<iostream>
+	<complex>
+	<math.h>
+	<armadillo>
+	<fstream>
+	<iostream>
+	<iomanip>
+	<random>
+
+1446797896 source:/home/reza/Desktop/TernaryMERA-MBL/Dscend.cpp
+	"Header.h"
+
+1446983694 source:/home/reza/Desktop/TernaryMERA-MBL/Env.cpp
+	"Header.h"
+
+1446207773 source:/home/reza/Desktop/TernaryMERA-MBL/Fidelity.cpp
+
+1447355765 source:/home/reza/Desktop/TernaryMERA-MBL/main.cpp
+	"Header.h"
+
+1447527577 source:/home/reza/Desktop/TernaryMERA-MBL/OInitial.cpp
+	"Header.h"
+
+1446207744 source:/home/reza/Desktop/TernaryMERA-MBL/OptTop.cpp
+
+1446207792 source:/home/reza/Desktop/TernaryMERA-MBL/OptUni.cpp
+
+1446965015 source:/home/reza/Desktop/TernaryMERA-MBL/Quantity.cpp
+
+1446207818 source:/home/reza/Desktop/TernaryMERA-MBL/Rholanczos.cpp
+
+1446207826 source:/home/reza/Desktop/TernaryMERA-MBL/Store.cpp
+
+1447355810 source:/home/reza/Desktop/TernaryMERA-MBL/UniInitial.cpp
+	"Header.h"
+

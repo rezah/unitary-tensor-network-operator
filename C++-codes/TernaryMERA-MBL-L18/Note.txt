@@ -1,0 +1,15 @@
+cx_mat Help;
+Help=randu<cx_mat>(Xi[1]*Xi[1],Xi[1]*Xi[1]);
+RhoA[1]=trans(Help)*Help;
+RhoA[1]=RhoA[1]*(1.00/abs(trace(RhoA[1])));
+Help=randn<cx_mat>(Xi[1]*Xi[1],Xi[1]*Xi[1]);
+RhoB[1]=trans(Help)*Help;
+RhoB[1]=RhoB[1]*(1.00/abs(trace(RhoB[1])));
+
+Help=randu<cx_mat>(Xi[2]*Xi[2],Xi[2]*Xi[2]);
+RhoA[2]=trans(Help)*Help;
+RhoA[2]=RhoA[2]*(1.00/abs(trace(RhoA[2])));
+Help=randn<cx_mat>(Xi[2]*Xi[2],Xi[2]*Xi[2]);
+RhoB[2]=trans(Help)*Help;
+RhoB[2]=RhoB[2]*(1.00/abs(trace(RhoB[2])));
+

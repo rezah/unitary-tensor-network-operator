@@ -1,0 +1,160 @@
+# depslib dependency file v1.0
+1446909295 source:/home/reza/Desktop/TernaryMERA-MBL/Ascend.cpp
+	"Header.h"
+
+1446996917 /home/reza/Desktop/TernaryMERA-MBL/Header.h
+	<iostream>
+	<complex>
+	<math.h>
+	<armadillo>
+	<fstream>
+	<iostream>
+	<iomanip>
+	<random>
+
+1446797896 source:/home/reza/Desktop/TernaryMERA-MBL/Dscend.cpp
+	"Header.h"
+
+1446983694 source:/home/reza/Desktop/TernaryMERA-MBL/Env.cpp
+	"Header.h"
+
+1446207773 source:/home/reza/Desktop/TernaryMERA-MBL/Fidelity.cpp
+
+1446995214 source:/home/reza/Desktop/TernaryMERA-MBL/main.cpp
+	"Header.h"
+
+1446984543 source:/home/reza/Desktop/TernaryMERA-MBL/OInitial.cpp
+	"Header.h"
+
+1446207744 source:/home/reza/Desktop/TernaryMERA-MBL/OptTop.cpp
+
+1446207792 source:/home/reza/Desktop/TernaryMERA-MBL/OptUni.cpp
+
+1446965015 source:/home/reza/Desktop/TernaryMERA-MBL/Quantity.cpp
+
+1446207818 source:/home/reza/Desktop/TernaryMERA-MBL/Rholanczos.cpp
+
+1446207826 source:/home/reza/Desktop/TernaryMERA-MBL/Store.cpp
+
+1446987742 source:/home/reza/Desktop/TernaryMERA-MBL/UniInitial.cpp
+	"Header.h"
+
+1447945784 source:/home/reza/Desktop/TernaryMERA-MBL-twoLayer/Ascend.cpp
+	"Header.h"
+
+1447946718 /home/reza/Desktop/TernaryMERA-MBL-twoLayer/Header.h
+	<iostream>
+	<complex>
+	<math.h>
+	<armadillo>
+	<fstream>
+	<iostream>
+	<iomanip>
+	<random>
+
+1447744158 source:/home/reza/Desktop/TernaryMERA-MBL-twoLayer/Dscend.cpp
+	"Header.h"
+
+1447759786 source:/home/reza/Desktop/TernaryMERA-MBL-twoLayer/Env.cpp
+	"Header.h"
+
+1446965015 source:/home/reza/Desktop/TernaryMERA-MBL-twoLayer/Quantity.cpp
+
+1447947041 source:/home/reza/Desktop/TernaryMERA-MBL-twoLayer/main.cpp
+	"Header.h"
+
+1447946796 source:/home/reza/Desktop/TernaryMERA-MBL-twoLayer/OInitial.cpp
+	"Header.h"
+
+1447920025 source:/home/reza/Desktop/TernaryMERA-MBL-twoLayer/UniInitial.cpp
+	"Header.h"
+
+1447921387 source:/home/reza/Desktop/TernaryMERA-MBL-twoLayer/Optimize.cpp
+	"Header.h"
+
+1447924174 source:/home/reza/Desktop/TernaryMERA-MBL-twoLayer/OptimizeIso.cpp
+	"Header.h"
+
+1447938679 source:/home/reza/Desktop/TernaryMERA-MBL-twoLayer/OptimizeUp.cpp
+	"Header.h"
+
+1448004860 source:/home/reza/Desktop/TernaryMERA-MBL-twoLayer-Modified/Ascend.cpp
+	"Header.h"
+
+1448084543 /home/reza/Desktop/TernaryMERA-MBL-twoLayer-Modified/Header.h
+	<iostream>
+	<complex>
+	<math.h>
+	<armadillo>
+	<fstream>
+	<iostream>
+	<iomanip>
+	<random>
+
+1447744158 source:/home/reza/Desktop/TernaryMERA-MBL-twoLayer-Modified/Dscend.cpp
+	"Header.h"
+
+1447759786 source:/home/reza/Desktop/TernaryMERA-MBL-twoLayer-Modified/Env.cpp
+	"Header.h"
+
+1448084521 source:/home/reza/Desktop/TernaryMERA-MBL-twoLayer-Modified/main.cpp
+	"Header.h"
+
+1448084237 source:/home/reza/Desktop/TernaryMERA-MBL-twoLayer-Modified/Optimize.cpp
+	"Header.h"
+
+1448016626 source:/home/reza/Desktop/TernaryMERA-MBL-twoLayer-Modified/OptimizeIso.cpp
+	"Header.h"
+
+1448026906 source:/home/reza/Desktop/TernaryMERA-MBL-twoLayer-Modified/OptimizeUp.cpp
+	"Header.h"
+
+1448082727 source:/home/reza/Desktop/TernaryMERA-MBL-twoLayer-Modified/UniInitial.cpp
+	"Header.h"
+
+1448087355 source:/home/reza/Desktop/TernaryMERA-MBL-twoLayer-Modified/OInitial.cpp
+	"Header.h"
+
+1448084166 source:/home/reza/Desktop/TernaryMERA-MBL-twoLayer-Modified/Quantity.cpp
+	"Header.h"
+
+1448089781 source:/home/reza/Desktop/TernaryMERA-MBL-TI-TwoLayer/Ascend.cpp
+	"Header.h"
+
+1448302750 /home/reza/Desktop/TernaryMERA-MBL-TI-TwoLayer/Header.h
+	<iostream>
+	<complex>
+	<math.h>
+	<armadillo>
+	<fstream>
+	<iostream>
+	<iomanip>
+	<random>
+
+1447744158 source:/home/reza/Desktop/TernaryMERA-MBL-TI-TwoLayer/Dscend.cpp
+	"Header.h"
+
+1447759786 source:/home/reza/Desktop/TernaryMERA-MBL-TI-TwoLayer/Env.cpp
+	"Header.h"
+
+1448084237 source:/home/reza/Desktop/TernaryMERA-MBL-TI-TwoLayer/Optimize.cpp
+	"Header.h"
+
+1448016626 source:/home/reza/Desktop/TernaryMERA-MBL-TI-TwoLayer/OptimizeIso.cpp
+	"Header.h"
+
+1448111467 source:/home/reza/Desktop/TernaryMERA-MBL-TI-TwoLayer/OptimizeUp.cpp
+	"Header.h"
+
+1448302585 source:/home/reza/Desktop/TernaryMERA-MBL-TI-TwoLayer/Quantity.cpp
+	"Header.h"
+
+1448119413 source:/home/reza/Desktop/TernaryMERA-MBL-TI-TwoLayer/UniInitial.cpp
+	"Header.h"
+
+1448298797 source:/home/reza/Desktop/TernaryMERA-MBL-TI-TwoLayer/OInitial.cpp
+	"Header.h"
+
+1448300306 source:/home/reza/Desktop/TernaryMERA-MBL-TI-TwoLayer/main.cpp
+	"Header.h"
+
