@@ -1,0 +1,9 @@
+Env_right_copy: 0, 1, 2, 3, 4, 5
+U_up_11: -1, 6 ; 0
+U_up_22: -4, 11 ; 3
+U_down_11: -3  ; 2, 7
+U_down_22: -6 ; 5, 12
+mpo_up:  -2, 7 ; 1, 6
+mpo_down: -5, 12 ; 4, 11
+TOUT:  -1 , -2, -3, -4, -5, -6
+ORDER:  ((((Env_right_copy (U_up_11 mpo_up)) U_down_11)  ( U_up_22 mpo_down) ) U_down_22)  

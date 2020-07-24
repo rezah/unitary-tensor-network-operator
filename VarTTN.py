@@ -28,11 +28,11 @@ hz_list=[]                       # list of randomness
 U_delta=0.00                     #if it's zero, U_list is intialized by Identity
 Method='SteepestDescent'         #methods: CGarmjo, CGpoly, SVD, SteepestDescent, SteepestDescentploy 
 Randomness='Fixed'               #Fixed
-Max_number_iteratoin_SVD=1       # maximum number of sweeps for SVD method 
-Max_number_iteratoin_Steepest=400  # maximum number of sweeps for SteepestDescent method
-Max_number_iteratoin_CG=400         #maximum number of sweeps for CG method
+Max_number_iteratoin_SVD=100       # maximum number of sweeps for SVD method 
+Max_number_iteratoin_Steepest=100  # maximum number of sweeps for SteepestDescent method
+Max_number_iteratoin_CG=100         #maximum number of sweeps for CG method
 
-Max_SVD_iteratoin=1               #maximum number of SVD iteration
+Max_SVD_iteratoin=20               #maximum number of SVD iteration
 Max_Steepest_iteratoin=20          #maximum number of SteepestDescent iteration
 Max_CG_iteratoin=20                #maximum number of SteepestDescent iteration
 #######################################################################################3
@@ -253,7 +253,7 @@ for q in xrange(realizations):
  mpo_list1, mpo_list2, mpo_boundy_list=mpo.make_mpo_H( L, J, hz_list, Fieldz, J2,Model,Tech,L_lay )
  trH2=mpo.contraction_MPO_trH2( mpo_list2, mpo_boundy_list, L, Tech,L_lay)
  print '\n', 'trH2=', trH2
- Method='SVD'
+ Method='CGpoly'
  U_list=mpo.intialize_unitary_list( L, L_lay, d, U_delta,Tech)
  mpo_U_list_up = mpo.make_mpo_U_list(U_list, L_lay, (((L-8)/3)+4), 'up', Tech)
  mpo_U_list_down= mpo.make_mpo_U_list(U_list, L_lay, (((L-8)/3)+4), 'down', Tech)
@@ -286,7 +286,7 @@ for q in xrange(realizations):
  mpo_list1, mpo_list2, mpo_boundy_list=mpo.make_mpo_H( L, J, hz_list, Fieldz, J2,Model,Tech,L_lay )
  trH2=mpo.contraction_MPO_trH2( mpo_list2, mpo_boundy_list, L, Tech,L_lay)
  print '\n', 'trH2=', trH2
- Method='SVD'
+ Method='CGpoly'
  U_list=mpo.intialize_unitary_list( L, L_lay, d, U_delta,Tech)
  mpo_U_list_up = mpo.make_mpo_U_list(U_list, L_lay, L/2, 'up', Tech)
  mpo_U_list_down= mpo.make_mpo_U_list(U_list, L_lay, L/2, 'down', Tech)
@@ -329,7 +329,7 @@ for q in xrange(realizations):
  print ' E_0= ',  E_f, '\n'
 
 
- Method='SVD'
+ Method='CGpoly'
  U_list=mpo.intialize_unitary_list( L, L_lay, d, U_delta,Tech)
  mpo_U_list_up = mpo.make_mpo_U_list(U_list, L_lay, L, 'up', Tech)
  mpo_U_list_down= mpo.make_mpo_U_list(U_list, L_lay, L, 'down', Tech)
@@ -359,7 +359,7 @@ for q in xrange(realizations):
  print ' E_0= ', E_f,'\n'
 
 
- Method='SVD'
+ Method='CGpoly'
 
  Optimi_full_process(U_list,mpo_U_list_up, mpo_U_list_down, mpo_list2, mpo_boundy_list,Environment_Left,Environment_Right,perl_label_up, Environment_Uni,Env_Uni_inner, Bond_IN,d,L,L_lay,L_position,Method ,Max_SVD_iteratoin, Max_Steepest_iteratoin,Max_CG_iteratoin, E_list2, Count_list2,Gamma,Tech,trH2,E_time3, time3 )
 

@@ -1,0 +1,10 @@
+Env_Right_copy: -1, -2, -3, -4, -5, -6 ;
+U_up_22:  11; -4
+U_down_11:  ;-3, 7
+U_down_22:  ; -6, 12
+mpo_up:  1, 7 ; -2, 6
+mpo_down: 4, 12 ;-5, 11
+mpo_boundy_up: ;1
+mpo_boundy_down: ;4
+TOUT:  6 ; -1 
+ORDER:  ( ((Env_Right_copy (U_up_22 (mpo_down mpo_boundy_up))) U_down_22)   (( (U_down_11     (mpo_up  mpo_boundy_down ))) ) )
